@@ -15,9 +15,10 @@ public class SustenanceEventCard extends EventCard {
     private int numPP;
 
     // Costruttore dell'evento: inizializza la penalità in PP
-    public SustenanceEventCard(int numPP,int era) {
+    public SustenanceEventCard(int id, int era, int numPP) {
+        super(id,era);
         this.numPP = numPP;
-        this.era = era;
+
     }
 
     @Override

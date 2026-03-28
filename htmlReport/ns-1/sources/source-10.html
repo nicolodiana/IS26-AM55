@@ -1,0 +1,194 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > SustenanceEventCard</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">it.polimi.ingsw.am55.MesosModel</a>
+</div>
+
+<h1>Coverage Summary for Class: SustenanceEventCard (it.polimi.ingsw.am55.Effetti)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">SustenanceEventCard</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/16)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package it.polimi.ingsw.am55.MesosModel;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;// Evento Sostentamento:
+&nbsp;// - ogni personaggio della tribù costa 1 cibo
+&nbsp;// - gli edifici NON contano
+&nbsp;// - ogni Collector sconta 3 cibi sul totale
+&nbsp;// - se il giocatore non riesce a pagare tutto, perde numPP
+&nbsp;//   per ogni personaggio rimasto non sfamato
+&nbsp;public class SustenanceEventCard extends EventCard {
+&nbsp;
+&nbsp;    // Numero di punti prestigio persi per ogni personaggio non sfamato
+&nbsp;    private int numPP;
+&nbsp;
+&nbsp;    // Costruttore dell&#39;evento: inizializza la penalità in PP
+<b class="nc">&nbsp;    public SustenanceEventCard(int numPP) {</b>
+<b class="nc">&nbsp;        this.numPP = numPP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void activateEvent(List&lt;Player&gt; players) {
+&nbsp;
+&nbsp;        // Scorro tutti i giocatori coinvolti nell&#39;evento
+<b class="nc">&nbsp;        for (Player p : players) {</b>
+&nbsp;
+&nbsp;            // 1) Calcolo quanti personaggi ha il giocatore.
+&nbsp;            // playerDeckSize() nel tuo Player conta solo le carte personaggio
+&nbsp;            // (shaman, hunter, artist, inventor, builder, collector),
+&nbsp;            // quindi è giusto per il costo base del sostentamento.
+<b class="nc">&nbsp;            int totalCharacters = p.playerDeckSize();</b>
+&nbsp;
+&nbsp;            // 2) Calcolo lo sconto totale dato dai Collector.
+&nbsp;            // Ogni Collector sconta 3 cibi.
+<b class="nc">&nbsp;            int collectorDiscount = p.getCollectorsList().size() * 3;</b>
+&nbsp;
+&nbsp;            // 3) Eventuale bonus/sconto dato dall&#39;edificio 2.
+&nbsp;            // Qui sto assumendo che BUILDING2 riduca il costo di 1 cibo.
+&nbsp;            // Se la regola reale è diversa, questo valore va cambiato.
+&nbsp;            //DA GESTIRE NUM TIPO  per sconto addizionale dato da edificio 2: il tipo su cui contare le occorrenze si dovrebbe leggere da lei
+<b class="nc">&nbsp;            int building2Discount = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;            if (p.hasBuilding(BuildingType.BUILDING2)) {</b>
+<b class="nc">&nbsp;                for (BuildingCard bc : p.getBuildings()) {</b>
+<b class="nc">&nbsp;                    if (bc.getType().equals(BuildingType.BUILDING2)) {</b>
+<b class="nc">&nbsp;                        building2Discount = bc.getCharacterForED().countSameTypeIn(p);</b>
+&nbsp;                        break;
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;            // 4) Calcolo il costo netto totale dell&#39;evento.
+&nbsp;            // È il costo base meno tutti gli sconti.
+&nbsp;            // Uso Math.max(0, ...) perché il costo non può mai diventare negativo.
+<b class="nc">&nbsp;            int foodToPay = Math.max(0, totalCharacters - collectorDiscount - building2Discount);</b>
+&nbsp;
+&nbsp;            // 5) Recupero quanto cibo possiede attualmente il giocatore.
+<b class="nc">&nbsp;            int availableFood = p.getNumFood();</b>
+&nbsp;
+&nbsp;            // 6) Il giocatore deve pagare tutto il possibile.
+&nbsp;            // Se ha abbastanza cibo, paga tutto foodToPay.
+&nbsp;            // Se non ne ha abbastanza, paga solo quello che possiede.
+<b class="nc">&nbsp;            int paidFood = Math.min(availableFood, foodToPay);</b>
+&nbsp;
+&nbsp;            // 7) Calcolo quanti &quot;costi&quot; restano scoperti.
+&nbsp;            // Ogni unità non pagata corrisponde a un personaggio non sfamato.
+<b class="nc">&nbsp;            int unfedCharacters = foodToPay - paidFood;</b>
+&nbsp;
+&nbsp;            // 8) Tolgo al giocatore il cibo che ha effettivamente pagato.
+&nbsp;            // Non tolgo foodToPay direttamente, perché il giocatore potrebbe
+&nbsp;            // non avere abbastanza cibo.
+<b class="nc">&nbsp;            p.removeFood(paidFood);</b>
+&nbsp;
+&nbsp;            // 9) Applico la penalità in punti prestigio.
+&nbsp;            // Per ogni personaggio non sfamato il giocatore perde numPP.
+<b class="nc">&nbsp;            p.removePP(unfedCharacters * numPP);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-22 20:31</div>
+</div>
+</body>
+</html>

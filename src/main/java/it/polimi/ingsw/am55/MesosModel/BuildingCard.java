@@ -4,13 +4,14 @@ public class BuildingCard extends Card {
     private int foodCost;
     private int numOfPP;
     BuildingType type;
-    private Card characterForED; // Il personaggio da contare lo inserisco generico Card, poi a runtime capirà cosa è (avrà valore diverso da null) solo se e una building edificio 2 o 12
+    private CharacterType CharType; // Il personaggio da contare lo inserisco generico Card, poi a runtime capirà cosa è (avrà valore diverso da null) solo se e una building edificio 2 o 12
 
-    public BuildingCard(int foodCost, int numOfPP, BuildingType type, Card characterForED) {
+    public BuildingCard(int id, int era, int foodCost, int numOfPP, BuildingType type, CharacterType CharType) {
+        super(id,era);
         this.foodCost = foodCost;
         this.numOfPP = numOfPP;
         this.type = type;
-        this.characterForED = characterForED;
+        this.CharType = CharType;
     }
     //devo gestire il caso se non ne ha abbastanza
     public void addToPlayer(Player player) {
@@ -18,9 +19,6 @@ public class BuildingCard extends Card {
     }
 
 
-    public Card getCharacterForED() {
-        return characterForED;
-    }
 
     public BuildingType getType() {
         return type;

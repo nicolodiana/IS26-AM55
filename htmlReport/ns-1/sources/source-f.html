@@ -1,0 +1,173 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ShamanRitualEventCard</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">it.polimi.ingsw.am55.MesosModel</a>
+</div>
+
+<h1>Coverage Summary for Class: ShamanRitualEventCard (it.polimi.ingsw.am55.Effetti)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ShamanRitualEventCard</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package it.polimi.ingsw.am55.MesosModel;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;// Evento Rituale Sciamanico
+&nbsp;public class ShamanRitualEventCard extends EventCard {
+&nbsp;    private int maxPP;
+&nbsp;    private int minPP;
+&nbsp;
+<b class="nc">&nbsp;    public ShamanRitualEventCard(int maxPP, int minPP) {</b>
+<b class="nc">&nbsp;        this.maxPP = maxPP;</b>
+<b class="nc">&nbsp;        this.minPP = minPP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void activateEvent(List&lt;Player&gt; players) {
+<b class="nc">&nbsp;        if (players == null || players.isEmpty()) {</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Calcolo una sola volta il massimo e il minimo numero di stelle tra tutti i player
+<b class="nc">&nbsp;        int maxStars = players.get(0).countShamanStars();</b>
+<b class="nc">&nbsp;        int minStars = players.get(0).countShamanStars();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Player p : players) {</b>
+<b class="nc">&nbsp;            int stars = p.countShamanStars();</b>
+&nbsp;
+<b class="nc">&nbsp;            if (stars &gt; maxStars) {</b>
+<b class="nc">&nbsp;                maxStars = stars;</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            if (stars &lt; minStars) {</b>
+<b class="nc">&nbsp;                minStars = stars;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Applico gli effetti a tutti i player
+<b class="nc">&nbsp;        for (Player p : players) {</b>
+<b class="nc">&nbsp;            int stars = p.countShamanStars();</b>
+&nbsp;
+&nbsp;            // Chi ha il massimo guadagna PP
+&nbsp;            // Se ha BUILDING7 il guadagno raddoppia
+<b class="nc">&nbsp;            if (stars == maxStars) {</b>
+<b class="nc">&nbsp;                int gain = p.hasBuilding(BuildingType.BUILDING7) ? maxPP * 2 : maxPP;</b>
+<b class="nc">&nbsp;                p.addPP(gain);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // Chi ha il minimo perde PP
+&nbsp;            // Se ha BUILDING3 la perdita viene annullata
+<b class="nc">&nbsp;            if (stars == minStars) {</b>
+<b class="nc">&nbsp;                if (!p.hasBuilding(BuildingType.BUILDING3)) {</b>
+<b class="nc">&nbsp;                    p.removePP(minPP);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-22 20:31</div>
+</div>
+</body>
+</html>

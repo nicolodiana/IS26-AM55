@@ -2,10 +2,7 @@ package it.polimi.ingsw.am55.MesosModel;
 
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class Player {
     private final String nickname;
@@ -22,6 +19,7 @@ public class Player {
     private List<Builder> builderList = new ArrayList<>();
     private List<Inventor> inventorList = new ArrayList<>();
     private List<BuildingCard> buildings;
+    private Map<CharacterType, List<CharacterCard>> buildingsByCharacterType;
     private int minSetCompleted;
 
     public Player(String nickname, String totem, String summaryCard) {
@@ -32,13 +30,6 @@ public class Player {
         this.numPP = 0;
         this.upperRowCardSelected = 0;
         this.lowerRowCardSelected = 0;
-        this.shamanList = new ArrayList<>();
-        this.hunterList = new ArrayList<>();
-        this.artistList = new ArrayList<>();
-        this.collectorList = new ArrayList<>();
-        this.builderList = new ArrayList<>();
-        this.inventorList = new ArrayList<>();
-        this.buildings = new ArrayList<>();
         this.minSetCompleted = 0;
     }
 
@@ -221,7 +212,10 @@ public class Player {
         }
         return totalStars;
     }
-
+    //metodo per sapere il conteggio in base al tipo di personaggio: SERVE PER EDIFICIO 2,12
+    public int countByTypeforED(CharacterType type) {
+        return buildingsByCharacterType.get(type).size();
+    }
     public int minCardSet() {
         return Collections.min(Arrays.asList(
                 shamanList.size(),

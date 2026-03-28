@@ -13,13 +13,14 @@ public class PaintingsEventCard extends EventCard {
     private int minArtist;
 
 
-    public PaintingsEventCard(int upperPP, int lowerPP, int upperNumberOfArtist, int lowerNumberOfArtist, int minArtist,int era) {
+    public PaintingsEventCard(int id, int era, int upperPP, int lowerPP, int upperNumberOfArtist, int lowerNumberOfArtist, int minArtist) {
+        super(id, era);
         this.upperPP = upperPP;
         this.lowerPP = lowerPP;
         this.upperNumberOfArtist = upperNumberOfArtist;
         this.lowerNumberOfArtist = lowerNumberOfArtist;
         this.minArtist = minArtist;
-        this.era = era;
+
 
     }
 

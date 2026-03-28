@@ -7,9 +7,9 @@ import java.util.List;
 public class HuntEventCard extends EventCard {
     private final int numPP;
 
-    public HuntEventCard(int numPP, int era) {
+    public HuntEventCard(int id, int era, int numPP) {
         this.numPP = numPP;
-        this.era = era;
+        super(id, era);
     }
 
     //evento caccia

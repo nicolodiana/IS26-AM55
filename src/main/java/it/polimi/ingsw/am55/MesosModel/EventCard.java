@@ -4,6 +4,11 @@ import java.util.List;
 
 public class EventCard extends TribeCard {
     private int numPlayer;
+    public EventCard(int id, int era) {
+        super(id, era);
+    }
+
+
     //metodo da overridare negli eventi specifici per attivare l'effetto proprio
     public void activateEvent(List<Player> players) {}
 

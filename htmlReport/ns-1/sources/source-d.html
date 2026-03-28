@@ -1,0 +1,353 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > Player</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">it.polimi.ingsw.am55.MesosModel</a>
+</div>
+
+<h1>Coverage Summary for Class: Player (it.polimi.ingsw.am55.Effetti)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">Player</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    31%
+  </span>
+  <span class="absValue">
+    (9/29)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    7,1%
+  </span>
+  <span class="absValue">
+    (2/28)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    32,9%
+  </span>
+  <span class="absValue">
+    (28/85)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package it.polimi.ingsw.am55.MesosModel;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.Collections;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;public class Player {
+&nbsp;    String nickname;
+&nbsp;    private List&lt;Shaman&gt; shamanList;
+<b class="fc">&nbsp;    private List&lt;Hunter&gt; hunterList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;Artist&gt; artistList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;Collector&gt; collectorList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;Builder&gt; builderList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;    private List&lt;Inventor&gt; inventorList = new ArrayList&lt;&gt;();</b>
+&nbsp;    private List&lt;BuildingCard&gt; buildings;
+&nbsp;    private int numFood;
+&nbsp;    private int numPP;
+&nbsp;    // tiene traccia dell&#39;ultimo set completo completato al momento dell&#39;aggiunta di un personaggio,
+&nbsp;    // serve per l&#39;effetto edificio 1: non conta i set già completati prima dell&#39;acquisizione dell&#39;edificio
+&nbsp;    private int minSetCompleted;
+&nbsp;
+&nbsp;    public void setNumFood(int numFood) {
+<b class="nc">&nbsp;        this.numFood = numFood;</b>
+&nbsp;    }
+&nbsp;
+<b class="fc">&nbsp;    public Player(String nickname, int numFood, int numPP) {</b>
+<b class="fc">&nbsp;        this.nickname = nickname;</b>
+<b class="fc">&nbsp;        this.shamanList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.hunterList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.artistList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.collectorList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.builderList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.inventorList = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.buildings = new ArrayList&lt;&gt;();</b>
+<b class="fc">&nbsp;        this.numFood = numFood;</b>
+<b class="fc">&nbsp;        this.numPP = numPP;</b>
+<b class="fc">&nbsp;        this.minSetCompleted = 0;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Edificio 1 (effetto passivo su pescaggio personaggi):
+&nbsp;    // Dal momento in cui si possiede BUILDING1, si guadagnano 5 cibi ogni volta che
+&nbsp;    // si completa un nuovo set di 6 carte personaggio di tipo diverso (1 per tipo).
+&nbsp;    // Non conta i set già completati prima dell&#39;acquisizione dell&#39;edificio:
+&nbsp;    // quando si acquisisce BUILDING1, minSetCompleted viene allineato al valore attuale
+&nbsp;    // di minCardSet() cosi i set già fatti non vengono premiati.
+&nbsp;    // Ad ogni aggiunta di personaggio si controlla se minCardSet() è aumentato
+&nbsp;    // rispetto a minSetCompleted: se sì, si è completato un nuovo set e si aggiungono 5 cibi.
+&nbsp;  public  void checkBuilding1() {
+<b class="pc">&nbsp;        if (hasBuilding(BuildingType.BUILDING1)) {</b>
+<b class="nc">&nbsp;            int currentSet = minCardSet();</b>
+<b class="nc">&nbsp;            if (currentSet &gt; minSetCompleted) {</b>
+<b class="nc">&nbsp;                addFood(5);</b>
+<b class="nc">&nbsp;                minSetCompleted = currentSet;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    //ADD CARD CON EFFETTI ISTANTANEI
+&nbsp;    public void addTribeCard(Shaman card) {
+&nbsp;        //card.addCard(this);
+<b class="nc">&nbsp;        shamanList.add(card);</b>
+<b class="nc">&nbsp;        checkBuilding1();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addTribeCard(Hunter card) {
+&nbsp;        //card.addCard(this);
+&nbsp;        //aggiunge cacciatore e se ha icona si guadagna 1 cibo x ogni cacciatore in tribù (effetto istantaneo)
+<b class="nc">&nbsp;        hunterList.add(card);</b>
+<b class="nc">&nbsp;        if (card.getIcon()) { addFood(1 * (hunterList.size())); }</b>
+<b class="nc">&nbsp;        checkBuilding1();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addTribeCard(Artist card) {
+&nbsp;        //card.addCard(this);
+<b class="fc">&nbsp;        artistList.add(card);</b>
+<b class="fc">&nbsp;        checkBuilding1();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addTribeCard(Collector card) {
+&nbsp;        //card.addCard(this);
+<b class="nc">&nbsp;        collectorList.add(card);</b>
+<b class="nc">&nbsp;        checkBuilding1();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // Il suo ppBonus viene conteggiato a fine partita da EndGameResolver.
+&nbsp;    public void addTribeCard(Builder card) {
+&nbsp;        //card.addCard(this);
+<b class="fc">&nbsp;        builderList.add(card);</b>
+<b class="fc">&nbsp;        checkBuilding1();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addTribeCard(Inventor card) {
+&nbsp;        //Effetto edificio 5
+<b class="nc">&nbsp;        if (hasBuilding(BuildingType.BUILDING5)) {</b>
+<b class="nc">&nbsp;            int countEqualsInvontors = 0;</b>
+&nbsp;            //equalsIgnoreCase controlla prima dell&#39;aggiunta se 2 stringhe (invenzione) (poi json) sono uguali, ignorando uppercase e formattazione stringa
+<b class="nc">&nbsp;            for (Inventor inventor : inventorList) {</b>
+<b class="nc">&nbsp;                if (inventor.getIconInvention().equalsIgnoreCase(card.getIconInvention())) { countEqualsInvontors++; }</b>
+&nbsp;            }
+&nbsp;            // se prima dell&#39;aggiunta erano dispari, con questa carta completo una nuova coppia
+&nbsp;            // e quindi guadagno 3 cibi.
+<b class="nc">&nbsp;            addFood((countEqualsInvontors % 2 == 1) ? 3 : 0);</b>
+&nbsp;        }
+&nbsp;        //card.addCard(this);
+<b class="nc">&nbsp;        inventorList.add(card);</b>
+<b class="nc">&nbsp;        checkBuilding1();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addTribeCard(BuildingCard card) {
+&nbsp;        try {
+<b class="nc">&nbsp;            int builderDiscount = 0;</b>
+&nbsp;            //calcolo costo degli sconti in base ai costruttori che ho
+<b class="nc">&nbsp;            for (Builder b : builderList) {</b>
+<b class="nc">&nbsp;                builderDiscount += b.getPickbuildingdiscount();</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            int buildingCost = card.getFoodCost() - builderDiscount;</b>
+<b class="nc">&nbsp;            buildingCost = Math.max(0, buildingCost); //se lo sconto è maggiore del costo dovuto, setto un minimo di 0</b>
+&nbsp;
+<b class="nc">&nbsp;            if (this.getNumFood() &lt; buildingCost) { //se non ho abbastanza cibo non la prendo e lancio eccezione poi inviata anche alla view</b>
+<b class="nc">&nbsp;                throw new IllegalArgumentException(&quot;Non puoi pescarla!&quot;);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            this.removeFood(buildingCost);</b>
+<b class="nc">&nbsp;            buildings.add(card);</b>
+&nbsp;
+&nbsp;            // se la building card appena aggiunta è BUILDING1,
+&nbsp;            // allinea minSetCompleted ai set già completati così non li conta retroattivamente
+<b class="nc">&nbsp;            if (card.getType().equals(BuildingType.BUILDING1)) {</b>
+<b class="nc">&nbsp;                minSetCompleted = minCardSet();</b>
+&nbsp;            }
+&nbsp;
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            System.out.println(e.getMessage());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    //METODI ADD E REMOVE PP E FOOD
+&nbsp;    public void addFood(int numFood) {
+<b class="nc">&nbsp;        this.numFood += numFood;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void addPP(int numPP) {
+<b class="nc">&nbsp;        this.numPP += numPP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void removeFood(int numFood) {
+<b class="nc">&nbsp;        this.numFood -= numFood;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public void removePP(int numPP) {
+<b class="nc">&nbsp;        this.numPP -= numPP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    //METODI GET
+&nbsp;    public String getNickname() {
+<b class="nc">&nbsp;        return nickname;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;BuildingCard&gt; getBuildings() {
+<b class="nc">&nbsp;        return buildings;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNumPP() {
+<b class="fc">&nbsp;        return numPP;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int getNumFood() {
+<b class="fc">&nbsp;        return numFood;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Shaman&gt; getShamansList() {
+<b class="nc">&nbsp;        return shamanList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Hunter&gt; getHuntersList() {
+<b class="nc">&nbsp;        return hunterList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Inventor&gt; getInventorsList() {
+<b class="nc">&nbsp;        return inventorList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Builder&gt; getBuildersList() {
+<b class="fc">&nbsp;        return builderList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Collector&gt; getCollectorsList() {
+<b class="nc">&nbsp;        return collectorList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;Artist&gt; getArtistsList() {
+<b class="fc">&nbsp;        return artistList;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public List&lt;BuildingCard&gt; getShamanBuildings() {
+<b class="nc">&nbsp;        return this.buildings;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    public int playerDeckSize() {
+<b class="nc">&nbsp;        return shamanList.size() + hunterList.size() + artistList.size() + inventorList.size() + builderList.size() + collectorList.size();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    //DA RIVEDERE PERCHE buildings CONTIENE BUILDINGCARD NON BUILDINGTYPE QUINDI FARE FOR E CONTROLLARE ATTRIBUTO TYPE
+&nbsp;    public Boolean hasBuilding(BuildingType type) {
+<b class="pc">&nbsp;        for (BuildingCard bc : buildings) {</b>
+<b class="nc">&nbsp;            if (bc.type.equals(type)) { return true; }</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    //metodo per contare il totale di stelle possedute guardando gli sciamani nel mio deck (serve x rituale sciamanico)
+&nbsp;    //considera anche l&#39;aggiunta di 3 stelle finali se si ha edificio 6
+&nbsp;    public int countShamanStars() {
+<b class="nc">&nbsp;        int totalStars = 0;</b>
+<b class="nc">&nbsp;        for (Shaman s : shamanList) {</b>
+<b class="nc">&nbsp;            totalStars += s.getNumStars();</b>
+&nbsp;        }
+<b class="nc">&nbsp;        if (hasBuilding(BuildingType.BUILDING6)) {</b>
+<b class="nc">&nbsp;            totalStars += 3;</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return totalStars;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    // mi serve per effetto dell&#39;edificio 1 e dell&#39;edificio 11 per trovarmi la minima occorrenza di carte comune per ogni lista (3 carte per ogni lista = 3 set completi)
+&nbsp;    public int minCardSet() {
+<b class="nc">&nbsp;        return Collections.min(Arrays.asList(</b>
+<b class="nc">&nbsp;                shamanList.size(),</b>
+<b class="nc">&nbsp;                hunterList.size(),</b>
+<b class="nc">&nbsp;                artistList.size(),</b>
+<b class="nc">&nbsp;                collectorList.size(),</b>
+<b class="nc">&nbsp;                builderList.size(),</b>
+<b class="nc">&nbsp;                inventorList.size()</b>
+&nbsp;        ));
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2026-03-22 20:31</div>
+</div>
+</body>
+</html>

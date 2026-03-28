@@ -8,10 +8,10 @@ public class ShamanRitualEventCard extends EventCard {
     private int maxPP;
     private int minPP;
 
-    public ShamanRitualEventCard(int maxPP, int minPP,int era) {
+    public ShamanRitualEventCard(int id, int era,int maxPP, int minPP) {
+        super(id,era);
         this.maxPP = maxPP;
         this.minPP = minPP;
-        this.era = era;
     }
 
     @Override
