@@ -1,0 +1,23 @@
+package it.polimi.ingsw.am55.MesosModel.Effect;
+import it.polimi.ingsw.am55.MesosModel.*;
+//cacciatori
+public class Hunter extends CharacterCard {
+    private Boolean icon;
+
+    public Hunter(Boolean icon,int era) {
+        this.icon = icon;
+        this.era= era;
+    }
+
+    public void addToPlayer(Player player) {
+        //player.getHuntersList().add(this);
+        player.addTribeCard(this);
+    }
+    public int countSameTypeIn(Player player) {
+        return player.getHuntersList().size(); // so che sono un Hunter, conto gli Hunter
+    }
+
+    public Boolean getIcon() {
+        return icon;
+    }
+}

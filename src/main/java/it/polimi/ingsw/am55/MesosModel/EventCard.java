@@ -1,0 +1,18 @@
+package it.polimi.ingsw.am55.MesosModel;
+
+import java.util.List;
+
+public class EventCard extends TribeCard {
+    private int numPlayer;
+    //metodo da overridare negli eventi specifici per attivare l'effetto proprio
+    public void activateEvent(List<Player> players) {}
+
+    //metodi per
+    public void addInRightRow(Row upperRow, Row lowerRow){
+        upperRow.addEventCard(this);
+    }
+
+    public void addInRightList(Row row){
+        row.addEventCard(this);
+    }
+}
