@@ -3,15 +3,17 @@ import it.polimi.ingsw.am55.MesosModel.*;
 //inventori
 public class Inventor extends CharacterCard {
     private String iconInvention;
+    //final CharacterType type = CharacterType.INVENTOR;
 
     public void addToPlayer(Player player) {
         //player.getInventorsList().add(this);
         player.addTribeCard(this);
     }
 
-    public Inventor(String iconInvention,int era) {
+    public Inventor(String iconInvention, int id, int era) {
+        super(id, era);
         this.iconInvention = iconInvention;
-        this.era= era;
+        //this.era= era;
     }
 
     public int countSameTypeIn(Player player) {

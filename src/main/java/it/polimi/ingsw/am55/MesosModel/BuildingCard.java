@@ -33,6 +33,18 @@ public class BuildingCard extends Card {
         row.getBuildingCardsList().removeBuildingCard(this);
     }
 
+    public int bonusCharType(Player p) {
+        int ris = 0;
 
+        switch (CharType) {
+            case SHAMAN -> ris = p.sizeShamans();
+            case HUNTER -> ris = p.sizeHunters();
+            case INVENTOR -> ris = p.sizeInventors();
+            case COLLECTOR -> ris = p.sizeCollectors();
+            case BUILDER -> ris = p.sizeBuilders();
+            case ARTIST -> ris = p.sizeArtists();
+        }
+        return ris;
+    }
 
 }

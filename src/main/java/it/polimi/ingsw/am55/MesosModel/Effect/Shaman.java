@@ -3,10 +3,12 @@ import it.polimi.ingsw.am55.MesosModel.*;
 //sciamani
 public class Shaman extends CharacterCard {
     private int numStars;
+    //final CharacterType type = CharacterType.SHAMAN;
 
-    public Shaman(int numStars,int era) {
+    public Shaman(int id, int numStars, int era) {
+        super(id, era);
         this.numStars = numStars;
-        this.era = era;
+        //this.era = era;
     }
 
     @Override

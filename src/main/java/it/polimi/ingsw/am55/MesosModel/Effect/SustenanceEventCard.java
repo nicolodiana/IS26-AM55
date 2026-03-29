@@ -35,7 +35,7 @@ public class SustenanceEventCard extends EventCard {
 
             // 2) Calcolo lo sconto totale dato dai Collector.
             // Ogni Collector sconta 3 cibi.
-            int collectorDiscount = p.getCollectorsList().size() * 3;
+            int collectorDiscount = p.sizeCollectors() * 3;
 
             // 3) Eventuale bonus/sconto dato dall'edificio 2.
             // Qui sto assumendo che BUILDING2 riduca il costo di 1 cibo.
@@ -46,7 +46,8 @@ public class SustenanceEventCard extends EventCard {
             if (p.hasBuilding(BuildingType.BUILDING2)) {
                 for (BuildingCard bc : p.getBuildings()) {
                     if (bc.getType().equals(BuildingType.BUILDING2)) {
-                        building2Discount = bc.getCharacterForED().countSameTypeIn(p);
+                        //building2Discount = bc.getCharacterForED().countSameTypeIn(p);
+                        building2Discount = bc.bonusCharType(p);
                         break;
                     }
                 }

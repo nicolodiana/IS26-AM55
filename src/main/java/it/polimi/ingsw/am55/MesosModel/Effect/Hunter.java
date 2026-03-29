@@ -3,10 +3,12 @@ import it.polimi.ingsw.am55.MesosModel.*;
 //cacciatori
 public class Hunter extends CharacterCard {
     private Boolean icon;
+    //final CharacterType type = CharacterType.COLLECTOR;
 
-    public Hunter(Boolean icon,int era) {
+    public Hunter(int id, Boolean icon, int era) {
+        super(id, era);
         this.icon = icon;
-        this.era= era;
+        //this.era= era;
     }
 
     public void addToPlayer(Player player) {

@@ -27,7 +27,7 @@ public class PaintingsEventCard extends EventCard {
     @Override
     public void activateEvent(List<Player> players) {
         for (Player p : players) {
-            int counterArtist = p.getArtistsList().size();
+            int counterArtist = p.sizeArtists();
 
             // l'evento si applica solo se il player ha almeno minArtist artisti
             if (counterArtist < minArtist) {

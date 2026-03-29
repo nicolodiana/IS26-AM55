@@ -226,4 +226,12 @@ public class Player {
                 inventorList.size()
         ));
     }
+
+    //METODI SIZE
+    public int sizeShamans() { return shamanList.size(); }
+    public int sizeHunters() { return hunterList.size(); }
+    public int sizeArtists() { return artistList.size(); }
+    public int sizeBuilders() { return builderList.size(); }
+    public int sizeCollectors() { return collectorList.size(); }
+    public int sizeInventors() { return inventorList.size(); }
 }
