@@ -5,6 +5,7 @@ import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import java.util.*;
 
 public class Player {
+    private String id;
     private final String nickname;
     private String totem;
     private int numPP;
@@ -23,6 +24,7 @@ public class Player {
     private int minSetCompleted;
 
     public Player(String nickname, String totem, String summaryCard) {
+        this.id = UUID.randomUUID().toString();
         this.nickname = nickname;
         this.totem = totem;
         this.summaryCard = summaryCard;
