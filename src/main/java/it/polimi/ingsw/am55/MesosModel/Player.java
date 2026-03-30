@@ -19,7 +19,7 @@ import java.util.*;
  *
  */
 public class Player {
-    private String id;
+    private final String id;
     private final String nickname;
     private String totem;
     private int numPP;

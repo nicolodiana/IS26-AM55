@@ -14,7 +14,7 @@ import java.util.UUID;
  * the current round, and the set of winners (if any).
  */
 public class Game {
-    private String id;
+    private final String id;
     private List<Player> players;
     private Player currentPlayer;
     private Board sharedBoard;
