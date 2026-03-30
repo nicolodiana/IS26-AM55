@@ -7,14 +7,36 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
-
+/**
+ * DESCRIPTION: Represents the deck of tribe cards used during the game.
+ * This class is responsible for creating, initializing, and managing the full
+ * set of {@link TribeCard} instances according to the number of players.
+ * The deck is composed of cards from Era 1, Era 2, Era 3, and a small set of
+ * final event cards. Each era is generated separately and shuffled before being
+ * added to the main stack.
+ * Once initialized, cards can be drawn from the top of the deck through
+ * {@link #getNextCard()}.
+ */
 public class TribeDeck {
     private Stack<TribeCard> tribeCardStack;
-
+    /**
+     * Creates an empty tribe deck.
+     * The deck must be initialized later through {@link #initTribeDeck(int)}
+     * before cards can be drawn.
+     */
     public TribeDeck() {
         tribeCardStack = new Stack<>();
     }
-
+    /**
+     * Initializes the tribe deck according to the number of players.
+     * The method fills the deck by adding:
+     *     final event cards,
+     *     Era 3 cards,
+     *     Era 2 cards,
+     *     Era 1 cards.
+     * Each group of cards is shuffled before being added to the stack.
+     * @param numPlayer the number of players in the game
+     */
     public void initTribeDeck(int numPlayer){
 
         tribeCardStack.addAll(createFinalEventCards(numPlayer));
@@ -22,8 +44,13 @@ public class TribeDeck {
         tribeCardStack.addAll(createAllCardsEra2(numPlayer));
         tribeCardStack.addAll(createAllCardsEra1(numPlayer));
     }
-
-    //create all the character and event Card
+    /**
+     * Creates all Era 1 cards for the given number of players.
+     * The base set for two players is always included, and additional cards
+     * are added for games with more players.
+     * @param numPlayer the number of players
+     * @return a shuffled list containing all Era 1 cards
+     */
     private List<TribeCard> createAllCardsEra1(int numPlayer) {
         List<TribeCard> allCardsEra1 = new ArrayList<>();
         switch (numPlayer) {
@@ -69,6 +96,13 @@ public class TribeDeck {
         Collections.shuffle(allCardsEra1);
         return allCardsEra1;
     }
+    /**
+     * Creates all Era 2 cards for the given number of players.
+     * The base set for two players is always included, and extra cards are
+     * added depending on the number of players.
+     * @param numPlayer the number of players
+     * @return a shuffled list containing all Era 2 cards
+     */
     private List<TribeCard> createAllCardsEra2(int numPlayer) {
         List<TribeCard> allCardsEra2 = new ArrayList<>();
         switch (numPlayer) {
@@ -109,6 +143,13 @@ public class TribeDeck {
         Collections.shuffle(allCardsEra2);
         return allCardsEra2;
     }
+    /**
+     * Creates all Era 3 cards for the given number of players.
+     * The base set for two players is always included, and extra cards are
+     * added depending on the number of players.
+     * @param numPlayer the number of players
+     * @return a shuffled list containing all Era 3 cards
+     */
     private List<TribeCard> createAllCardsEra3(int numPlayer) {
         List<TribeCard> allCardsEra3 = new ArrayList<>();
         switch (numPlayer) {
@@ -148,6 +189,11 @@ public class TribeDeck {
         Collections.shuffle(allCardsEra3);
         return allCardsEra3;
     }
+    /**
+     * Adds the complete Era 1 base card set for a two-player game to the given list.
+     *
+     * @param allCards the list that will receive the Era 1 cards
+     */
     private void createCardTwoPlayersEra1(List<TribeCard> allCards) {
         allCards.add(new Hunter(1,true, 1));
         allCards.add(new Hunter(2,true, 1));
@@ -171,7 +217,11 @@ public class TribeDeck {
         allCards.add(new PaintingsEventCard(20,1,2,1,1,0,1));
         allCards.add(new HuntEventCard(21,1, 1));
     }
-
+    /**
+     * Adds the complete Era 2 base card set for a two-player game to the given list.
+     *
+     * @param allCards the list that will receive the Era 1 cards
+     */
     public void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
         allCards.add(new Hunter(34,true, 2));
         allCards.add(new Hunter(35,false, 2));
@@ -195,6 +245,11 @@ public class TribeDeck {
         allCards.add(new SustenanceEventCard(53,2, 2));
         allCards.add(new PaintingsEventCard(54,2,2,2,2,1,0));
     }
+    /**
+     * Adds the complete Era 3 base card set for a two-player game to the given list.
+     *
+     * @param allCards the list that will receive the Era 1 cards
+     */
     private void createCardTwoPlayersEra3(List<TribeCard> allCards){
         allCards.add(new Inventor("Bread", 65,3));
         allCards.add(new Inventor("Fish Hook",66, 3));
@@ -216,6 +271,13 @@ public class TribeDeck {
         allCards.add(new PaintingsEventCard(82,3,3,2,3,2,0));
         allCards.add(new HuntEventCard(83,3, 3));
     }
+    /**
+     * Creates the final event cards that are placed in the deck.
+     * These cards represent the final events of the game and are shuffled
+     * before being returned.
+     * @param numPlayer the number of players in the game
+     * @return a shuffled list containing the final event cards
+     */
     private List<TribeCard> createFinalEventCards(int numPlayer) {
         List<TribeCard> finalEventCards = new ArrayList<>();
         finalEventCards.add(new SustenanceEventCard(95,3,3));
@@ -223,7 +285,10 @@ public class TribeDeck {
         Collections.shuffle(finalEventCards);
         return finalEventCards;
     }
-
+    /**
+     * Draws and returns the next card from the top of the deck.
+     * @return the next {@link TribeCard} in the deck
+     */
     public TribeCard getNextCard() {
         return tribeCardStack.pop();
     }
