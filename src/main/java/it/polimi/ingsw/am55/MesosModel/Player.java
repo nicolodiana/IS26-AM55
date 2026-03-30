@@ -3,7 +3,21 @@ package it.polimi.ingsw.am55.MesosModel;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 
 import java.util.*;
-
+/**
+ * DESCRIPTION: Represents a player in the game.
+ * This class stores the full state of a player, including identification data,
+ * resources, selected cards, owned tribe characters, constructed buildings,
+ * and auxiliary values used to resolve game effects.
+ * A Player keeps track of:
+ *     The player's identity and personal information,
+ *     victory or prestige-related resources and food,
+ *     selected cards from the upper and lower rows,
+ *     owned tribe cards grouped by character type,
+ *     owned building cards and effect-related counters.
+ * The first part of the class provides basic initialization, getters, and
+ * resource management methods.
+ *
+ */
 public class Player {
     private String id;
     private final String nickname;
@@ -22,7 +36,15 @@ public class Player {
     private List<BuildingCard> buildings;
     private Map<CharacterType, List<CharacterCard>> buildingsByCharacterType;
     private int minSetCompleted;
-
+    /**
+     * Creates a new player with the given nickname, totem, and summary card.
+     * A random unique identifier is generated automatically. Resources and card
+     * selection counters are initialized to zero.
+     *
+     * @param nickname the nickname of the player
+     * @param totem the totem assigned to the player
+     * @param summaryCard the summary card assigned to the player
+     */
     public Player(String nickname, String totem, String summaryCard) {
         this.id = UUID.randomUUID().toString();
         this.nickname = nickname;
@@ -34,36 +56,74 @@ public class Player {
         this.lowerRowCardSelected = 0;
         this.minSetCompleted = 0;
     }
-
+    /**
+     * Returns the player's nickname.
+     * @return the nickname of the player
+     */
     public String getNickname() {
         return nickname;
     }
+    /**
+     * Returns the current amount of player points.
+     * @return the player's current points
+     */
     public int getNumPP() {
         return numPP;
     }
+
+    /**
+     * Returns the current amount of food.
+     * @return the player's current food
+     */
     public int getNumFoods() {
         return numFoods;
     }
+    /**
+     * Returns the player's totem.
+     * @return the player's totem
+     */
     public String getTotem() {
         return totem;
     }
-
+    /**
+     * Decreases the player's points by the specified amount.
+     * @param amount the amount of points to spend
+     * @throws IllegalArgumentException if {@code amount} is negative
+     */
     public void payPP(int amount){
-        if(amount<0) throw new IllegalArgumentException("Amount is negative");
+        if(amount < 0) throw new IllegalArgumentException("Amount is negative");
         numPP = numPP - amount;
     }
+
+    /**
+     * Increases the player's points by the specified amount.
+     * @param amount the amount of points to add
+     * @throws IllegalArgumentException if {@code amount} is negative
+     */
     public void addPP(int amount){
-        if(amount<0) throw new IllegalArgumentException("Amount is negative");
+        if(amount < 0) throw new IllegalArgumentException("Amount is negative");
         numPP = numPP + amount;
     }
+
+    /**
+     * Increases the player's food by the specified amount.
+     * @param amount the amount of food to add
+     * @throws IllegalArgumentException if  amount is negative
+     */
     public void addFood(int amount){
-        if(amount<0) throw new IllegalArgumentException("Amount is negative");
-        numFoods+=amount;
+        if(amount < 0) throw new IllegalArgumentException("Amount is negative");
+        numFoods += amount;
     }
+    /**
+     * Decreases the player's food by the specified amount.
+     * @param amount the amount of food to pay
+     * @throws IllegalArgumentException if  amount is negative
+     */
     public void payFood(int amount){
-        if(amount<0) throw new IllegalArgumentException("Amount is negative");
+        if(amount < 0) throw new IllegalArgumentException("Amount is negative");
         numFoods = numFoods - amount;
     }
+
     public int getUpperRowCardSelected() {
         return upperRowCardSelected;
     }
