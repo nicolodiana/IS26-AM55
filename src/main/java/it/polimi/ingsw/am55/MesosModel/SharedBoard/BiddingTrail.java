@@ -1,4 +1,7 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.SharedBoard;
+
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -22,8 +25,13 @@ public class BiddingTrail {
     private List<BiddingTicket> createAllBiddingTicket() {
         List<BiddingTicket> allBiddingTicket = new ArrayList<>();
 
-        //gonna add all the "new" for creating the new cards
-
+        allBiddingTicket.add(new BiddingTicket(3,0,0,2,'A'));
+        allBiddingTicket.add(new BiddingTicket(0,0,1,2,'B'));
+        allBiddingTicket.add(new BiddingTicket(0,0,1,2,'C'));
+        allBiddingTicket.add(new BiddingTicket(0,2,0,3,'D'));
+        allBiddingTicket.add(new BiddingTicket(0,1,1,2,'E'));
+        allBiddingTicket.add(new BiddingTicket(0,0,2,2,'F'));
+        allBiddingTicket.add(new BiddingTicket(0,1,2,4,'G'));
         return allBiddingTicket;
     }
     private List<BiddingTicket> setUpBiddingTrail(List<BiddingTicket> allBiddingTicket, int numPlayer) {
