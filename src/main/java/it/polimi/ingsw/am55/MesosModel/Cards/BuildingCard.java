@@ -1,24 +1,29 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.Cards;
+
+import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
+import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.MesosModel.SharedBoard.Row;
 
 public class BuildingCard extends Card {
     private int foodCost;
     private int numOfPP;
     BuildingType type;
-    private CharacterType CharType; // Il personaggio da contare lo inserisco generico Card, poi a runtime capirà cosa è (avrà valore diverso da null) solo se e una building edificio 2 o 12
+    private CharacterType CharType;// Il personaggio da contare lo inserisco generico Card, poi a runtime capirà cosa è (avrà valore diverso da null) solo se e una building edificio 2 o 12
+    private int effectPP;
 
-    public BuildingCard(int id, int era, int foodCost, int numOfPP, BuildingType type, CharacterType CharType) {
+    public BuildingCard(int id, int era, int foodCost, int numOfPP, BuildingType type, CharacterType CharType, int effectPP) {
         super(id,era);
         this.foodCost = foodCost;
         this.numOfPP = numOfPP;
         this.type = type;
         this.CharType = CharType;
+        this.effectPP = effectPP;
     }
     //devo gestire il caso se non ne ha abbastanza
     public void addToPlayer(Player player) {
         player.addTribeCard(this);
     }
-
-
 
     public BuildingType getType() {
         return type;

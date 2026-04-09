@@ -1,4 +1,6 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.Cards;
+
+import it.polimi.ingsw.am55.MesosModel.SharedBoard.Row;
 
 public abstract class  TribeCard extends Card {
 

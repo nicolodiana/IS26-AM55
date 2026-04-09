@@ -1,5 +1,6 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.Decks;
 
+import it.polimi.ingsw.am55.MesosModel.Cards.TribeCard;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 
 import java.util.ArrayList;
@@ -222,7 +223,7 @@ public class TribeDeck {
      *
      * @param allCards the list that will receive the Era 1 cards
      */
-    public void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
+    private void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
         allCards.add(new Hunter(34,true, 2));
         allCards.add(new Hunter(35,false, 2));
         allCards.add(new Hunter(36,false, 2));
@@ -291,5 +292,9 @@ public class TribeDeck {
      */
     public TribeCard getNextCard() {
         return tribeCardStack.pop();
+    }
+
+    public boolean isEmpty() {
+        return tribeCardStack.isEmpty();
     }
 }

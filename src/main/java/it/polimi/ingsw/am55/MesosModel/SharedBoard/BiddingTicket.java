@@ -1,6 +1,8 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
 
+import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 public class BiddingTicket {
     private final int foodBonus;
@@ -11,7 +13,7 @@ public class BiddingTicket {
     private boolean isTaken;
     private Player player;
 
-    private BiddingTicket(int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement){
+    public BiddingTicket(int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement){
         this.foodBonus = foodBonus;
         this.chooseLowerCard = chooseLowerCard;
         this.chooseUpperCard = chooseUpperCard;
@@ -44,15 +46,20 @@ public class BiddingTicket {
         return isTaken;
     }
 
-    public void setIsTaken(boolean isTaken) {
+    /*public void setIsTaken(boolean isTaken) {
         this.isTaken = isTaken;
-    }
+    }*/
     public void setPlayer(Player player){
-        this.player = player;
-        setIsTaken(true);
+        if(this.player == null){
+            this.player = player;
+            isTaken=true;
+        }else{
+            throw new BiddingTicketIsTaken("The bidding ticket has already been taken");
+        }
     }
     public void removePlayer(){
         player = null;
+        isTaken=false;
     }
 
 

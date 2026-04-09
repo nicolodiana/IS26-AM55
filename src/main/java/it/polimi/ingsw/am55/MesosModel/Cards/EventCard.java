@@ -1,4 +1,7 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.Cards;
+
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.MesosModel.SharedBoard.Row;
 
 import java.util.List;
 
@@ -20,4 +23,6 @@ public class EventCard extends TribeCard {
     public void addInRightList(Row row){
         row.addEventCard(this);
     }
+
+    public void setOrder(List<EventCard> events, int index){};
 }

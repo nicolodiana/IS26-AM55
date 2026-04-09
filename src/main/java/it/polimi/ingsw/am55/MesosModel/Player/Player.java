@@ -1,6 +1,11 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.Player;
 
+import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
+import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
+import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
+import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
+import it.polimi.ingsw.am55.MesosModel.Game.Game;
 
 import java.util.*;
 /**
@@ -57,6 +62,13 @@ public class Player {
         this.minSetCompleted = 0;
     }
     /**
+     * This method allows a player to create a new game if that player is creator
+     * @param numPlayers the numbers of player in a game, it must be 2-5
+     * **/
+    public Game createGame(int numPlayers){
+        return new Game(numPlayers);
+    }
+    /**
      * Returns the player's nickname.
      * @return the nickname of the player
      */
@@ -87,7 +99,7 @@ public class Player {
     }
     /**
      * Decreases the player's points by the specified amount.
-     * @param amount the amount of points to spend
+     * @param amount the amount of points to spend, it must be zero or greater than zero
      * @throws IllegalArgumentException if {@code amount} is negative
      */
     public void payPP(int amount){
@@ -97,7 +109,7 @@ public class Player {
 
     /**
      * Increases the player's points by the specified amount.
-     * @param amount the amount of points to add
+     * @param amount the amount of points to add, it must be zero or greater than zero
      * @throws IllegalArgumentException if {@code amount} is negative
      */
     public void addPP(int amount){
@@ -107,7 +119,7 @@ public class Player {
 
     /**
      * Increases the player's food by the specified amount.
-     * @param amount the amount of food to add
+     * @param amount the amount of food to add, it must be zero or greater than zero
      * @throws IllegalArgumentException if  amount is negative
      */
     public void addFood(int amount){
@@ -116,7 +128,7 @@ public class Player {
     }
     /**
      * Decreases the player's food by the specified amount.
-     * @param amount the amount of food to pay
+     * @param amount the amount of food to pay, it must be zero or greater than zero.
      * @throws IllegalArgumentException if  amount is negative
      */
     public void payFood(int amount){
@@ -259,7 +271,7 @@ public class Player {
 
     public boolean hasBuilding(BuildingType type) {
         for (BuildingCard bc : buildings) {
-            if (bc.type.equals(type)) return true;
+            if (bc.getType().equals(type)) return true;
         }
         return false;
     }

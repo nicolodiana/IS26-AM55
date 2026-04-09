@@ -1,5 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
-import it.polimi.ingsw.am55.MesosModel.*;
+import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
+
 //raccoglitori
 public class Collector extends CharacterCard {
     final private int foodDiscount = 3;

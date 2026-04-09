@@ -1,32 +1,33 @@
 package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
+import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class BiddingTrail {
     private List<BiddingTicket> ticketList;
 
-    public BiddingTrail(){
+    public BiddingTrail() {
         ticketList = new ArrayList<BiddingTicket>();
     }
 
-    public void initBiddingTrail(int numPlayers){
-        ticketList = setUpBiddingTrail( createAllBiddingTicket(), numPlayers);
+    public void initBiddingTrail(int numPlayers) {
+        ticketList = setUpBiddingTrail(createAllBiddingTicket(), numPlayers);
     }
 
-    public List<BiddingTicket> getTicketList(){
+    /*public List<BiddingTicket> getTicketList() {
         return ticketList;
-    }
-
+    }*/
     //create all the bidding Ticket
     private List<BiddingTicket> createAllBiddingTicket() {
         List<BiddingTicket> allBiddingTicket = new ArrayList<>();
 
-        allBiddingTicket.add(new BiddingTicket(3,0,0,2,'A'));
-        allBiddingTicket.add(new BiddingTicket(0,0,1,2,'B'));
+        allBiddingTicket.add(new BiddingTicket(3,0,0,5,'A'));
+        allBiddingTicket.add(new BiddingTicket(0,1,0,2,'B'));
         allBiddingTicket.add(new BiddingTicket(0,0,1,2,'C'));
         allBiddingTicket.add(new BiddingTicket(0,2,0,3,'D'));
         allBiddingTicket.add(new BiddingTicket(0,1,1,2,'E'));
@@ -36,52 +37,91 @@ public class BiddingTrail {
     }
     private List<BiddingTicket> setUpBiddingTrail(List<BiddingTicket> allBiddingTicket, int numPlayer) {
         //select only the biddinTicket needed and set them by TrailPlacement
-        for (BiddingTicket biddingTicket : allBiddingTicket) {
-            if (biddingTicket.getNumPlayer() <= numPlayer){
+        return allBiddingTicket.stream()
+                .filter(b->b.getNumPlayer()<=numPlayer)
+                .sorted(Comparator.comparing(BiddingTicket::getTrailPlacement))
+                .toList();
+
+        /*for (BiddingTicket biddingTicket : allBiddingTicket) {
+            if (biddingTicket.getNumPlayer() <= numPlayer) {
                 ticketList.add(biddingTicket);
             }
         }
         ticketList.sort(Comparator.comparing(BiddingTicket::getTrailPlacement));
-        return ticketList;
+        return ticketList;*/
     }
 
-    public void movePlayerToBiddingTrail(Player player, int index){
+    /*public void movePlayerToBiddingTrail(Player player, int index) {
         ticketList.get(index).setPlayer(player);
-    }
+    }*/
 
-    public Player nextPlayerSecondPhase(Player currentPlayer, int numPlayers){
+    public Optional<Player> nextPlayerSecondPhase(Player currentPlayer) {
 
-        for (int i = getPlayerPositionOnTrail(currentPlayer) +1; i < ticketList.size(); i++) {
+        for (int i = getPlayerPositionOnTrail(currentPlayer) + 1; i < ticketList.size(); i++) {
             if (ticketList.get(i).getIsTaken()) {
-                return ticketList.get(i).getPlayer();
+                return Optional.of(ticketList.get(i).getPlayer());
             }
         }
-        return null;
+        return Optional.empty();
     }
 
-    public int getPlayerPositionOnTrail(Player player){
-        int i=0;
-        while (true){
-            if (ticketList.get(i).getPlayer() == player && ticketList.get(i).getIsTaken()){
+    public int getPlayerPositionOnTrail(Player player) {
+        int i = 0;
+        while (true) {
+            if (ticketList.get(i).getPlayer() == player && ticketList.get(i).getIsTaken()) {
                 return i;
             }
             i++;
         }
     }
 
-    public void clearBiddingTrail(){
+    /*public void clearBiddingTrail() {
         for (BiddingTicket biddingTicket : ticketList) {
-            biddingTicket.setIsTaken(false);
+            setIsTaken(ticketList.indexOf(biddingTicket), false);
         }
-    }
+    }*/
 
-    public Player getFirstPlayerSecondPhase(){
+    public Player getFirstPlayerSecondPhase() {
         for (int i = 0; i < ticketList.size(); i++) {
-            if (ticketList.get(i).getIsTaken()) {
+            if (getIsTaken(i)) {
                 return ticketList.get(i).getPlayer();
             }
         }
-        return null;
+        throw new IllegalStateException("No player found");
     }
 
+    public boolean getIsTaken(int index) {
+        return ticketList.get(index).getIsTaken();
+    }
+
+    /*private void setIsTaken(int index, boolean taken) {
+        ticketList.get(index).setIsTaken(taken);
+    }*/
+
+    public void setPlayer(int index, Player player) throws BiddingTicketIsTaken,IndexOutOfBoundsException {
+        if(index<0 || index>ticketList.size()-1){
+            throw new  IndexOutOfBoundsException("The current index doesn't exits");
+        }else{
+            ticketList.get(index).setPlayer(player);
+        }
+    }
+
+    /*public int getFoodBonus(Player player){
+        int index = getPlayerPositionOnTrail(player);
+        return ticketList.get(index).getFoodBonus();
+    }*/
+
+    public int getChooseUpperCard(Player player){
+        int index = getPlayerPositionOnTrail(player);
+        return ticketList.get(index).getChooseUpperCard();
+    }
+
+    public int getChooseLowerCard(Player player){
+        int index = getPlayerPositionOnTrail(player);
+        return ticketList.get(index).getChooseLowerCard();
+    }
+
+    public void removePlayer(Player player){
+        ticketList.get(getPlayerPositionOnTrail(player)).removePlayer();
+    }
 }

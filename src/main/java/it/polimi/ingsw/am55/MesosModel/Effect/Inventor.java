@@ -1,5 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
-import it.polimi.ingsw.am55.MesosModel.*;
+import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
+
 //inventori
 public class Inventor extends CharacterCard {
     private String iconInvention;

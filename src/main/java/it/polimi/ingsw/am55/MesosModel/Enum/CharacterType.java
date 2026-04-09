@@ -1,4 +1,4 @@
-package it.polimi.ingsw.am55.MesosModel;
+package it.polimi.ingsw.am55.MesosModel.Enum;
 
 public enum CharacterType {
     HUNTER,

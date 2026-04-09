@@ -1,5 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
-import it.polimi.ingsw.am55.MesosModel.*;
+import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 public class Builder extends CharacterCard {
     int numPP;
