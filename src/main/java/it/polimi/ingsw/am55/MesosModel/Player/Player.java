@@ -32,13 +32,13 @@ public class Player {
     private String summaryCard;
     private int upperRowCardSelected;
     private int lowerRowCardSelected;
-    private List<Shaman> shamanList;
+    private List<Shaman> shamanList = new ArrayList<>();
     private List<Hunter> hunterList = new ArrayList<>();
     private List<Artist> artistList = new ArrayList<>();
     private List<Collector> collectorList = new ArrayList<>();
     private List<Builder> builderList = new ArrayList<>();
     private List<Inventor> inventorList = new ArrayList<>();
-    private List<BuildingCard> buildings;
+    private List<BuildingCard> buildings = new ArrayList<>();
     private Map<CharacterType, List<CharacterCard>> buildingsByCharacterType;
     private int minSetCompleted;
     /**
