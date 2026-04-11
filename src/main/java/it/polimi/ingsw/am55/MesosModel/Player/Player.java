@@ -54,6 +54,15 @@ public class Player {
         this.lowerRowCardSelected = 0;
         this.minSetCompleted = 0;
 
+        this.shamanList = new ArrayList<>();
+        this.hunterList = new ArrayList<>();
+        this.artistList = new ArrayList<>();
+        this.collectorList = new ArrayList<>();
+        this.builderList = new ArrayList<>();
+        this.inventorList = new ArrayList<>();
+        this.buildings = new ArrayList<>();
+
+        this.characterLists = new EnumMap<>(CharacterType.class);
         characterLists.put(CharacterType.SHAMAN, shamanList);
         characterLists.put(CharacterType.HUNTER, hunterList);
         characterLists.put(CharacterType.ARTIST, artistList);

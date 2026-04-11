@@ -36,7 +36,7 @@ public class BuildingCard extends Card {
         }
         return 0;
     }
-    //devo gestire il caso se non ne ha abbastanza
+
     public void addToPlayer(Player player) {
         player.addTribeCard(this);
     }

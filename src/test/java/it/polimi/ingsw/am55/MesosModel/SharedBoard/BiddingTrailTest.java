@@ -2,7 +2,6 @@ package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;

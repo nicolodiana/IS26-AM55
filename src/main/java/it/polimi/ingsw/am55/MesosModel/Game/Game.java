@@ -239,7 +239,7 @@ public class Game implements GameModelInterface{
     /**
      * Changes the game's state
      * **/
-    private void changeState(GameState newState){
+    public void changeState(GameState newState){
         this.state=newState;
     }
     /**

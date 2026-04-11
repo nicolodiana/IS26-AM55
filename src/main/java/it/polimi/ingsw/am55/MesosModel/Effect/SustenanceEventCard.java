@@ -1,7 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
 import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
 import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
-import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 import java.util.List;

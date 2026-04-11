@@ -7,7 +7,6 @@ import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.CardType;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.CannotPickEventCard;
-import it.polimi.ingsw.am55.MesosModel.Exceptions.CantPickFromRow;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 import java.util.ArrayList;
