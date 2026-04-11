@@ -24,32 +24,25 @@ import java.util.*;
  *
  */
 public class Player {
-    private final String id;
     private final String nickname;
+    private final String id;
     private String totem;
     private int numPP;
     private int numFoods;
     private String summaryCard;
     private int upperRowCardSelected;
     private int lowerRowCardSelected;
-    private List<Shaman> shamanList = new ArrayList<>();
+    private List<Shaman> shamanList;
     private List<Hunter> hunterList = new ArrayList<>();
     private List<Artist> artistList = new ArrayList<>();
     private List<Collector> collectorList = new ArrayList<>();
     private List<Builder> builderList = new ArrayList<>();
     private List<Inventor> inventorList = new ArrayList<>();
-    private List<BuildingCard> buildings = new ArrayList<>();
-    private Map<CharacterType, List<CharacterCard>> buildingsByCharacterType;
+    private List<BuildingCard> buildings;
+    //mappa che serve per mappare i charactertype con liste associate (per effetto building 2 e 12)
+    private Map<CharacterType, List<? extends CharacterCard>> characterLists;
     private int minSetCompleted;
-    /**
-     * Creates a new player with the given nickname, totem, and summary card.
-     * A random unique identifier is generated automatically. Resources and card
-     * selection counters are initialized to zero.
-     *
-     * @param nickname the nickname of the player
-     * @param totem the totem assigned to the player
-     * @param summaryCard the summary card assigned to the player
-     */
+
     public Player(String nickname, String totem, String summaryCard) {
         this.id = UUID.randomUUID().toString();
         this.nickname = nickname;
@@ -60,7 +53,15 @@ public class Player {
         this.upperRowCardSelected = 0;
         this.lowerRowCardSelected = 0;
         this.minSetCompleted = 0;
+
+        characterLists.put(CharacterType.SHAMAN, shamanList);
+        characterLists.put(CharacterType.HUNTER, hunterList);
+        characterLists.put(CharacterType.ARTIST, artistList);
+        characterLists.put(CharacterType.INVENTOR, inventorList);
+        characterLists.put(CharacterType.BUILDER, builderList);
+        characterLists.put(CharacterType.COLLECTOR, collectorList);
     }
+
     /**
      * This method allows a player to create a new game if that player is creator
      * @param numPlayers the numbers of player in a game, it must be 2-5
@@ -288,8 +289,9 @@ public class Player {
     }
     //metodo per sapere il conteggio in base al tipo di personaggio: SERVE PER EDIFICIO 2,12
     public int countByTypeforED(CharacterType type) {
-        return buildingsByCharacterType.get(type).size();
+        return characterLists.get(type).size();
     }
+
     public int minCardSet() {
         return Collections.min(Arrays.asList(
                 shamanList.size(),
@@ -300,12 +302,4 @@ public class Player {
                 inventorList.size()
         ));
     }
-
-    //METODI SIZE
-    public int sizeShamans() { return shamanList.size(); }
-    public int sizeHunters() { return hunterList.size(); }
-    public int sizeArtists() { return artistList.size(); }
-    public int sizeBuilders() { return builderList.size(); }
-    public int sizeCollectors() { return collectorList.size(); }
-    public int sizeInventors() { return inventorList.size(); }
 }

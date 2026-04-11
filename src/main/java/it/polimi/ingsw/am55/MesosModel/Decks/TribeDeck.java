@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
+
 /**
  * DESCRIPTION: Represents the deck of tribe cards used during the game.
  * This class is responsible for creating, initializing, and managing the full
@@ -215,7 +216,7 @@ public class TribeDeck {
         allCards.add(new Inventor("Hide",17, 1));
         allCards.add(new ShamanRitualEventCard(18,1,5, 3));
         allCards.add(new SustenanceEventCard(19, 1,1));
-        allCards.add(new PaintingsEventCard(20,1,2,1,1,0,1));
+        allCards.add(new PaintingsEventCard(20,1,2,1,1,0));
         allCards.add(new HuntEventCard(21,1, 1));
     }
     /**
@@ -223,7 +224,7 @@ public class TribeDeck {
      *
      * @param allCards the list that will receive the Era 1 cards
      */
-    private void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
+    public void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
         allCards.add(new Hunter(34,true, 2));
         allCards.add(new Hunter(35,false, 2));
         allCards.add(new Hunter(36,false, 2));
@@ -244,7 +245,7 @@ public class TribeDeck {
         allCards.add(new ShamanRitualEventCard(51,10, 5, 2));
         allCards.add(new HuntEventCard(52,2, 2));
         allCards.add(new SustenanceEventCard(53,2, 2));
-        allCards.add(new PaintingsEventCard(54,2,2,2,2,1,0));
+        allCards.add(new PaintingsEventCard(54,2,2,2,2,1));
     }
     /**
      * Adds the complete Era 3 base card set for a two-player game to the given list.
@@ -269,7 +270,7 @@ public class TribeDeck {
         allCards.add(new Shaman(79,2, 3));
         allCards.add(new Shaman(80,3, 3));
         allCards.add(new Collector(81,3));
-        allCards.add(new PaintingsEventCard(82,3,3,2,3,2,0));
+        allCards.add(new PaintingsEventCard(82,3,3,2,3,2));
         allCards.add(new HuntEventCard(83,3, 3));
     }
     /**

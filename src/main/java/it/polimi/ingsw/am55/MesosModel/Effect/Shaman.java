@@ -18,9 +18,6 @@ public class Shaman extends CharacterCard {
         //player.getShamansList().add(this);
         player.addTribeCard(this);
     }
-    public int countSameTypeIn(Player player) {
-        return player.getShamansList().size(); // so che sono un Hunter, conto gli Hunter
-    }
 
     public int getNumStars() {
         return this.numStars;

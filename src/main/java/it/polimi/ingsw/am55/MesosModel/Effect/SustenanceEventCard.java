@@ -38,22 +38,17 @@ public class SustenanceEventCard extends EventCard {
 
             // 2) Calcolo lo sconto totale dato dai Collector.
             // Ogni Collector sconta 3 cibi.
-            int collectorDiscount = p.sizeCollectors() * 3;
+            int collectorDiscount = p.getCollectorsList().size() * 3;
 
             // 3) Eventuale bonus/sconto dato dall'edificio 2.
             // Qui sto assumendo che BUILDING2 riduca il costo di 1 cibo.
             // Se la regola reale è diversa, questo valore va cambiato.
             //DA GESTIRE NUM TIPO  per sconto addizionale dato da edificio 2: il tipo su cui contare le occorrenze si dovrebbe leggere da lei
             int building2Discount = 0;
-
-            if (p.hasBuilding(BuildingType.BUILDING2)) {
-                for (BuildingCard bc : p.getBuildings()) {
-                    if (bc.getType().equals(BuildingType.BUILDING2)) {
-                        //building2Discount = bc.getCharacterForED().countSameTypeIn(p);
-                        building2Discount = bc.bonusCharType(p);
-                        break;
-                    }
-                }
+            //A differenza degli altri edifici , che per portare un effetto mi bastava semplicemente capire se ci fosse quella carta edificio
+            //Gli edifici 2 possono ripetersi e portano uno sconto diverso in base al personaggio che indicano
+            for (BuildingCard bc : p.getBuildings()) {
+                building2Discount += bc.getSustenanceDiscount(p);
             }
             // 4) Calcolo il costo netto totale dell'evento.
             // È il costo base meno tutti gli sconti.

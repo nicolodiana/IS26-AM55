@@ -11,19 +11,18 @@ public class Builder extends CharacterCard {
         super(id, era);
         this.numPP = numPP;
         this.pickbuildingdiscount = pickbuildingdiscount;
-        //this.era= era;
     }
 
     public int getNumPP() {
         return numPP;
     }
-    public int getPickbuildingdiscount() {return pickbuildingdiscount; }
+
+    public int getPickbuildingdiscount() {
+        return pickbuildingdiscount;
+    }
 
     public void addToPlayer(Player player) {
         //player.getBuildersList().add(this);
         player.addTribeCard(this);
-    }
-    public int countSameTypeIn(Player player) {
-        return player.getBuildersList().size(); // so che sono un Hunter, conto gli Hunter
     }
 }

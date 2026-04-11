@@ -17,7 +17,7 @@ public class HuntEventCard extends EventCard {
     //evento caccia
     public void activateEvent(List<Player> players) {
         for (Player p : players) {
-            int numHunters = p.sizeHunters();
+            int numHunters = p.getHuntersList().size();
             int bonusPerBuilding8 = p.hasBuilding(BuildingType.BUILDING8) ? numHunters : 0;
 
             p.addPP(numHunters * numPP + bonusPerBuilding8);
@@ -25,5 +25,4 @@ public class HuntEventCard extends EventCard {
         }
     }
 }
-
 

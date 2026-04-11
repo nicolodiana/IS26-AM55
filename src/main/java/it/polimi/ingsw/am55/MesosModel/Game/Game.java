@@ -308,15 +308,12 @@ public class Game implements GameModelInterface{
                     p.addPP(p.minCardSet() * 6);
                 }
 
-                // Building Effect 12
-                if (p.hasBuilding(BuildingType.BUILDING12)) {
-                    for (BuildingCard bc : p.getBuildings()) {
-                        if (bc.getType().equals(BuildingType.BUILDING12)) {
-                            //p.addPP(bc.getCharacterForED().countSameTypeIn(p) * bc.getNumOfPP());
-                            break;
-                        }
-                    }
+                //bonus pp edificio 12
+                int bonusPP = 0;
+                for (BuildingCard bc : p.getBuildings()) {
+                    bonusPP += bc.getEndGameBonus(p) * bc.getNumOfPP();
                 }
+                p.addPP(bonusPP);
 
                 // Building Effect 14
                 multiplier = p.hasBuilding(BuildingType.BUILDING14) ? 1 : 0;

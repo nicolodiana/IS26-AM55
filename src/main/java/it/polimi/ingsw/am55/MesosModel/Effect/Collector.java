@@ -2,7 +2,6 @@ package it.polimi.ingsw.am55.MesosModel.Effect;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
-//raccoglitori
 public class Collector extends CharacterCard {
     final private int foodDiscount = 3;
     //final CharacterType type = CharacterType.COLLECTOR;
@@ -15,6 +14,6 @@ public class Collector extends CharacterCard {
     public Collector(int id, int era) {
 
         super(id, era);
-    //this.era= era;
+        //this.era= era;
     }
 }

@@ -2,7 +2,6 @@ package it.polimi.ingsw.am55.MesosModel.Effect;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
-//inventori
 public class Inventor extends CharacterCard {
     private String iconInvention;
     //final CharacterType type = CharacterType.INVENTOR;
@@ -18,9 +17,6 @@ public class Inventor extends CharacterCard {
         //this.era= era;
     }
 
-    public int countSameTypeIn(Player player) {
-        return player.getInventorsList().size(); // so che sono un Hunter, conto gli Hunter
-    }
     public String getIconInvention() {
         return iconInvention;
     }
