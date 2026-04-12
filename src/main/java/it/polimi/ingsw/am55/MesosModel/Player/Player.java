@@ -297,7 +297,7 @@ public class Player {
         return totalStars;
     }
     //metodo per sapere il conteggio in base al tipo di personaggio: SERVE PER EDIFICIO 2,12
-    public int countByTypeforED(CharacterType type) {
+    public int countByType(CharacterType type) {
         return characterLists.get(type).size();
     }
 

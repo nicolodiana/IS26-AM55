@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
 import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
+import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 
@@ -17,7 +18,7 @@ public class HuntEventCard extends EventCard {
     //evento caccia
     public void activateEvent(List<Player> players) {
         for (Player p : players) {
-            int numHunters = p.getHuntersList().size();
+            int numHunters = p.countByType(CharacterType.HUNTER);
             int bonusPerBuilding8 = p.hasBuilding(BuildingType.BUILDING8) ? numHunters : 0;
 
             p.addPP(numHunters * numPP + bonusPerBuilding8);

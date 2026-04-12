@@ -24,7 +24,7 @@ public class BuildingCard extends Card {
     //per gli edifici 2, se non è un edificio 2 non genera sconto
     public int getSustenanceDiscount(Player p) {
         if (type == BuildingType.BUILDING2 && CharType!=null) {
-            return p.countByTypeforED(CharType);
+            return p.countByType(CharType);
         }
         return 0;
     }
@@ -32,7 +32,7 @@ public class BuildingCard extends Card {
 
     public int getEndGameBonus(Player p) {
         if (type == BuildingType.BUILDING12 && CharType!=null) {
-            return p.countByTypeforED(CharType);
+            return p.countByType(CharType);
         }
         return 0;
     }
