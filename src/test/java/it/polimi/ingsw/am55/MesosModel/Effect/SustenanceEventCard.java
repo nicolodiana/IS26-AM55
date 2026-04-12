@@ -19,7 +19,7 @@ class SustenanceEventCardTest {
         // - giocatore che grazie a BUILDING2 ottiene uno sconto ma non basta e perde PP
         // - giocatore il cui costo finale va a zero grazie agli sconti
 
-        Player enoughFood = new Player("enoughFood", "totem1", "summary1");
+        Player enoughFood = new Player("enoughFood", "totem1");
         enoughFood.addPP(5);
         enoughFood.addFood(10);
         enoughFood.addTribeCard(new Hunter(1, false, 0));
@@ -31,7 +31,7 @@ class SustenanceEventCardTest {
         // costo finale = 1
         // ha 10 cibo -> paga 1, no penalità
 
-        Player withBuilding2Penalty = new Player("withBuilding2Penalty", "totem2", "summary2");
+        Player withBuilding2Penalty = new Player("withBuilding2Penalty", "totem2");
         withBuilding2Penalty.addPP(10);
         withBuilding2Penalty.addFood(2);
         withBuilding2Penalty.addTribeCard(new Hunter(5, false, 0));
@@ -47,7 +47,7 @@ class SustenanceEventCardTest {
         // costo finale = 1
         // ha 2 cibo -> paga 1, no penalità
 
-        Player freeDueToDiscounts = new Player("freeDueToDiscounts", "totem3", "summary3");
+        Player freeDueToDiscounts = new Player("freeDueToDiscounts", "totem3");
         freeDueToDiscounts.addPP(7);
         freeDueToDiscounts.addFood(9);
         freeDueToDiscounts.addTribeCard(new Collector(10, 0));
@@ -75,7 +75,7 @@ class SustenanceEventCardTest {
         // Testa il caso in cui il giocatore non abbia abbastanza cibo:
         // paga tutto quello che può e perde numPP per ogni unità di costo rimasta scoperta.
 
-        Player poor = new Player("poor", "totem4", "summary4");
+        Player poor = new Player("poor", "totem4");
         poor.addPP(10);
         poor.addFood(1);
 
@@ -109,7 +109,7 @@ class SustenanceEventCardTest {
         // Testa che più BUILDING2 si sommino correttamente:
         // ogni edificio 2 conta il numero di personaggi del proprio CharacterType.
 
-        Player player = new Player("multiDiscount", "totem5", "summary5");
+        Player player = new Player("multiDiscount", "totem5");
         player.addPP(8);
         player.addFood(5);
 

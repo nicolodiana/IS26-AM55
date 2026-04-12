@@ -28,7 +28,7 @@ class BiddingTrailTest {
     void testSetPlayerException(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(2);
-        Player p1 = new Player("Player1","black","path");
+        Player p1 = new Player("Player1","black");
         assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(-1,p1));
         assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(4,p1));
     }
@@ -41,9 +41,9 @@ class BiddingTrailTest {
     void testSetPlayerOnBiddingTicket(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(2);
-        Player p1 = new Player("Player1","black","path");
+        Player p1 = new Player("Player1","black");
         biddingTrail.setPlayer(1,p1);
-        Player p2 =new Player("Player2","white","path");
+        Player p2 =new Player("Player2","white");
         assertThrows(BiddingTicketIsTaken.class, ()->biddingTrail.setPlayer(1,p2));
     }
 
@@ -56,8 +56,8 @@ class BiddingTrailTest {
     void testGetFirstPlayerSecondPhaseFurtherLeft(){
         BiddingTrail trail = new BiddingTrail();
         trail.initBiddingTrail(2);
-        Player p1 = new Player("Player1","black","path");
-        Player p2 = new Player("Player2","white","path");
+        Player p1 = new Player("Player1","black");
+        Player p2 = new Player("Player2","white");
         trail.setPlayer(0,p1);
         trail.setPlayer(1,p2);
         assertSame(p1, trail.getFirstPlayerSecondPhase());
@@ -72,8 +72,8 @@ class BiddingTrailTest {
     void testGetNextPlayerSecondPhase(){
         BiddingTrail trail = new BiddingTrail();
         trail.initBiddingTrail(2);
-        Player p1 = new Player("Player1","black","path");
-        Player p2 = new Player("Player2","white","path");
+        Player p1 = new Player("Player1","black");
+        Player p2 = new Player("Player2","white");
         trail.setPlayer(0,p1);
         trail.setPlayer(1,p2);
         assertEquals(p2, trail.nextPlayerSecondPhase(p1).get());
@@ -102,7 +102,7 @@ class BiddingTrailTest {
     void testBiddingTicketIsTaken(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(2);
-        Player p1 = new Player("Player1","black","path");
+        Player p1 = new Player("Player1","black");
         assertFalse(biddingTrail.getIsTaken(0));
         biddingTrail.setPlayer(0,p1);
         assertTrue(biddingTrail.getIsTaken(0));
@@ -116,7 +116,7 @@ class BiddingTrailTest {
     @Test
     void testRemovePlayer(){
         BiddingTrail biddingTrail = new BiddingTrail();
-        Player p1 = new Player("Player1","black","path");
+        Player p1 = new Player("Player1","black");
 
         biddingTrail.initBiddingTrail(2);
         biddingTrail.setPlayer(0,p1);
@@ -138,7 +138,7 @@ class BiddingTrailTest {
     void testPlayerPosition(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(2);
-        Player p1 = new Player("Player1","black","path");
+        Player p1 = new Player("Player1","black");
         biddingTrail.setPlayer(0,p1);
         assertEquals(0, biddingTrail.getPlayerPositionOnTrail(p1));
     }
@@ -152,11 +152,11 @@ class BiddingTrailTest {
     void testChooseUpperLowerCards(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(5);
-        Player p1 = new Player("Player1","black","path");
-        Player p2 = new Player("Player2","white","path");
-        Player p3 = new Player("Player3","red","path");
-        Player p4 = new Player("Player4","yellow","path");
-        Player p5 = new Player("Player5","blue","path");
+        Player p1 = new Player("Player1","black");
+        Player p2 = new Player("Player2","white");
+        Player p3 = new Player("Player3","red");
+        Player p4 = new Player("Player4","yellow");
+        Player p5 = new Player("Player5","blue");
 
         biddingTrail.setPlayer(0,p1);
         biddingTrail.setPlayer(1,p2);

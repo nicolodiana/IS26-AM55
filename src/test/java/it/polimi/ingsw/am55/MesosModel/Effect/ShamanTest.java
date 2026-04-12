@@ -10,7 +10,7 @@ class ShamanTest {
     //stesso test degli artisti per check override+ check del getter delle stelle
     @Test
     void shamanStoresStarsAndAddsItselfToPlayer() {
-        Player player = new Player("Player1", "red", "summary");
+        Player player = new Player("Player1", "red");
         Shaman shaman = new Shaman(1, 4, 1);
         Shaman second = new Shaman(2, 1, 1);
 

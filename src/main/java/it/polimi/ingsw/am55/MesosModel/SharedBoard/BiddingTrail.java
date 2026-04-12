@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
+import it.polimi.ingsw.am55.MesosModel.Exceptions.PlayerNotOnTrail;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 import java.util.ArrayList;
@@ -65,14 +66,15 @@ public class BiddingTrail {
         return Optional.empty();
     }
 
-    public int getPlayerPositionOnTrail(Player player) {
+    public int getPlayerPositionOnTrail(Player player) throws PlayerNotOnTrail {
         int i = 0;
-        while (true) {
+        while (i < ticketList.size()) {
             if (ticketList.get(i).getPlayer() == player && ticketList.get(i).getIsTaken()) {
                 return i;
             }
             i++;
         }
+        throw new PlayerNotOnTrail("Player " + player + " is not on the trail");
     }
 
     /*public void clearBiddingTrail() {

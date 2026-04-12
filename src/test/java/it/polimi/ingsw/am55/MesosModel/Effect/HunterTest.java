@@ -11,7 +11,7 @@ class HunterTest {
     //stesso test specificato per gli artisti
     @Test
     void hunterKeepsIconAndAddsItselfToPlayer() {
-        Player player = new Player("hunter", "red", "summary");
+        Player player = new Player("hunter", "red");
         Hunter hunter = new Hunter(1,true, 1);
         Hunter second = new Hunter(2, false, 1);
 

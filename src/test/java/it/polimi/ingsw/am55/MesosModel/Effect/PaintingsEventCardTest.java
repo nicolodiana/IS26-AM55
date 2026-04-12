@@ -19,17 +19,17 @@ class PaintingsEventCardTest {
     @Test
     void constructorsExistAndActivateEventAppliesEffects() {
 
-        Player upper = new Player("upper", "orange", "orage summary");
+        Player upper = new Player("upper", "orange");
         upper.addPP(10);
         upper.addTribeCard(new Artist(1, 1));
         upper.addTribeCard(new BuildingCard(0, 0, 0, 0, BuildingType.BUILDING10, null, 0));
 
-        Player lower = new Player("lower", "green", "green summary");
+        Player lower = new Player("lower", "green");
         lower.addTribeCard(new Artist(3, 1));
         lower.addTribeCard(new Artist(2, 1));
         lower.addTribeCard(new Artist(11, 1));
 
-        Player neutral = new Player("neutral", "yellow", "yellow summary");
+        Player neutral = new Player("neutral", "yellow");
         neutral.addTribeCard(new Artist(4, 1));
         neutral.addTribeCard(new Artist(5, 1));
         //neutral.addTribeCard(new Artist(6, 1));

@@ -10,7 +10,7 @@ class CollectorTest {
     //stesso test degli artisti per check override
     @Test
     void addToPlayerAddsCollector() {
-        Player player = new Player("Player 1", "red", "summary");
+        Player player = new Player("Player 1", "red");
         Collector collector = new Collector(1, 1);
 
         collector.addToPlayer(player);

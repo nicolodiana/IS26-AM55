@@ -14,7 +14,7 @@ class ArtistTest {
     //e il conteggio della carta sul suo tipo dinamico sia 2
     @Test
     void addToPlayerAddsArtistAndCountSameTypeReflectsPlayerState() {
-        Player player = new Player("Player1", "red", "summary");
+        Player player = new Player("Player1", "red");
         Card first = new Artist(1, 1);
         Card second = new Artist(2, 1);
 

@@ -104,13 +104,13 @@ public class Board {
     }
 
     //after all the event in order to restore the board
-    public void restoreForRound(int numPlayers) throws EmptyTribeDeckException{
+    public boolean restoreForRound(int numPlayers) throws EmptyTribeDeckException{
         lowerRow.clearRoundEnd();
         lowerRow.swapTribeRow(upperRow, lowerRow);
         TribeCard tmp;
         for (int i = 0; i < numPlayers + 4; i++) {
             if (tribeDeck.isEmpty()){
-                throw new EmptyTribeDeckException("Empty TribeDeck");
+                return false;
             }
             tmp =tribeDeck.getNextCard();
             tmp.addInRightList(upperRow);
@@ -118,6 +118,7 @@ public class Board {
                 startNewEra();
             }
         }
+        return true;
     }
 
     private void startNewEra() {
@@ -155,9 +156,9 @@ public class Board {
         return playerOrder.getTurnPlayer(index);
     }
 
-    /*public Player getFirstPlayerFirstPhase(){
+    public Player getFirstPlayerFirstPhase(){
         return playerOrder.getFirstPlayerFirstPhase();
-    }*/ //unused
+    }
 
     public int getChooseUpperCard(Player player){
         return biddingTrail.getChooseUpperCard(player);
@@ -167,12 +168,19 @@ public class Board {
         return biddingTrail.getChooseLowerCard(player);
     }
 
-    /*public void giveMalusOrBonus(Player player){
+    public void giveMalusOrBonus(Player player){
         playerOrder.giveMalusOrBonus(player);
-    }*/ //unused
+    }
 
     public void removePlayerFromBiddingTrail(Player player){
         biddingTrail.removePlayer(player);
+    }
+
+    public void findCard(int id, CardSearchResult cardSearchResult, RowType rowType) throws IllegalArgumentException{
+        if (upperRow.findCard(id,cardSearchResult)) {
+            cardSearchResult.setRowType(RowType.UPPER);
+        }
+        throw new IllegalArgumentException("Card not found");
     }
 
     public void findCard(int id, CardSearchResult cardSearchResult){

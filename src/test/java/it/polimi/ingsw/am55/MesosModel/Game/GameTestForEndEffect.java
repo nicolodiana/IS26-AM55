@@ -17,9 +17,11 @@ class GameTestForEndEffect {
     void endGameShouldApplyAllEffectsInsideForLoop() throws Exception {
         Game game = new Game(2);
 
-        Player rich = new Player("rich", "totem1", "summary1");
-        Player plain = new Player("plain", "totem2", "summary2");
+        Player rich = new Player("rich", "totem1");
+        Player plain = new Player("plain", "totem2");
 
+        game.addPlayer("rich", "totem1");
+        game.addPlayer("plain", "totem2");
         // rich player
         rich.addTribeCard(new Shaman(1, 1, 0));
         rich.addTribeCard(new Hunter(2, false, 0));
@@ -49,8 +51,6 @@ class GameTestForEndEffect {
         plain.addTribeCard(new Inventor("rope", 23, 0));
         plain.addTribeCard(new Artist(24, 0));
 
-        game.addPlayer(rich);
-        game.addPlayer(plain);
         game.changeState(GameState.STARTED);
 
         game.endGame();
@@ -81,15 +81,16 @@ class GameTestForEndEffect {
         // non vengano applicati se lo stato del game non è STARTED.
 
         Game game = new Game(1);
-        Player player = new Player("p1", "totem1", "summary1");
+        Player player = new Player("p1", "totem1");
+        game.addPlayer("p1", "totem1");
+        game.changeState(GameState.CREATED);
 
         player.addTribeCard(new Artist(1, 0));
         player.addTribeCard(new Artist(2, 0));
         player.addTribeCard(new Builder(3, 4, 0, 0));
         player.addTribeCard(new Inventor("tool", 4, 0));
 
-        game.addPlayer(player);
-        game.changeState(GameState.CREATED);
+
 
         game.endGame();
 

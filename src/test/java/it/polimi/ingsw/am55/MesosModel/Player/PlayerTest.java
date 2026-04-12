@@ -15,7 +15,7 @@ class PlayerTest {
         // nella lista corretta e che l'effetto istantaneo dell'Hunter con icona
         // aggiunga cibo pari al numero di cacciatori presenti in tribù.
 
-        Player player = new Player("tribe", "totem1", "summary1");
+        Player player = new Player("tribe", "totem1");
 
         player.addTribeCard(new Shaman(1, 2, 0));
         player.addTribeCard(new Hunter(2, true, 0));
@@ -43,7 +43,7 @@ class PlayerTest {
         // ogni volta che si aggiunge un Hunter con icona, il cibo guadagnato
         // è pari al numero totale di Hunter dopo l'aggiunta.
 
-        Player player = new Player("hunters", "totem2", "summary2");
+        Player player = new Player("hunters", "totem2");
 
         player.addTribeCard(new Hunter(1, true, 0));
         assertEquals(1, player.getNumFoods());
@@ -63,7 +63,7 @@ class PlayerTest {
         // una nuova coppia, il player guadagna 3 cibi.
         // Il controllo deve essere case-insensitive.
 
-        Player player = new Player("inventors", "totem3", "summary3");
+        Player player = new Player("inventors", "totem3");
         player.getBuildings().add(new BuildingCard(1, 0, 0, 0, BuildingType.BUILDING5, null, 0));
 
         player.addTribeCard(new Inventor("hammer", 2, 0));
@@ -86,7 +86,7 @@ class PlayerTest {
         // 2) il costo non può scendere sotto zero
         // 3) se il cibo non è sufficiente l'edificio non viene aggiunto
 
-        Player discounted = new Player("discounted", "totem4", "summary4");
+        Player discounted = new Player("discounted", "totem4");
         discounted.addFood(10);
         discounted.addTribeCard(new Builder(1, 0, 1, 0));
         discounted.addTribeCard(new BuildingCard(2, 0, 5, 0, BuildingType.BUILDING4, null, 0));
@@ -94,7 +94,7 @@ class PlayerTest {
         assertEquals(6, discounted.getNumFoods());
         assertTrue(discounted.hasBuilding(BuildingType.BUILDING4));
 
-        Player zeroFloor = new Player("zeroFloor", "totem5", "summary5");
+        Player zeroFloor = new Player("zeroFloor", "totem5");
         zeroFloor.addFood(5);
         zeroFloor.addTribeCard(new Builder(3, 0, 3, 0));
         zeroFloor.addTribeCard(new Builder(4, 0, 4, 0));
@@ -103,7 +103,7 @@ class PlayerTest {
         assertEquals(5, zeroFloor.getNumFoods());
         assertTrue(zeroFloor.hasBuilding(BuildingType.BUILDING8));
 
-        Player poor = new Player("poor", "totem6", "summary6");
+        Player poor = new Player("poor", "totem6");
         poor.addFood(1);
         poor.addTribeCard(new BuildingCard(6, 0, 3, 0, BuildingType.BUILDING9, null, 0));
 
@@ -118,7 +118,7 @@ class PlayerTest {
         // dopo aver ottenuto BUILDING1, ogni nuovo set completo di 6 tipi diversi
         // deve assegnare 5 cibi nel momento esatto in cui si completa.
 
-        Player player = new Player("building1", "totem7", "summary7");
+        Player player = new Player("building1", "totem7");
         player.addFood(20);
 
         addCompleteSet(player);
@@ -155,7 +155,7 @@ class PlayerTest {
                 // +5 bonus per il completamento del set
                 //=13
 
-        Player player = new Player("multiSet", "totem8", "summary8");
+        Player player = new Player("multiSet", "totem8");
         player.addFood(10);
 
         player.addTribeCard(new BuildingCard(14, 0, 2, 0, BuildingType.BUILDING1, null, 0));
@@ -184,7 +184,7 @@ class PlayerTest {
         // Testa che l'aggiunta degli Shaman aggiorni correttamente il conteggio stelle
         // e che BUILDING6 aggiunga il bonus fisso di 3 stelle.
 
-        Player player = new Player("stars", "totem9", "summary9");
+        Player player = new Player("stars", "totem9");
 
         player.addTribeCard(new Shaman(1, 2, 0));
         player.addTribeCard(new Shaman(2, 1, 0));

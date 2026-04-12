@@ -11,7 +11,7 @@ class BuilderTest {
 
     @Test
     void builderExposesValuesAndAddsItselfToPlayer() {
-        Player player = new Player("builder", "red", "summary");
+        Player player = new Player("builder", "red");
         Builder builder = new Builder(1, 7, 2,  1);
 
         builder.addToPlayer(player);

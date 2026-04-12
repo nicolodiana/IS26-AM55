@@ -12,7 +12,7 @@ class EventCardTest {
     //controllo che una EventCard generica non abbia effetti ( solo quelle piu specifiche portano effetti)
     @Test
     void baseEventCardDoesNothing() {
-        Player player = new Player("testEvent", "red", "summary");
+        Player player = new Player("testEvent", "red");
         player.addFood(6);
         player.addPP(7);
         new EventCard(1, 1).activateEvent(List.of(player));

@@ -17,11 +17,16 @@ public interface GameModelInterface {
     **/
     String getIdGame();
     /**
-     * Add a player in the game
-     * @throws NicknameAlreadyUsed if the nickname is already used from another player in game
-     * @throws TotemAlreadyUsed if totem is already used from another player in game
+     * A modifier method that allows a new player to join the game.
+     * It allocates a new Player object using the two parameters received and adds it to the end of the players list.
+     *
+     * @param nickname that is the player's nickname to add in the game
+     * @param totem that is the player's totem to add in the game
+     * @throws TotemAlreadyUsed if the totem has been already taken
+     * @throws PlayerNumberOutOfRange if player is equals or greater than 5
+     * @throws NicknameAlreadyUsed if the nickname has been already taken
      * **/
-    void addPlayer(Player player) throws NicknameAlreadyUsed,TotemAlreadyUsed,PlayerNumberOutOfRange;
+    void addPlayer(String nickname, String totem) throws NicknameAlreadyUsed,TotemAlreadyUsed,PlayerNumberOutOfRange;
     /**
      * Returns the players in the game
      * @return the number of players in the game
@@ -64,15 +69,13 @@ public interface GameModelInterface {
     List<String> getWinners() throws GameNotFinished;
 
 
-    public void pickCard(int index);
+    void pickCard(int index);
     /**
      * Allows for a client player gets foods
      * @throws IllegalStateException if it will be when there are less than 5 players
      **/
-    public void pickFood() throws IllegalStateException;
+    void pickFood() throws IllegalStateException;
 
-    /**
-     * Allows end the game
-     **/
-    public void endGame();
+    void handleGameCrashed();
+
 }

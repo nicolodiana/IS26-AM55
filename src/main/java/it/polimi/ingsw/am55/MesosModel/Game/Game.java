@@ -35,24 +35,29 @@ public class Game implements GameModelInterface{
      * Generates a new game identifier, creates the player list,
      * initializes countRound to 0, instantiates a new Board, and sets winners to null.
      */
-    public Game(int numPlayers){
-        id =UUID.randomUUID().toString();
-        players= new ArrayList<>();
-        countRound=0;
-        sharedBoard = new Board();
+    public Game(int numPlayers)throws PlayerNumberOutOfRange{
+        this.id =UUID.randomUUID().toString();
+        this.players= new ArrayList<>();
+        this.countRound=0;
+        this.sharedBoard = new Board();
         winners = null;
+        if(numPlayers<2 || numPlayers>5) throw new PlayerNumberOutOfRange("Invalid numbers of player");
         this.numPlayers=numPlayers;
         this.state=GameState.CREATED;
     }
     /**
      * A modifier method that allows a new player to join the game.
-     * It allocates a new Player object using the three parameters received and adds it to the end of the players list.
+     * It allocates a new Player object using the two parameters received and adds it to the end of the players list.
      *
-     * @param player that is the player to add in the game
+     * @param nickname that is the player's nickname to add in the game
+     * @param totem that is the player's totem to add in the game
+     * @throws TotemAlreadyUsed if the totem has been already taken
+     * @throws PlayerNumberOutOfRange if player is equals or greater than 5
+     * @throws NicknameAlreadyUsed if the nickname has been already taken
      * **/
-    public void addPlayer(Player player) throws PlayerNumberOutOfRange {
-       if(player == null) throw new NullPointerException("Player is null");
-       else if(players.size()>numPlayers){throw new PlayerNumberOutOfRange("The number of player is out of range");}
+    public void addPlayer(String nickname, String totem) throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+       Player player = new Player(nickname, totem);
+       if(players.size()>=numPlayers){throw new PlayerNumberOutOfRange("The number of player is out of range");}
        for(Player p:players){
             if(p.getNickname().equals(player.getNickname())){
                 throw new NicknameAlreadyUsed("Nickname already exists");
@@ -109,7 +114,9 @@ public class Game implements GameModelInterface{
      * @throws IndexOutOfBoundsException if the index is out of the range of bidding tickets
      */
     public void placeTotem(int index) throws BiddingTicketIsTaken,IndexOutOfBoundsException,IllegalArgumentException{
-
+        if(!state.equals(GameState.PLACETOTEM)){
+            throw new IllegalStateException("Can't move your totem now");
+        }
         //check if the selected position is taken
         //sharedBoard.getIsTaken(index);
         //setupping in the selected position
@@ -126,6 +133,7 @@ public class Game implements GameModelInterface{
             currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
 
             System.out.println("Second Phase starting\n" + "Now playing: " + currentPlayer.getNickname());
+            changeState(GameState.PICKCARD);
             return;
         }
         currentPlayer = nextPlayer.get();
@@ -134,8 +142,10 @@ public class Game implements GameModelInterface{
     }
 
 
-
     public void pickCard(int id){
+        if(!state.equals(GameState.PICKCARD)){
+            throw new IllegalStateException("can't pick a card now");
+        }
         if(id<1 || id > 120){ throw new IllegalArgumentException("Id is out of range");}
 
         CardSearchResult cardSearchResult = new CardSearchResult();
@@ -144,6 +154,73 @@ public class Game implements GameModelInterface{
         isCardPickRowValid(cardSearchResult);// This method compares how many cards you've already taken from that row with
         // how many you're entitled to according to your position on the bidding trail
 
+        obtainCard(cardSearchResult);
+
+        updateRowCardSelected(cardSearchResult);// Add the cards selected by player
+
+        //check Player's turn end, and place him on turn ticket
+        if  (currentPlayer.getUpperRowCardSelected() == sharedBoard.getChooseUpperCard(currentPlayer) &&
+                currentPlayer.getLowerRowCardSelected() == sharedBoard.getChooseLowerCard(currentPlayer)){
+
+            sharedBoard.movePlayerToTurnTicket(currentPlayer);
+            sharedBoard.giveMalusOrBonus(currentPlayer);
+        }
+        Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase(currentPlayer);
+
+        //check if the PlayingPlayer was the last player of the round
+        if (nextPlayer.isEmpty()){
+
+            for(Player p:players){
+                if(p.hasBuilding(BuildingType.BUILDING13)){
+                    changeState(GameState.PICKSPECIAL);
+                    currentPlayer = p;
+                    return;
+                }
+            }
+
+            sharedBoard.eventResolve(players, RowType.LOWER);
+
+            boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
+            countRound++;
+            if (countRound == 11 || !boardRestored){
+                sharedBoard.eventResolveEndGame(players);
+                endGame();
+                return;
+            }
+            changeState(GameState.PLACETOTEM);
+            currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
+        } else {
+            Player playerPlayer = nextPlayer.get();
+            sharedBoard.removePlayerFromBiddingTrail(playerPlayer);
+        }
+    }
+
+    public void pickSpecial(int id){
+        if(!state.equals(GameState.PICKSPECIAL)){
+            throw new IllegalStateException("Can't activate special Pick from building effect");
+        }
+        if(id<1 || id > 120){ throw new IllegalArgumentException("Id is out of range");}
+
+        CardSearchResult cardSearchResult = new CardSearchResult();
+
+        sharedBoard.findCard(id, cardSearchResult, RowType.UPPER);
+
+        obtainCard(cardSearchResult);
+
+        sharedBoard.eventResolve(players, RowType.LOWER);
+
+        boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
+        countRound++;
+        if (countRound == 11 || !boardRestored){
+            sharedBoard.eventResolveEndGame(players);
+            endGame();
+            return;
+        }
+        changeState(GameState.PLACETOTEM);
+        currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
+    }
+
+    public void obtainCard(CardSearchResult cardSearchResult){
         if (cardSearchResult.getCardType() == CardType.CHARACTER){
             //da verificare e aggiungere l'attivazione degli effetti
             cardSearchResult.addToPlayer(currentPlayer); //CardResult gives to player the card he picked
@@ -157,38 +234,6 @@ public class Game implements GameModelInterface{
             currentPlayer.payFood(costWithDiscount); //Before add the card to player he must pay
             cardSearchResult.addToPlayer(currentPlayer);
             sharedBoard.removeCard(cardSearchResult);
-        }
-
-        updateRowCardSelected(cardSearchResult);// Add the cards selected by player
-
-        //check Player's turn end, and place him on turn ticket
-        if  (currentPlayer.getUpperRowCardSelected() == sharedBoard.getChooseUpperCard(currentPlayer) &&
-                currentPlayer.getLowerRowCardSelected() == sharedBoard.getChooseLowerCard(currentPlayer)){
-
-            sharedBoard.movePlayerToTurnTicket(currentPlayer);
-        }
-        Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase(currentPlayer);
-
-        //check if the PlayingPlayer was the last player of the round
-        if (nextPlayer.isEmpty()){
-            //eventuali effetti fine Round prima della risoluzione degli eventi
-
-            sharedBoard.eventResolve(players, RowType.LOWER);
-
-            try { //WHAT????
-                sharedBoard.restoreForRound(numPlayers);
-            } catch (EmptyTribeDeckException e){
-                sharedBoard.eventResolveEndGame(players);
-                endGame();
-            }
-        }
-        Player playerPlayer = nextPlayer.get();
-        sharedBoard.removePlayerFromBiddingTrail(playerPlayer);
-
-        countRound++;
-        if (countRound == 11){
-            sharedBoard.eventResolveEndGame(players);
-            endGame();
         }
     }
 
@@ -239,7 +284,7 @@ public class Game implements GameModelInterface{
     /**
      * Changes the game's state
      * **/
-    public void changeState(GameState newState){
+    protected void changeState(GameState newState){
         this.state=newState;
     }
     /**
@@ -250,7 +295,7 @@ public class Game implements GameModelInterface{
      */
     public void startGame() {
         if(state.equals(GameState.CREATED)){
-            try{
+//            try{
                 sharedBoard.initBoard(players);
                 Player player;
                 byte food=2;
@@ -259,15 +304,15 @@ public class Game implements GameModelInterface{
                     player.addFood(food);
                     if(i%2==0) food++;
                 }
-            }catch(Exception e){
-                //find the exception
-            }
-            this.changeState(GameState.STARTED);
+//            }catch(Exception e){
+//                //find the exception
+//            }
             countRound=1;
             currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
         }else{
             throw new GameAlreadyStarted("The game is already  started");
         }
+        changeState(GameState.PLACETOTEM);
 
         System.out.println("Now playing: "+currentPlayer.getNickname());
     }
@@ -277,71 +322,77 @@ public class Game implements GameModelInterface{
      * If multiple players are tied, a tie-break is applied based on the amount
      * of food. Only the players with the highest food among them remain winners.
      */
-    public void endGame() {
-        if(state.equals(GameState.STARTED)){
-            for (Player p : players) {
+    protected void endGame() {
+            if(state.equals(GameState.STARTED)){
+                for (Player p : players) {
 
-                // Painters' end-of-game effect.
-                //Painters' end-of-game effect. Since the operation is only between int s, the result will also be truncated to the integer part only.
-                //Example: 5:2 = 2, because with 5 artists, the calculation on which to apply 10 points is 2.
-                p.addPP(p.getArtistsList().size() / 2 * 10);
+                    // Painters' end-of-game effect.
+                    //Painters' end-of-game effect. Since the operation is only between int s, the result will also be truncated to the integer part only.
+                    //Example: 5:2 = 2, because with 5 artists, the calculation on which to apply 10 points is 2.
+                    p.addPP(p.getArtistsList().size() / 2 * 10);
 
-                // Builders end game effect
-                int sumPPbuilders = 0;
-                int multiplier = p.hasBuilding(BuildingType.BUILDING9) ? 2 : 1;
-                for (Builder b : p.getBuildersList()) {
-                    sumPPbuilders += b.getNumPP();
+                    // Builders end game effect
+                    int sumPPbuilders = 0;
+                    int multiplier = p.hasBuilding(BuildingType.BUILDING9) ? 2 : 1;
+                    for (Builder b : p.getBuildersList()) {
+                        sumPPbuilders += b.getNumPP();
+                    }
+                    p.addPP(sumPPbuilders * multiplier);
+
+                    // Inventors' end-of-game effect
+                    int inventorCount = p.getInventorsList().size();
+                    //I create a set on the fly that adds me only if the element is not present (so I take into account the distinct icons) cost O(n)
+                    Set<String> distinctIcons = new HashSet<>();
+                    for (Inventor inventor : p.getInventorsList()) {
+                        distinctIcons.add(inventor.getIconInvention());
+                    }
+                    p.addPP(inventorCount * distinctIcons.size());
+
+                    // Building Effect 11
+                    if (p.hasBuilding(BuildingType.BUILDING11)) {
+                        p.addPP(p.minCardSet() * 6);
+                    }
+
+                    //bonus pp edificio 12
+                    int bonusPP = 0;
+                    for (BuildingCard bc : p.getBuildings()) {
+                        bonusPP += bc.getEndGameBonus(p) * bc.getNumOfPP();
+                    }
+                    p.addPP(bonusPP);
+
+                    // Building Effect 14
+                    multiplier = p.hasBuilding(BuildingType.BUILDING14) ? 1 : 0;
+                    p.addPP(25 * multiplier);
                 }
-                p.addPP(sumPPbuilders * multiplier);
-
-                // Inventors' end-of-game effect
-                int inventorCount = p.getInventorsList().size();
-                //I create a set on the fly that adds me only if the element is not present (so I take into account the distinct icons) cost O(n)
-                Set<String> distinctIcons = new HashSet<>();
-                for (Inventor inventor : p.getInventorsList()) {
-                    distinctIcons.add(inventor.getIconInvention());
-                }
-                p.addPP(inventorCount * distinctIcons.size());
-
-                // Building Effect 11
-                if (p.hasBuilding(BuildingType.BUILDING11)) {
-                    p.addPP(p.minCardSet() * 6);
-                }
-
-                //bonus pp edificio 12
-                int bonusPP = 0;
-                for (BuildingCard bc : p.getBuildings()) {
-                    bonusPP += bc.getEndGameBonus(p) * bc.getNumOfPP();
-                }
-                p.addPP(bonusPP);
-
-                // Building Effect 14
-                multiplier = p.hasBuilding(BuildingType.BUILDING14) ? 1 : 0;
-                p.addPP(25 * multiplier);
             }
-        }
-        // ─── Winner calculation (outside the forum, after updating all PPs) ───
+            // ─── Winner calculation (outside the forum, after updating all PPs) ───
 
-        int max = players.stream()
-                .mapToInt(Player::getNumPP)
-                .max()
-                .orElse(0);
-
-        winners = players.stream()
-                .filter(player -> player.getNumPP() == max)
-                .collect(Collectors.toList());
-
-        if (winners.size() != 1) {
-            int max2 = winners.stream()
-                    .mapToInt(Player::getNumFoods)
+            int max = players.stream()
+                    .mapToInt(Player::getNumPP)
                     .max()
                     .orElse(0);
 
-            winners = winners.stream()
-                    .filter(player -> player.getNumFoods() == max2)
+            winners = players.stream()
+                    .filter(player -> player.getNumPP() == max)
                     .collect(Collectors.toList());
-        }
-        changeState(GameState.ENDED);
+
+            if (winners.size() != 1) {
+                int max2 = winners.stream()
+                        .mapToInt(Player::getNumFoods)
+                        .max()
+                        .orElse(0);
+
+                winners = winners.stream()
+                        .filter(player -> player.getNumFoods() == max2)
+                        .collect(Collectors.toList());
+            }
+            changeState(GameState.ENDED);
+
+
+    }
+
+    public void handleGameCrashed(){
+        changeState(GameState.CRASHED);
     }
 
 }

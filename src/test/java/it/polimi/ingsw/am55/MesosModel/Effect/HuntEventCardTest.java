@@ -13,12 +13,12 @@ class HuntEventCardTest {
     //test per esclusivamente l'evento caccia
     @Test
     void activateEventAwardsPointsAndFoodWithAndWithoutBuilding8() {
-        Player boosted = new Player("testhuntevent", "red", "summary");
+        Player boosted = new Player("testhuntevent", "red");
         boosted.getHuntersList().add(new Hunter(1,false, 1));
         boosted.getHuntersList().add(new Hunter(2, false, 1));
         boosted.getBuildings().add(new BuildingCard(3, 1, 0, 0, BuildingType.BUILDING8, null, 0));
 
-        Player normal = new Player("normal", "green", "normal summary");
+        Player normal = new Player("normal", "green");
         normal.getHuntersList().add(new Hunter(4,false, 1));
 
         new HuntEventCard(5,1,3).activateEvent(List.of(boosted, normal));

@@ -29,7 +29,6 @@ public class Player {
     private String totem;
     private int numPP;
     private int numFoods;
-    private String summaryCard;
     private int upperRowCardSelected;
     private int lowerRowCardSelected;
     private List<Shaman> shamanList;
@@ -43,11 +42,10 @@ public class Player {
     private Map<CharacterType, List<? extends CharacterCard>> characterLists;
     private int minSetCompleted;
 
-    public Player(String nickname, String totem, String summaryCard) {
+    public Player(String nickname, String totem) {
         this.id = UUID.randomUUID().toString();
         this.nickname = nickname;
         this.totem = totem;
-        this.summaryCard = summaryCard;
         this.numFoods = 0;
         this.numPP = 0;
         this.upperRowCardSelected = 0;
@@ -71,13 +69,7 @@ public class Player {
         characterLists.put(CharacterType.COLLECTOR, collectorList);
     }
 
-    /**
-     * This method allows a player to create a new game if that player is creator
-     * @param numPlayers the numbers of player in a game, it must be 2-5
-     * **/
-    public Game createGame(int numPlayers){
-        return new Game(numPlayers);
-    }
+
     /**
      * Returns the player's nickname.
      * @return the nickname of the player

@@ -10,7 +10,7 @@ class InventorTest {
     //stesso testo specificato per gli artisti
     @Test
     void inventorStoresIconAndAddsItselfToPlayer() {
-        Player player = new Player("Player1", "red", "summary");
+        Player player = new Player("Player1", "red");
         Inventor inventor = new Inventor("Wheel", 1, 1);
         Inventor second = new Inventor("Saw", 2, 1);
 
