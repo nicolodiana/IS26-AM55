@@ -5,14 +5,16 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-
+/**
+ * This class is use for testing Bidding Ticket work properly.
+ * **/
 class BiddingTicketTest {
     /**
-     * Tests that a {@link BiddingTicketIsTaken} exception is thrown
+     * Tests that a  BiddingTicketIsTaken exception is thrown
      * when a player attempts to take a bidding ticket that is already occupied.
      */
     @Test
-    void testException() {
+    void testExceptionPlayerIsAlreadyOnBiddingTicket() {
         BiddingTicket t1 = new BiddingTicket(3,0,0,2,'A');
         Player p1 = new Player("Player1","black");
 
@@ -22,7 +24,7 @@ class BiddingTicketTest {
     }
 
     /**
-     * Tests that the {@link BiddingTicket} constructor correctly initializes all fields
+     * Tests that the  BiddingTicket constructor correctly initializes all fields
      * with the provided arguments and sets the default states (not taken and no assigned player).
      */
     @Test
@@ -39,9 +41,9 @@ class BiddingTicketTest {
     }
 
     /**
-     * Tests the {@link BiddingTicket#setPlayer(Player)} method for a valid assignment.
+     * Tests the  BiddingTicket setPlayer(Player) method for a valid assignment.
      * Verifies that the player reference is correctly saved and the ticket's state
-     * changes to taken.
+     * changes to take.
      */
     @Test
     public void setPlayer_shouldAssignPlayerAndMarkTaken(){
@@ -57,7 +59,7 @@ class BiddingTicketTest {
     }
 
     /**
-     * Tests the {@link BiddingTicket#removePlayer()} method.
+     * Tests the  BiddingTicket#removePlayer() method.
      * Verifies that invoking this method clears the assigned player reference
      * and resets the ticket's state to available (not taken).
      */

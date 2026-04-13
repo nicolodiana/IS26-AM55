@@ -27,7 +27,7 @@ public class Game implements GameModelInterface{
     private Player currentPlayer;
     private Board sharedBoard;
     private int countRound;
-    private List<Player> winners;
+    private Map<String,Integer> winners;
     private int numPlayers;
     private GameState state;
 
@@ -39,8 +39,8 @@ public class Game implements GameModelInterface{
         this.id =UUID.randomUUID().toString();
         this.players= new ArrayList<>();
         this.countRound=0;
+        this.winners= new HashMap<>();
         this.sharedBoard = new Board();
-        winners = null;
         if(numPlayers<2 || numPlayers>5) throw new PlayerNumberOutOfRange("Invalid numbers of player");
         this.numPlayers=numPlayers;
         this.state=GameState.CREATED;
@@ -49,23 +49,22 @@ public class Game implements GameModelInterface{
      * A modifier method that allows a new player to join the game.
      * It allocates a new Player object using the two parameters received and adds it to the end of the players list.
      *
-     * @param nickname that is the player's nickname to add in the game
-     * @param totem that is the player's totem to add in the game
-     * @throws TotemAlreadyUsed if the totem has been already taken
+     * @param nickname that is the player's nickname to add in the game. Requires a lower case string.
+     * @param totem that is the player's totem to add in the game. Requires a lower case string.
+     * @throws TotemAlreadyUsed if the totem has been already taken.
      * @throws PlayerNumberOutOfRange if player is equals or greater than 5
      * @throws NicknameAlreadyUsed if the nickname has been already taken
      * **/
     public void addPlayer(String nickname, String totem) throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
-       Player player = new Player(nickname, totem);
        if(players.size()>=numPlayers){throw new PlayerNumberOutOfRange("The number of player is out of range");}
-       for(Player p:players){
-            if(p.getNickname().equals(player.getNickname())){
+        for(Player p:players){
+            if(p.getNickname().equals(nickname)){
                 throw new NicknameAlreadyUsed("Nickname already exists");
-            }else if(p.getTotem().equals(player.getTotem())){
+            }else if(p.getTotem().equals(totem)){
                 throw new TotemAlreadyUsed("Totem is already exists");
             }
         }
-        players.add(player);
+        players.add(new Player(nickname,totem));
     }
     /**
      * Returns the game's id
@@ -80,25 +79,40 @@ public class Game implements GameModelInterface{
         return currentPlayer.getNickname();
     }
     /**
-     * Returns the number of players in the game
+     * Returns the current number of players in the game
      * @return the number of players in the game
      */
-    public int getNumPlayers(){return numPlayers;}
+    public int getNumPlayers(){return players.size();}
     /**
      * Return if the game's state
      * @return GameState which consist of game's state
      **/
     public GameState getGameState(){return state;}
     /**
-     * Returns the list of match winners or the winner
-     * @return the list of winning players
+     * Returns the map in which there are player's nickname and player's point
+     * @return  map in which there are player's nickname and player's point
      * @throws GameNotFinished If the game isn't ended
      */
-    public List<String> getWinners(){
+    public Map<String, Integer> getWinners(){
         if(this.state.equals(GameState.CREATED) || this.state.equals(GameState.STARTED)){
             throw new GameNotFinished("Game isn't ended");
         }else{
-            return players.stream().map(Player::getNickname).collect(Collectors.toList());
+            return this.winners;
+        }
+    }
+    /**
+     * Return the available color for totems in this game
+     * @return available color for totems in this game
+     * **/
+    public Set<String> getTotemColorsValid(){
+        if(!players.isEmpty()){
+            Set<String> totemColors= Set.of("white","blue","red","yellow","black");
+            return players.stream()
+                    .filter(p->!totemColors.contains(p.getTotem()))
+                    .map(Player::getTotem)
+                    .collect(Collectors.toSet());
+        }else{
+            return Set.of("white","blue","red","yellow","black");
         }
     }
     /**
@@ -141,7 +155,21 @@ public class Game implements GameModelInterface{
         System.out.println("Now playing: " + currentPlayer.getNickname());
     }
 
-
+    /**
+     * Executes the card picking action for the current player.
+     * This method validates the card ID, ensures the player is allowed to pick from the
+     * specified row (based on their bidding trail position), and handles the logic
+     * for card acquisition. It also checks if the player's turn has ended to apply
+     * bonuses or maluses, manages the transition to the next player, and triggers
+     * round-end procedures (event resolution and board restoration) if the last
+     * player has finished.
+     *
+     * @param id the unique identifier of the card to be picked.
+     * @throws IllegalStateException if the game is not in the PICKCARD state.
+     * @throws IllegalArgumentException if the provided card ID is out of the valid range (1-120).
+     * @throws CantPickFromRow if the player has already reached their limit for the row containing the card.
+     * @throws CannotAffordBuildingException if the player lacks sufficient food to pay for a building card.
+     */
     public void pickCard(int id){
         if(!state.equals(GameState.PICKCARD)){
             throw new IllegalStateException("can't pick a card now");
@@ -194,7 +222,17 @@ public class Game implements GameModelInterface{
             sharedBoard.removePlayerFromBiddingTrail(playerPlayer);
         }
     }
-
+    /**
+     * Handles a special card pick triggered by specific game effects (e.g., Building 13).
+     * This method bypasses the standard row limits but restricts the search to the
+     * upper row. After the card is obtained, it proceeds to resolve pending effects,
+     * restores the board for the next round, or triggers the end-game sequence if
+     * the maximum number of rounds has been reached.
+     *
+     * @param id the unique identifier of the card to be picked from the upper row.
+     * @throws IllegalStateException if the game is not in the PICKSPECIAL state.
+     * @throws IllegalArgumentException if the provided card ID is out of the valid range.
+     */
     public void pickSpecial(int id){
         if(!state.equals(GameState.PICKSPECIAL)){
             throw new IllegalStateException("Can't activate special Pick from building effect");
@@ -219,7 +257,15 @@ public class Game implements GameModelInterface{
         changeState(GameState.PLACETOTEM);
         currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
     }
-
+    /**
+     * Internal logic for moving a card from the shared board to the player's inventory.
+     * If the card is a Character, it is added immediately. If it is a Building, the
+     * method calculates the cost, verifies the player's ability to pay, deducts
+     * the food resources, and then adds the card to the player's collection.
+     *
+     * @param cardSearchResult the result object containing the card found and its metadata.
+     * @throws CannotAffordBuildingException if the player does not have enough food to purchase the building.
+     */
     public void obtainCard(CardSearchResult cardSearchResult){
         if (cardSearchResult.getCardType() == CardType.CHARACTER){
             //da verificare e aggiungere l'attivazione degli effetti
@@ -236,7 +282,15 @@ public class Game implements GameModelInterface{
             sharedBoard.removeCard(cardSearchResult);
         }
     }
-
+    /**
+     * Validates whether the current player is permitted to pick a card from the
+     * row specified in the search result.
+     * It compares the player's current selection counters against the limits
+     * defined by the shared board for the player's specific position.
+     *
+     * @param cardSearchResult the metadata of the card the player is attempting to pick.
+     * @throws CantPickFromRow if the player's selection count for the row is already at maximum.
+     */
     private void isCardPickRowValid(CardSearchResult cardSearchResult){
         if (cardSearchResult.getRowType() == RowType.LOWER){
             if (currentPlayer.getLowerRowCardSelected() == sharedBoard.getChooseLowerCard(currentPlayer)){
@@ -248,7 +302,11 @@ public class Game implements GameModelInterface{
             }
         }
     }
-
+    /**
+     * Updates the internal counters of the current player based on the row
+     * from which a card was successfully picked.
+     * @param cardSearchResult the metadata of the successfully acquired card.
+     */
     private void updateRowCardSelected(CardSearchResult cardSearchResult){
         if (cardSearchResult.getRowType() == RowType.LOWER){
             currentPlayer.addLowerRowCardSelected();
@@ -295,18 +353,12 @@ public class Game implements GameModelInterface{
      */
     public void startGame() {
         if(state.equals(GameState.CREATED)){
-//            try{
                 sharedBoard.initBoard(players);
-                Player player;
                 byte food=2;
                 for(int i=0; i<players.size(); i++){
-                    player = sharedBoard.getPlayerFromTurnTicket(i);
-                    player.addFood(food);
+                    sharedBoard.getPlayerFromTurnTicket(i).addFood(food);
                     if(i%2==0) food++;
                 }
-//            }catch(Exception e){
-//                //find the exception
-//            }
             countRound=1;
             currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
         }else{
@@ -366,31 +418,38 @@ public class Game implements GameModelInterface{
                 }
             }
             // ─── Winner calculation (outside the forum, after updating all PPs) ───
-
+            List<Player> winnersList;
             int max = players.stream()
                     .mapToInt(Player::getNumPP)
                     .max()
                     .orElse(0);
 
-            winners = players.stream()
+            winnersList = players.stream()
                     .filter(player -> player.getNumPP() == max)
                     .collect(Collectors.toList());
 
-            if (winners.size() != 1) {
-                int max2 = winners.stream()
+            if (winnersList.size() > 1) {
+                int max2 = winnersList.stream()
                         .mapToInt(Player::getNumFoods)
                         .max()
                         .orElse(0);
 
-                winners = winners.stream()
+                winnersList = winnersList.stream()
                         .filter(player -> player.getNumFoods() == max2)
                         .collect(Collectors.toList());
+                for(Player p : winnersList){
+                    this.winners.put(p.getNickname(),p.getNumFoods());
+                }
+                changeState(GameState.ENDED);
+                return;
             }
+            this.winners.put(winnersList.getFirst().getNickname(),winnersList.getFirst().getNumPP());
             changeState(GameState.ENDED);
-
-
     }
-
+    /**
+     * Transitions the game state to CRASHED.
+     * This is used to handle unexpected failures or network disconnections or the players leave the game.
+     */
     public void handleGameCrashed(){
         changeState(GameState.CRASHED);
     }

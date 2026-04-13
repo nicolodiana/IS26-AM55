@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
+import it.polimi.ingsw.am55.MesosModel.Exceptions.PlayerNotOnTrail;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class BiddingTrailTest {
 
     /**
-     * Tests that an {@link IllegalStateException} is thrown when attempting to retrieve
+     * Tests that an IllegalStateException is thrown when attempting to retrieve
      * the first player for the second phase while the trail is completely empty.
      */
     @Test
@@ -21,7 +22,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests that an {@link IndexOutOfBoundsException} is thrown when attempting to place
+     * Tests that an  IndexOutOfBoundsException is thrown when attempting to place
      * a player at negative or out-of-bounds indices on the initialized bidding trail.
      */
     @Test
@@ -34,7 +35,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests that a {@link BiddingTicketIsTaken} exception is thrown when attempting
+     * Tests that a  BiddingTicketIsTaken exception is thrown when attempting
      * to assign a player to a bidding ticket that is already occupied by another player.
      */
     @Test
@@ -48,7 +49,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests that the {@link BiddingTrail#getFirstPlayerSecondPhase()} method
+     * Tests that the  BiddingTrail#getFirstPlayerSecondPhase() method
      * correctly identifies and returns the player located furthest to the left (lowest index)
      * on the bidding trail.
      */
@@ -64,7 +65,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests the {@link BiddingTrail#nextPlayerSecondPhase(Player)} method to ensure
+     * Tests the  BiddingTrail#nextPlayerSecondPhase(Player) method to ensure
      * it correctly returns an Optional containing the next sequential player on the trail,
      * or an empty Optional if the current player is the last one.
      */
@@ -83,7 +84,7 @@ class BiddingTrailTest {
     /**
      * Tests the boundary limits of the bidding trail after initialization.
      * Verifies that valid max indices return expected states, while exceeding the
-     * available size throws an {@link IndexOutOfBoundsException}.
+     * available size throws an IndexOutOfBoundsException.
      */
     @Test
     void testInitBiddingTrailSizeViaBounds() {
@@ -95,7 +96,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests the {@link BiddingTrail#getIsTaken(int)} method to verify that a bidding ticket's
+     * Tests the  BiddingTrail#getIsTaken(int) method to verify that a bidding ticket's
      * state correctly updates from available to taken after a player is placed on it.
      */
     @Test
@@ -109,7 +110,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests the {@link BiddingTrail#removePlayer(Player)} method to ensure it correctly
+     * Tests the  BiddingTrail#removePlayer(Player) method to ensure it correctly
      * frees the ticket previously occupied by the player, and that the player's position
      * can no longer be found.
      */
@@ -125,13 +126,13 @@ class BiddingTrailTest {
 
         // Note: This relies on the current while(true) implementation in getPlayerPositionOnTrail.
         // If refactored, this assertion should be updated (e.g., to assert -1).
-        assertThrows(IndexOutOfBoundsException.class, () -> {
+        assertThrows(PlayerNotOnTrail.class, () -> {
             biddingTrail.getPlayerPositionOnTrail(p1);
         });
     }
 
     /**
-     * Tests the {@link BiddingTrail#getPlayerPositionOnTrail(Player)} method to confirm
+     * Tests the  BiddingTrail#getPlayerPositionOnTrail(Player) method to confirm
      * it accurately retrieves the index of a successfully placed player.
      */
     @Test
@@ -144,7 +145,7 @@ class BiddingTrailTest {
     }
 
     /**
-     * Tests {@link BiddingTrail#getChooseLowerCard(Player)} and {@link BiddingTrail#getChooseUpperCard(Player)}.
+     * Tests  BiddingTrail#getChooseLowerCard(Player) and  BiddingTrail#getChooseUpperCard(Player).
      * Verifies that players receive the correct number of upper and lower card choices
      * depending on the specific properties of the bidding ticket they occupy.
      */

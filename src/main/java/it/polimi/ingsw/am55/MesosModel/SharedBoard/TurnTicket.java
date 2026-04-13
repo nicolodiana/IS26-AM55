@@ -12,13 +12,13 @@ public class TurnTicket {
     public TurnTicket() {
         turnOrder = new ArrayList<Player>();
     }
-    // Costruttore per i test (Dependency Injection)
+
     public TurnTicket(Random random) {
         this.turnOrder = new ArrayList<Player>();
         this.random = random;
     }
     public void initTurnTicket(List<Player> players){
-        turnOrder = new ArrayList<Player>(players);
+        turnOrder = new ArrayList<>(players);
         Collections.shuffle(turnOrder);
         this.effect = switch (players.size()) {
             case 2 -> new TwoPlayersEffect();
@@ -34,16 +34,13 @@ public class TurnTicket {
     public List<Player> getTurnOrder() {
         return turnOrder;
     }
-    public int getTurnIndex(Player player) {
-        return turnOrder.indexOf(player);
-    }
     public Player getTurnPlayer(int index){
         return turnOrder.get(index);
     }
 
     public Optional<Player> getNextPlayerFirstPhase(Player player){
         if(player == null){throw new IllegalArgumentException("Player isn't valid");}
-        int index = getTurnIndex(player);
+        int index = this.turnOrder.indexOf(player);;
         if (index < turnOrder.size()-1){
             return Optional.of(turnOrder.get(index+1));
         }
@@ -51,12 +48,8 @@ public class TurnTicket {
             return Optional.empty(); //return an empty optional if there aren't no other players
         }
     }
-
-
-
-
     public void giveMalusOrBonus(Player player){
-        int playerPosition = getTurnIndex(player);
+        int playerPosition = this.turnOrder.indexOf(player);;
         int lastIndex = turnOrder.size()-1;
         if(playerPosition==lastIndex){
             effect.applyMalus(player);
@@ -65,15 +58,10 @@ public class TurnTicket {
         }
     }
 
-    public void removePlayerFromTurnTicket(){
-        turnOrder.removeFirst();//To be checked again....
-    }
-
-
-    //Unused method
-    public Player getFirstPlayerFirstPhase(){
+    /*public Player getFirstPlayerFirstPhase(){
         return turnOrder.getFirst();
-    }
+    }*/
+
     public void addPlayer(Player player){
         for (int i = 0; i < turnOrder.size(); i++) {
             if(turnOrder.get(i) == null){
@@ -82,7 +70,7 @@ public class TurnTicket {
             }
         }
     }
-    public void removePlayer(){
+    public void removePlayerFromTurnTicket(){
         for (int i = 0; i < turnOrder.size(); i++) {
             if(turnOrder.get(i) != null){
                 turnOrder.set(i, null);
@@ -90,6 +78,4 @@ public class TurnTicket {
             }
         }
     }
-
-
 }

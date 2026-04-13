@@ -81,8 +81,7 @@ class TurnTicketTest {
 
     /**
      * Verifies the retrieval of the next player during the first phase under normal conditions (Happy Path).
-     * <p>
-     * Expected result: The method returns a non-empty {@link java.util.Optional}
+     * Expected result: The method returns a non-empty Optional
      * containing the player exactly following the one passed as a parameter.
      */
     @Test
@@ -97,8 +96,7 @@ class TurnTicketTest {
 
     /**
      * Verifies the robustness of the turn retrieval method against null inputs.
-     * <p>
-     * Expected result: An {@link IllegalArgumentException} is thrown if the parameter is null.
+     * Expected result: An IllegalArgumentException is thrown if the parameter is null.
      */
     @Test
     void testGetNextPlayerFirstPhase_PlayerIsNull() {
@@ -108,18 +106,16 @@ class TurnTicketTest {
 
     /**
      * Verifies the behavior when requesting the turn of a player not present in the game.
-     * <p>
-     * Expected result: An {@link IllegalArgumentException} is thrown to prevent inconsistent advancement.
+     * Expected result: An  IllegalArgumentException is thrown to prevent inconsistent advancement.
      */
     @Test
     void testGetNextPlayerFirstPhase_PlayerDoesNotExist() {
         turnTicket.initTurnTicket(List.of(p2, p3));
-        assertThrows(IllegalArgumentException.class, () -> turnTicket.getNextPlayerFirstPhase(p1));
+        assertThrows(IllegalArgumentException.class, () -> turnTicket.getNextPlayerFirstPhase(null));
     }
 
     /**
      * Verifies turn retrieval when the given player is the last one in the turn order.
-     * <p>
      * Expected result: The method returns an {@link java.util.Optional#empty()}, indicating the end of the phase.
      */
     @Test
@@ -132,7 +128,6 @@ class TurnTicketTest {
 
     /**
      * Verifies that players who are not in the last position correctly receive the food bonus.
-     * <p>
      * Expected result: The food stock of the first player increases by one unit.
      */
     @Test
@@ -147,7 +142,6 @@ class TurnTicketTest {
 
     /**
      * Verifies that the player in the last position correctly receives the expected malus.
-     * <p>
      * Expected result: The Prestige Points (PP) of the player in the last position suffer a -2 penalty.
      */
     @Test
@@ -162,7 +156,6 @@ class TurnTicketTest {
 
     /**
      * Verifies the manual removal and addition methods of a player to the TurnTicket.
-     * <p>
      * Expected result: Removal sets the first slot to null, while subsequent addition
      * repositions the player in the first available slot.
      */

@@ -8,7 +8,51 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlayerTest {
+    /**
+     * Tests valid additions and payments for Food.
+     */
+    @Test
+    void testFoodManagement_ValidAmounts() {
+        Player player = new Player("tribe", "totem1");
+        player.addFood(10);
+        assertEquals(10, player.getNumFoods());
 
+        player.payFood(4);
+        assertEquals(6, player.getNumFoods());
+    }
+
+    /**
+     * Tests that negative amounts throw exceptions for Food methods.
+     */
+    @Test
+    void testFoodManagement_NegativeAmountsThrowException() {
+        Player player = new Player("tribe", "totem1");
+        assertThrows(IllegalArgumentException.class, () -> player.addFood(-1));
+        assertThrows(IllegalArgumentException.class, () -> player.payFood(-1));
+    }
+
+    /**
+     * Tests valid additions and payments for Prestige Points (PP).
+     */
+    @Test
+    void testPPManagement_ValidAmounts() {
+        Player player = new Player("tribe", "totem1");
+        player.addPP(10);
+        assertEquals(10, player.getNumPP());
+
+        player.payPP(4);
+        assertEquals(6, player.getNumPP());
+    }
+
+    /**
+     * Tests that negative amounts throw exceptions for PP methods.
+     */
+    @Test
+    void testPPManagement_NegativeAmountsThrowException() {
+        Player player = new Player("tribe", "totem1");
+        assertThrows(IllegalArgumentException.class, () -> player.addPP(-1));
+        assertThrows(IllegalArgumentException.class, () -> player.payPP(-1));
+    }
     @Test
     void addTribeCardForCharactersShouldPopulateAllListsAndApplyHunterInstantEffect() {
         // Testa che ogni addTribeCard dei personaggi inserisca la carta

@@ -156,9 +156,9 @@ public class Board {
         return playerOrder.getTurnPlayer(index);
     }
 
-    public Player getFirstPlayerFirstPhase(){
+    /*public Player getFirstPlayerFirstPhase(){
         return playerOrder.getFirstPlayerFirstPhase();
-    }
+    }*/
 
     public int getChooseUpperCard(Player player){
         return biddingTrail.getChooseUpperCard(player);

@@ -2,9 +2,9 @@ package it.polimi.ingsw.am55.MesosModel.Game;
 
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
-import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -63,19 +63,42 @@ public interface GameModelInterface {
     void placeTotem(int index) throws BiddingTicketIsTaken,IndexOutOfBoundsException,IllegalArgumentException;
 
     /**
-     * Send the winner or winners to the views
-     * @throws GameNotFinished if the game isn't ended
-    **/
-    List<String> getWinners() throws GameNotFinished;
-
-
+     * Returns the map in which there are player's nickname and player's point
+     * @return  map in which there are player's nickname and player's point
+     * @throws GameNotFinished If the game isn't ended
+     */
+    Map<String,Integer> getWinners() throws GameNotFinished;
+    /**
+     * Return the available color for totems in this game
+     * @return available color for totems in this game
+     * **/
+    Set<String> getTotemColorsValid();
+    /**
+     * Executes the card picking action for the current player.
+     * This method validates the card ID, ensures the player is allowed to pick from the
+     * specified row (based on their bidding trail position), and handles the logic
+     * for card acquisition. It also checks if the player's turn has ended to apply
+     * bonuses or maluses, manages the transition to the next player, and triggers
+     * round-end procedures (event resolution and board restoration) if the last
+     * player has finished.
+     *
+     * @param index the unique identifier of the card to be picked.
+     * @throws IllegalStateException if the game is not in the PICKCARD state.
+     * @throws IllegalArgumentException if the provided card ID is out of the valid range (1-120).
+     * @throws CantPickFromRow if the player has already reached their limit for the row containing the card.
+     * @throws CannotAffordBuildingException if the player lacks sufficient food to pay for a building card.
+     */
     void pickCard(int index);
+
     /**
      * Allows for a client player gets foods
      * @throws IllegalStateException if it will be when there are less than 5 players
      **/
     void pickFood() throws IllegalStateException;
 
+    /**
+     * Allows a controller terminates the game if one player crashed
+     * **/
     void handleGameCrashed();
 
 }
