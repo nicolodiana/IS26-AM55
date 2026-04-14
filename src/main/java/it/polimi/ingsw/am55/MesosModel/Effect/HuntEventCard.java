@@ -25,5 +25,9 @@ public class HuntEventCard extends EventCard {
             p.addFood(numHunters + bonusPerBuilding8);
         }
     }
+
+    public int getOrder(){
+        return 0;
+    }
 }
 

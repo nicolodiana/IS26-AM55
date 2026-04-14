@@ -77,4 +77,8 @@ public class SustenanceEventCard extends EventCard {
             p.payPP(unfedCharacters * numPP);
         }
     }
+
+    public int getOrder(){
+        return 3;
+    }
 }

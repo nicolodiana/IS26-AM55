@@ -41,4 +41,8 @@ public class PaintingsEventCard extends EventCard {
             }
         }
     }
+
+    public int getOrder(){
+        return 1;
+    }
 }

@@ -24,5 +24,5 @@ public class EventCard extends TribeCard {
         row.addEventCard(this);
     }
 
-    public void setOrder(List<EventCard> events, int index){};
+    public int getOrder(){return 0;}
 }

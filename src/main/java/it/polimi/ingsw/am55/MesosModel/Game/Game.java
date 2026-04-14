@@ -1,5 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Game;
 import it.polimi.ingsw.am55.MesosModel.Cards.CardSearchResult;
+import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.CardType;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Enum.RowType;
@@ -22,13 +23,45 @@ import java.util.UUID;
  * the current round, and the set of winners (if any).
  */
 public class Game implements GameModelInterface{
+    /**
+     * The unique identifier for this specific game or match.
+     */
     private final String id;
+
+    /**
+     * The list of players participating in the game.
+     */
     private List<Player> players;
+
+    /**
+     * The player whose turn is currently active.
+     */
     private Player currentPlayer;
+
+    /**
+     * The main shared board of the game, containing common elements and resources.
+     */
     private Board sharedBoard;
+
+    /**
+     * The counter tracking the current round number of the game.
+     */
     private int countRound;
-    private Map<String,Integer> winners;
+
+    /**
+     * A map storing the winners of the game.
+     * The key represents the player's identifier or name, and the value represents their final score.
+     */
+    private Map<String, Integer> winners;
+
+    /**
+     * The total number of players participating in this game.
+     */
     private int numPlayers;
+
+    /**
+     * The current state or phase of the game (e.g., lobby, ongoing, finished).
+     */
     private GameState state;
 
     /**
@@ -65,6 +98,7 @@ public class Game implements GameModelInterface{
             }
         }
         players.add(new Player(nickname,totem));
+        if(players.size()==numPlayers){startGame();}
     }
     /**
      * Returns the game's id
@@ -82,7 +116,7 @@ public class Game implements GameModelInterface{
      * Returns the current number of players in the game
      * @return the number of players in the game
      */
-    public int getNumPlayers(){return players.size();}
+    public int getNumPlayers(){return numPlayers;}
     /**
      * Return if the game's state
      * @return GameState which consist of game's state
@@ -92,7 +126,7 @@ public class Game implements GameModelInterface{
      * Returns the map in which there are player's nickname and player's point
      * @return  map in which there are player's nickname and player's point
      * @throws GameNotFinished If the game isn't ended
-     */
+    */
     public Map<String, Integer> getWinners(){
         if(this.state.equals(GameState.CREATED) || this.state.equals(GameState.STARTED)){
             throw new GameNotFinished("Game isn't ended");
@@ -192,34 +226,26 @@ public class Game implements GameModelInterface{
 
             sharedBoard.movePlayerToTurnTicket(currentPlayer);
             sharedBoard.giveMalusOrBonus(currentPlayer);
-        }
-        Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase(currentPlayer);
+//            currentPlayer.setLower
 
-        //check if the PlayingPlayer was the last player of the round
-        if (nextPlayer.isEmpty()){
+            Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase(currentPlayer);
 
-            for(Player p:players){
-                if(p.hasBuilding(BuildingType.BUILDING13)){
-                    changeState(GameState.PICKSPECIAL);
-                    currentPlayer = p;
-                    return;
+            //check if the PlayingPlayer was the last player of the round
+            if (nextPlayer.isEmpty()){
+
+                for(Player p:players){
+                    if(p.hasBuilding(BuildingType.BUILDING13)){
+                        changeState(GameState.PICKSPECIAL);
+                        currentPlayer = p;
+                        return;
+                    }
                 }
-            }
 
-            sharedBoard.eventResolve(players, RowType.LOWER);
-
-            boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
-            countRound++;
-            if (countRound == 11 || !boardRestored){
-                sharedBoard.eventResolveEndGame(players);
-                endGame();
-                return;
+                secondPartPick();
+            } else {
+                Player playerPlayer = nextPlayer.get();
+                sharedBoard.removePlayerFromBiddingTrail(playerPlayer);
             }
-            changeState(GameState.PLACETOTEM);
-            currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
-        } else {
-            Player playerPlayer = nextPlayer.get();
-            sharedBoard.removePlayerFromBiddingTrail(playerPlayer);
         }
     }
     /**
@@ -241,11 +267,18 @@ public class Game implements GameModelInterface{
 
         CardSearchResult cardSearchResult = new CardSearchResult();
 
-        sharedBoard.findCard(id, cardSearchResult, RowType.UPPER);
+        sharedBoard.findCardUpperRow(id, cardSearchResult);
 
         obtainCard(cardSearchResult);
 
-        sharedBoard.eventResolve(players, RowType.LOWER);
+        secondPartPick();
+    }
+    private void eventResolve(){
+        List<EventCard> eventList = sharedBoard.orderEvents();
+        eventList.forEach(card -> {card.activateEvent(players);});
+    }
+    private void secondPartPick(){
+        eventResolve();
 
         boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
         countRound++;
@@ -255,7 +288,7 @@ public class Game implements GameModelInterface{
             return;
         }
         changeState(GameState.PLACETOTEM);
-        currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
+        currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
     }
     /**
      * Internal logic for moving a card from the shared board to the player's inventory.
@@ -322,18 +355,23 @@ public class Game implements GameModelInterface{
      * or when the current player is not on the food card.
      * **/
     public void pickFood(){
-        int playerPosition = sharedBoard.getBiddingTrail().getPlayerPositionOnTrail(currentPlayer); //Come cambia
+        int playerPosition = sharedBoard.getPlayerPositionOnTrail(currentPlayer); //Come cambia
         //If current player is on the first ticket, he will get food, else
         // the methods will throw exception
         if(players.size()==5 && playerPosition==0){
             currentPlayer.addFood(3);
             sharedBoard.movePlayerToTurnTicket(currentPlayer);
+            sharedBoard.giveMalusOrBonus(currentPlayer);
             Player p = currentPlayer;
             Optional<Player> nextPlayer = sharedBoard.getNextPlayerFirstPhase(currentPlayer);
             currentPlayer = nextPlayer.get();
             sharedBoard.removePlayerFromBiddingTrail(p);
         }else{
-            throw new IllegalStateException("The current player isn't on the first card or there aren't 5 players");
+            if(players.size()!=5){
+                throw new IllegalStateException("There aren't 5 players");
+            }else{
+                throw new IllegalStateException("The current player isn't on the first card");
+            }
         }
 
         System.out.println("Now playing: " + currentPlayer.getNickname());
@@ -351,7 +389,7 @@ public class Game implements GameModelInterface{
      * assigns the initial food resources to the players in turn order,
      * sets the round number to 1, and selects the first player in turn order as the currentPlayer.
      */
-    public void startGame() {
+    private void startGame() {
         if(state.equals(GameState.CREATED)){
                 sharedBoard.initBoard(players);
                 byte food=2;
@@ -373,8 +411,9 @@ public class Game implements GameModelInterface{
      * The method selects the players with the highest number of victory points.
      * If multiple players are tied, a tie-break is applied based on the amount
      * of food. Only the players with the highest food among them remain winners.
+     * @return map that cointains players winner with points
      */
-    protected void endGame() {
+    public Map<String,Integer> endGame() {
             if(state.equals(GameState.STARTED)){
                 for (Player p : players) {
 
@@ -441,10 +480,11 @@ public class Game implements GameModelInterface{
                     this.winners.put(p.getNickname(),p.getNumFoods());
                 }
                 changeState(GameState.ENDED);
-                return;
+                return this.winners;
             }
             this.winners.put(winnersList.getFirst().getNickname(),winnersList.getFirst().getNumPP());
             changeState(GameState.ENDED);
+            return this.winners;
     }
     /**
      * Transitions the game state to CRASHED.

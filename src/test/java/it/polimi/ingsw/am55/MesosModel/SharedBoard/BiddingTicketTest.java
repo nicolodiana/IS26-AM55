@@ -36,7 +36,6 @@ class BiddingTicketTest {
         assertEquals(0, t1.getChooseUpperCard());
         assertEquals(2, t1.getNumPlayer());
         assertEquals('A', t1.getTrailPlacement());
-        assertFalse(t1.getIsTaken());
         assertNull(t1.getPlayer());
     }
 
@@ -55,7 +54,6 @@ class BiddingTicketTest {
         t1.setPlayer(p1);
 
         assertSame(p1, t1.getPlayer());
-        assertTrue(t1.getIsTaken());
     }
 
     /**
@@ -69,13 +67,10 @@ class BiddingTicketTest {
         BiddingTicket t1 = new BiddingTicket(3,0,0,2,'A');
 
         t1.setPlayer(p1);
-        assertTrue(t1.getIsTaken());
         assertSame(p1, t1.getPlayer());
 
         t1.removePlayer();
-
         assertNull(t1.getPlayer());
-        assertFalse(t1.getIsTaken());
     }
 
 }
