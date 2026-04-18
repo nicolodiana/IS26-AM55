@@ -37,11 +37,11 @@ public interface GameModelInterface {
      * @return GameState which consist of game's state
      **/
     GameState getGameState();
-    /**
-     * Allows start a new game
-     * @throws GameAlreadyStarted if the game is already started
-     * **/
-    void startGame() throws GameAlreadyStarted;
+//    /**
+//     * Allows start a new game
+//     * @throws GameAlreadyStarted if the game is already started
+//     * **/
+//    void startGame() throws GameAlreadyStarted;
     /**
      * Allows to have the current player in the game
      * @return current player's nickname

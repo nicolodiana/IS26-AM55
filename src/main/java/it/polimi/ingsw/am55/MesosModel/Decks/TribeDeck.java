@@ -20,7 +20,7 @@ import java.util.Stack;
  * {@link #getNextCard()}.
  */
 public class TribeDeck {
-    private Stack<TribeCard> tribeCardStack;
+    public Stack<TribeCard> tribeCardStack;
     /**
      * Creates an empty tribe deck.
      * The deck must be initialized later through {@link #initTribeDeck(int)}
@@ -224,7 +224,7 @@ public class TribeDeck {
      *
      * @param allCards the list that will receive the Era 1 cards
      */
-    public void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
+    private void createCardsTwoPlayersEra2(List<TribeCard> allCards) {
         allCards.add(new Hunter(34,true, 2));
         allCards.add(new Hunter(35,false, 2));
         allCards.add(new Hunter(36,false, 2));

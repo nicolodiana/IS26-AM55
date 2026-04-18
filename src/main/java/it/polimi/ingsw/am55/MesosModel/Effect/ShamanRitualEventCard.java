@@ -58,4 +58,7 @@ public class ShamanRitualEventCard extends EventCard {
             }
         }
     }
+    public int getOrder(){
+        return 2;
+    }
 }

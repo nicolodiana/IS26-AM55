@@ -7,9 +7,9 @@ import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.CardType;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.CannotPickEventCard;
-import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class Row {
@@ -23,6 +23,11 @@ public class Row {
         buildingCardsList = new BuildingDeck();
     }
 
+    //helper test
+    public void setBuildingCardsList(BuildingDeck deck) {
+        buildingCardsList.setBuildingCardsList(new ArrayList<>(deck.getBuildingDeck()));
+    }
+
     //getter
     public List<CharacterCard> getCharacterCardsList() {
         return characterCardsList;
@@ -33,12 +38,12 @@ public class Row {
     public BuildingDeck getBuildingCardsList() {
         return buildingCardsList;
     }
-    public int getNumCharacterCards(){
-        return characterCardsList.size();
-    }
-    public int getNumEventCards(){
-        return eventCardsList.size();
-    }
+//    public int getNumCharacterCards(){
+//        return characterCardsList.size();
+//    }
+//    public int getNumEventCards(){
+//        return eventCardsList.size();
+//    }
     public BuildingCard getBuildingCardByIndex(int index){
         return buildingCardsList.getBuildingCardByIndex(index);
     }
@@ -50,19 +55,25 @@ public class Row {
     public void addEventCard(EventCard eventCard){
         eventCardsList.add(eventCard);
     }
-    public void setBuildingCards(BuildingDeck buildingCardsList){
-        this.buildingCardsList = buildingCardsList;
-    }
-    public void removeCharacterCard(CharacterCard characterCard){
-        characterCardsList.remove(characterCard);
-    }
-    public void removeEventCard(EventCard eventCard){
-        eventCardsList.remove(eventCard);
-    }
-    public void removeCharacterCardByIndex(int index){
+//    public void setBuildingCards(BuildingDeck buildingCardsList){
+//        this.buildingCardsList = buildingCardsList;
+//    }
+//    public void removeCharacterCard(CharacterCard characterCard){
+//        characterCardsList.remove(characterCard);
+//    }
+//    public void removeEventCard(EventCard eventCard){
+//        eventCardsList.remove(eventCard);
+//    }
+    public void removeCharacterCardByIndex(int index) throws IllegalArgumentException{
+        if(index >= characterCardsList.size() || index < 0){
+            throw new IllegalArgumentException("Index out of bounds");
+        }
         characterCardsList.remove(index);
     }
     public void removeBuildingCardByIndex(int index){
+        if(index >= buildingCardsList.getBuildingDeck().size() || index < 0){
+            throw new IllegalArgumentException("Index out of bounds");
+        }
         buildingCardsList.removeBuildingCardByIndex(index);
     }
 
@@ -78,9 +89,9 @@ public class Row {
         donor.characterCardsList.clear();
         donor.eventCardsList.clear();
     }
-    public void swapBuildingRow(Row donor, Row receiver){
-        receiver.buildingCardsList.swapBuildingDeck(donor.buildingCardsList, receiver.buildingCardsList);
-    }
+//    public void swapBuildingRow(Row donor, Row receiver){
+//        receiver.buildingCardsList.swapBuildingDeck(donor.buildingCardsList, receiver.buildingCardsList);
+//    }
 
     public void clearRoundEnd(){
         characterCardsList.clear();
@@ -90,7 +101,7 @@ public class Row {
         buildingCardsList.clear();
     }
 
-    public boolean findCard(int id, CardSearchResult cardSearchResult){
+    public boolean findCard(int id, CardSearchResult cardSearchResult) throws CannotPickEventCard {
         int i = 0;
         for(CharacterCard characterCard: characterCardsList){
             if (characterCard.getId() == id){
@@ -127,19 +138,21 @@ public class Row {
         }
     }
 
-    public void eventResolve(List<Player> players, List<EventCard> events){
-        orderEvents(events);
-        events.forEach(card -> {card.activateEvent(players);});
-    }
-    public void eventResolve(List<Player> players){
-        orderEvents(eventCardsList);
-        eventCardsList.forEach(card -> {card.activateEvent(players);});
-    }
+//    public void eventResolve(List<Player> players, List<EventCard> events){
+//        orderEvents(events);
+//        events.forEach(card -> {card.activateEvent(players);});
+//    }
+//    public void eventResolve(List<Player> players){
+//        orderEvents(eventCardsList);
+//        eventCardsList.forEach(card -> {card.activateEvent(players);});
+//    }
 
-    private void orderEvents(List<EventCard> events){
-        for(EventCard eventCard: events){
-            eventCard.setOrder(events, events.indexOf(eventCard));
-        }
+    public List<EventCard> orderEvents(){
+        this.getEventCardsList().sort(
+                Comparator
+                        .comparingInt(EventCard::getOrder)
+                        .thenComparingInt(EventCard::getEra)
+        );
+        return this.getEventCardsList();
     }
-
 }

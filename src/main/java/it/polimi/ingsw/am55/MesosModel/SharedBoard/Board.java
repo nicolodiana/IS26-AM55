@@ -51,6 +51,9 @@ public class Board {
         buildingDeckEra1.initBuildingDeckEra1(numPlayers);
         buildingDeckEra2.initBuildingDeckEra2(numPlayers);
         buildingDeckEra3.initBuildingDeckEra3(numPlayers);
+
+        setUpLowerRow(numPlayers);
+        setUpUpperRow(numPlayers);
     }
 
 
@@ -71,32 +74,41 @@ public class Board {
     public BiddingTrail getBiddingTrail(){
         return biddingTrail;
     }
-    public TribeCard drawFromTribeDeck(){
-        return tribeDeck.getNextCard();
-    }
+//    public TribeCard drawFromTribeDeck(){
+//        return tribeDeck.getNextCard();
+//    }
     public BuildingDeck getBuildingDeck(int currentEra) {
         return switch (currentEra) {
             case 1 -> buildingDeckEra1;
             case 2 -> buildingDeckEra2;
             case 3 -> buildingDeckEra3;
-            default -> null;
+        default -> throw new IllegalArgumentException("BuildingDeck of era: " + currentEra + "doesn't exist");
         };
     }
 
     public void setUpLowerRow(int numPlayers){
-        while( (lowerRow.getCharacterCardsList().size() + lowerRow.getEventCardsList().size()) <= numPlayers){
+        while( (lowerRow.getCharacterCardsList().size() + lowerRow.getEventCardsList().size()) < numPlayers){
             tribeDeck.getNextCard().addInRightRow(upperRow, lowerRow);
         }
     }
     public void setUpUpperRow(int numPlayers){
-        while((upperRow.getCharacterCardsList().size() + upperRow.getEventCardsList().size()) <= (numPlayers + 3)){
+        while((upperRow.getCharacterCardsList().size() + upperRow.getEventCardsList().size()) < (numPlayers + 4)){
             tribeDeck.getNextCard().addInRightList(upperRow);
         }
-        moveBuildingCards(buildingDeckEra1, upperRow.getBuildingCardsList());
+        moveBuildingDeck(buildingDeckEra1, upperRow);
     }
 
-    public void moveBuildingCards(BuildingDeck donor, BuildingDeck receiver){
-        donor.swapBuildingDeck(donor, receiver);
+//    public void moveBuildingCards(BuildingDeck donor, BuildingDeck receiver){
+//        donor.swapBuildingDeck(donor, receiver);
+//    }
+
+    public void moveBuildingDeck(Row donor, Row receiver){
+        receiver.setBuildingCardsList(donor.getBuildingCardsList());
+        donor.clearBuildingCards();
+    }
+    public void moveBuildingDeck(BuildingDeck donor, Row receiver){
+        receiver.setBuildingCardsList(donor);
+        donor.clear();
     }
 
     public void movePlayerToTurnTicket(Player player){
@@ -124,8 +136,8 @@ public class Board {
     private void startNewEra() {
         currentEra++;
         lowerRow.clearBuildingCards();
-        lowerRow.swapBuildingRow(upperRow, lowerRow);
-        moveBuildingCards(getBuildingDeck(currentEra), upperRow.getBuildingCardsList());
+        moveBuildingDeck(upperRow, lowerRow);
+        moveBuildingDeck(getBuildingDeck(currentEra), upperRow);
     }
 
     /*public boolean getIsTaken(int index) {
@@ -149,6 +161,7 @@ public class Board {
     }*/ //***Unused we consider to assign 3 foods directly
 
     public Optional<Player> nextPlayerSecondPhase(Player currentPlayer){
+        if(currentPlayer==null) throw new IllegalArgumentException("Player is null");
         return biddingTrail.nextPlayerSecondPhase(currentPlayer);
     }//***Changed by using optional
 
@@ -156,9 +169,9 @@ public class Board {
         return playerOrder.getTurnPlayer(index);
     }
 
-    /*public Player getFirstPlayerFirstPhase(){
+    public Player getFirstPlayerFirstPhase(){
         return playerOrder.getFirstPlayerFirstPhase();
-    }*/
+    }
 
     public int getChooseUpperCard(Player player){
         return biddingTrail.getChooseUpperCard(player);
@@ -176,9 +189,10 @@ public class Board {
         biddingTrail.removePlayer(player);
     }
 
-    public void findCard(int id, CardSearchResult cardSearchResult, RowType rowType) throws IllegalArgumentException{
+    public void findCardUpperRow(int id, CardSearchResult cardSearchResult) throws IllegalArgumentException{
         if (upperRow.findCard(id,cardSearchResult)) {
             cardSearchResult.setRowType(RowType.UPPER);
+            return;
         }
         throw new IllegalArgumentException("Card not found");
     }
@@ -186,9 +200,11 @@ public class Board {
     public void findCard(int id, CardSearchResult cardSearchResult){
         if (upperRow.findCard(id,cardSearchResult)) {
             cardSearchResult.setRowType(RowType.UPPER);
+            return;
         }
         else if (lowerRow.findCard(id,cardSearchResult)) {
             cardSearchResult.setRowType(RowType.LOWER);
+            return;
         }
         throw new IllegalArgumentException("Card not found");
     }
@@ -209,19 +225,24 @@ public class Board {
         }
     }
 
-    public void eventResolve(List<Player> players, RowType rowType){
-        if (rowType == RowType.UPPER) {
-            upperRow.eventResolve(players);
-        } else if (rowType == RowType.LOWER) {
-            lowerRow.eventResolve(players);
-        }
+    public List<EventCard> orderEvents(){
+            return lowerRow.orderEvents();
     }
 
-    public void eventResolveEndGame(List<Player> players){
+    public List<EventCard> eventResolveEndGame(List<Player> players){
         ArrayList<EventCard> events = new ArrayList<EventCard>();
         events.addAll(lowerRow.getEventCardsList());
         events.addAll(upperRow.getEventCardsList());
 
-        lowerRow.eventResolve(players, events);
+        events.sort(
+                Comparator
+                        .comparingInt(EventCard::getOrder)
+                        .thenComparingInt(EventCard::getEra)
+        );
+        return events;
+    }
+
+    public int getPlayerPositionOnTrail(Player player){
+        return biddingTrail.getPlayerPositionOnTrail(player);
     }
 }

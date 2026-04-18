@@ -8,13 +8,18 @@ import java.util.Collections;
 import java.util.List;
 
 public class BuildingDeck {
-    List<BuildingCard> BuildingCardsList;
+    List<BuildingCard> buildingCardsList;
 
     public BuildingDeck(){
-        BuildingCardsList = new ArrayList<BuildingCard>();
+        buildingCardsList = new ArrayList<BuildingCard>();
     }
 
-    public void initBuildingDeckEra1( int numPlayers) {
+    //Test helper
+    public void setBuildingCardsList(List<BuildingCard> buildingCardsList) {
+        this.buildingCardsList = buildingCardsList;
+    }
+
+    public void initBuildingDeckEra1(int numPlayers) {
         List<BuildingCard> buildingDeckEra1 = new ArrayList<>();
         buildingDeckEra1.add(new BuildingCard( 100, 1, 4, 3, BuildingType.BUILDING1, null, 0));
         buildingDeckEra1.add(new BuildingCard(101, 1, 4, 4, BuildingType.BUILDING2, CharacterType.COLLECTOR, 0));
@@ -25,15 +30,15 @@ public class BuildingDeck {
         Collections.shuffle(buildingDeckEra1);
         int numCards = buildingDeckEra1.size();
         if (numPlayers == 2){
-            for (int i = numCards; i == 1; i--) {
+            for (int i = numCards; i > 1; i--) {
                     buildingDeckEra1.removeFirst();
             }
         } else {
-            for (int i = numCards; i == 2; i--) {
+            for (int i = numCards; i > 2; i--) {
                 buildingDeckEra1.removeFirst();
             }
         }
-        this.BuildingCardsList = buildingDeckEra1;
+        this.buildingCardsList = buildingDeckEra1;
     }
     public void initBuildingDeckEra2(int numPlayers) {
         List<BuildingCard> buildingDeckEra2 = new ArrayList<>();
@@ -47,15 +52,15 @@ public class BuildingDeck {
         Collections.shuffle(buildingDeckEra2);
         int numCards = buildingDeckEra2.size();
         if (numPlayers == 2 || numPlayers == 3){
-            for (int i = numCards; i == 2; i--) {
+            for (int i = numCards; i > 2; i--) {
                 buildingDeckEra2.removeFirst();
             }
         } else {
-            for (int i = numCards; i == 3; i--) {
+            for (int i = numCards; i > 3; i--) {
                 buildingDeckEra2.removeFirst();
             }
         }
-        this.BuildingCardsList = buildingDeckEra2;
+        this.buildingCardsList = buildingDeckEra2;
     }
     public void initBuildingDeckEra3(int numPlayers) {
         List<BuildingCard> buildingDeckEra3 = new ArrayList<>();
@@ -70,37 +75,37 @@ public class BuildingDeck {
         Collections.shuffle(buildingDeckEra3);
         int numCards = buildingDeckEra3.size();
         if (numPlayers == 2){
-            for (int i = numCards; i == 3; i--) {
+            for (int i = numCards; i > 3; i--) {
                 buildingDeckEra3.removeFirst();
             }
         } else if(numPlayers == 3 || numPlayers == 4){
-            for (int i = numCards; i == 4; i--) {
+            for (int i = numCards; i > 4; i--) {
                 buildingDeckEra3.removeFirst();
             }
         } else{
-            for (int i = numCards; i == 5; i--) {
+            for (int i = numCards; i > 5; i--) {
                 buildingDeckEra3.removeFirst();
             }
         }
-        this.BuildingCardsList = buildingDeckEra3;
+        this.buildingCardsList = buildingDeckEra3;
     }
     public List<BuildingCard> getBuildingDeck(){
-        return this.BuildingCardsList;
+        return this.buildingCardsList;
     }
     public void clear(){
-        BuildingCardsList.clear();
+        buildingCardsList.clear();
     }
-    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
-        receiver.BuildingCardsList = new ArrayList<>(donor.BuildingCardsList) ;
-        donor.clear();
-    }
+//    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
+//        receiver.buildingCardsList = new ArrayList<>(donor.buildingCardsList) ;
+//        donor.clear();
+//    }
     public void removeBuildingCard(BuildingCard buildingCard){
-        BuildingCardsList.remove(buildingCard);
+        buildingCardsList.remove(buildingCard);
     }
     public void removeBuildingCardByIndex(int index){
-        BuildingCardsList.remove(index);
+        buildingCardsList.remove(index);
     }
     public BuildingCard getBuildingCardByIndex(int index){
-        return BuildingCardsList.get(index);
+        return buildingCardsList.get(index);
     }
 }
