@@ -1,5 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 import it.polimi.ingsw.am55.MesosModel.Cards.*;
+import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.RowType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,12 +27,8 @@ class BoardTest {
         board.initBoard(players);
     }
 
-    // -------------------------
-    // INIT + SETUP TEST
-    // -------------------------
-
     @Test
-    void testInitBoardCreatesValidState() {
+    void initBoardTest() {
         assertEquals(1, board.getCurrentEra());
 
         assertNotNull(board.getUpperRow());
@@ -42,20 +39,106 @@ class BoardTest {
     }
 
     @Test
-    void testUpperRowHasCardsAfterInit() {
+    void getBuildingDeckTest() {
+        assertThrows(IllegalArgumentException.class, () -> board.getBuildingDeck(0));
+        assertThrows(IllegalArgumentException.class, () -> board.getBuildingDeck(4));
+    }
+
+    @Test
+    void setUpUpperRowTest() {
         int total =
                 board.getUpperRow().getCharacterCardsList().size()
                         + board.getUpperRow().getEventCardsList().size();
 
-        assertTrue(total >= 3); // non dipende dal deck interno
+        assertTrue(total >= 6); // non dipende dal deck interno
     }
 
-    // -------------------------
-    // FIND CARD TESTS
-    // -------------------------
+    @Test
+    void setUpLowerRowTest() {
+        int total =
+                board.getLowerRow().getCharacterCardsList().size()
+                + board.getLowerRow().getEventCardsList().size();
+        assertTrue(total >= 2);
+    }
 
     @Test
-    void testFindCardUpperRowSuccess() {
+    void moveBuildingDeckTest() {
+        Row donor = new Row();
+        BuildingDeck buildingDeck = new BuildingDeck();
+        buildingDeck.initBuildingDeckEra3(3);
+        donor.setBuildingCardsList(buildingDeck);
+
+        Row tmp = new Row();
+        tmp.setBuildingCardsList(buildingDeck);
+
+        Row receiver = new Row();
+        buildingDeck.initBuildingDeckEra1(3);
+        receiver.setBuildingCardsList(buildingDeck);
+
+        board.moveBuildingDeck(donor, receiver);
+
+        assertEquals(tmp.getBuildingCardsList().getBuildingDeck(), receiver.getBuildingCardsList().getBuildingDeck());
+        assertEquals(0, donor.getBuildingCardsList().getBuildingDeck().size());
+    }
+
+    @Test
+    void moveBuildingDeckTest2() {
+        Row receiver = new Row();
+        BuildingDeck buildingDeck = new BuildingDeck();
+        buildingDeck.initBuildingDeckEra3(3);
+
+        Row tmp = new Row();
+        tmp.setBuildingCardsList(buildingDeck);
+
+        board.moveBuildingDeck(buildingDeck, receiver);
+        assertEquals(tmp.getBuildingCardsList().getBuildingDeck(), receiver.getBuildingCardsList().getBuildingDeck());
+        assertEquals(0, buildingDeck.getBuildingDeck().size());
+    }
+
+    @Test
+    void startNewEraTest(){
+        int oldEra = board.getCurrentEra();
+        Row tmpBuildingDeck = new Row();
+        tmpBuildingDeck.setBuildingCardsList(board.getBuildingDeck(board.getCurrentEra() +1));
+        Row tmpUpperRow = new Row();
+        tmpUpperRow.setBuildingCardsList(board.getUpperRow().getBuildingCardsList());
+
+        board.startNewEra();
+        assertEquals(oldEra +1,board.getCurrentEra());
+        assertEquals(tmpBuildingDeck.getBuildingCardsList().getBuildingDeck(), board.getUpperRow().getBuildingCardsList().getBuildingDeck());
+        assertEquals(tmpUpperRow.getBuildingCardsList().getBuildingDeck(), board.getLowerRow().getBuildingCardsList().getBuildingDeck());
+        assertEquals(0, board.getBuildingDeck(board.getCurrentEra()).getBuildingDeck().size());
+    }
+
+    @Test
+    void restoreForRoundTest(){
+        board.getUpperRow().getCharacterCardsList().clear();
+        board.getUpperRow().getEventCardsList().clear();
+        board.getUpperRow().getBuildingCardsList().clear();
+        board.getLowerRow().getCharacterCardsList().clear();
+        board.getLowerRow().getEventCardsList().clear();
+        board.getLowerRow().getBuildingCardsList().clear();
+
+        assertTrue(board.restoreForRound(3));
+        assertEquals(7, board.getUpperRow().getCharacterCardsList().size()
+        +board.getUpperRow().getEventCardsList().size());
+
+        while(board.restoreForRound(3)){}
+        assertEquals(3, board.getCurrentEra());
+
+        setUp();
+        board.getTribeDeck().tribeCardStack.clear();
+        assertFalse(board.restoreForRound(3));
+    }
+
+    @Test
+    void nextPlayerSecondPhaseTest() {
+        Player player = null;
+        assertThrows(IllegalArgumentException.class, ()->{board.nextPlayerSecondPhase(player);});
+    }
+
+    @Test
+    void findCardUpperRowTest() {
         CardSearchResult result = new CardSearchResult();
 
         // prendo una carta reale dalla row
@@ -69,172 +152,97 @@ class BoardTest {
         board.findCardUpperRow(id, result);
 
         assertEquals(RowType.UPPER, result.getRowType());
+
+        assertThrows(IllegalArgumentException.class, ()->board.findCardUpperRow(999, result));
     }
 
     @Test
-    void testFindCardBothRows() {
+    void FindCardTest() {
         CardSearchResult result = new CardSearchResult();
 
         Optional<CharacterCard> upper =
                 board.getUpperRow().getCharacterCardsList().stream().findFirst();
-
         if (upper.isEmpty()) return;
-
         board.findCard(upper.get().getId(), result);
-
         assertEquals(RowType.UPPER, result.getRowType());
+
+        Optional<CharacterCard> lower =
+                board.getLowerRow().getCharacterCardsList().stream().findFirst();
+        if (lower.isEmpty()) return;
+        board.findCard(lower.get().getId(), result);
+        assertEquals(RowType.LOWER, result.getRowType());
+
+        assertThrows(IllegalArgumentException.class, ()->board.findCard(999, result));
     }
 
     @Test
-    void testFindCardNotFoundThrows() {
+    void removeCardTest() {
         CardSearchResult result = new CardSearchResult();
 
-        assertThrows(IllegalArgumentException.class,
-                () -> board.findCard(-9999, result));
-    }
-
-    // -------------------------
-    // REMOVE CARD TESTS
-    // -------------------------
-
-    @Test
-    void testRemoveCardUpperRow() {
-        CardSearchResult result = new CardSearchResult();
-
-        Optional<CharacterCard> cardOpt =
+        Optional<CharacterCard> cardOptUpper =
                 board.getUpperRow().getCharacterCardsList().stream().findFirst();
-
-        if (cardOpt.isEmpty()) return;
-
-        int id = cardOpt.get().getId();
-
-        board.findCard(id, result);
-
+        if (cardOptUpper.isEmpty()) return;
+        int idUpper = cardOptUpper.get().getId();
+        board.findCard(idUpper, result);
         board.removeCard(result);
-
-        boolean stillExists =
+        boolean stillExistsUpper =
                 board.getUpperRow().getCharacterCardsList()
                         .stream()
-                        .anyMatch(c -> c.getId() == id);
+                        .anyMatch(c -> c.getId() == idUpper);
+        assertFalse(stillExistsUpper);
 
-        assertFalse(stillExists);
-    }
-
-    // -------------------------
-    // TURN ORDER TESTS
-    // -------------------------
-
-    @Test
-    void testFirstPlayerExists() {
-        assertNotNull(board.getFirstPlayerFirstPhase());
-    }
-
-    @Test
-    void testNextPlayerOptionalLogic() {
-        Player first = board.getFirstPlayerFirstPhase();
-
-        Optional<Player> next = board.getNextPlayerFirstPhase(first);
-
-        assertTrue(next.isPresent() || next.isEmpty());
-    }
-
-    // -------------------------
-    // BIDDING TRAIL TESTS
-    // -------------------------
-
-    @Test
-    void testSetPlayerOnBiddingTrail() {
-        board.setPlayer(0, players.get(0));
-
-        assertDoesNotThrow(() -> board.setPlayer(1, players.get(1)));
+        Optional<CharacterCard> cardOptLower =
+                board.getLowerRow().getCharacterCardsList().stream().findFirst();
+        if (cardOptLower.isEmpty()) return;
+        int idLower = cardOptLower.get().getId();
+        board.findCard(idLower, result);
+        board.removeCard(result);
+        boolean stillExistsLower =
+                board.getLowerRow().getCharacterCardsList()
+                        .stream()
+                        .anyMatch(c -> c.getId() == idLower);
+        assertFalse(stillExistsLower);
     }
 
     @Test
-    void testGetChooseCardsFromTrail() {
-        board.setPlayer(0, players.get(0));
+    void getBuildingCardByIndexTest() {
+        CardSearchResult result = new CardSearchResult();
 
-        int upper = board.getChooseUpperCard(players.get(0));
-        int lower = board.getChooseLowerCard(players.get(0));
+        Optional<BuildingCard> cardOptUpper =
+                board.getUpperRow().getBuildingCardsList().getBuildingDeck().stream().findFirst();
+        if (cardOptUpper.isEmpty()) return;
+        int idUpper = cardOptUpper.get().getId();
+        board.findCard(idUpper, result);
+        assertEquals(RowType.UPPER, result.getRowType());
+        assertEquals(result.getCard(), board.getBuildingCardByIndex(result));
 
-        assertTrue(upper >= 0);
-        assertTrue(lower >= 0);
+        Optional<BuildingCard> cardOptLower =
+                board.getLowerRow().getBuildingCardsList().getBuildingDeck().stream().findFirst();
+        if (cardOptLower.isEmpty()) return;
+        int idLower = cardOptLower.get().getId();
+        board.findCard(idLower, result);
+        assertEquals(RowType.LOWER, result.getRowType());
+        assertEquals(result.getCard(), board.getBuildingCardByIndex(result));
     }
 
-    // -------------------------
-    // BUILDING DECK TESTS
-    // -------------------------
-
     @Test
-    void testGetBuildingDeckValidEra() {
-        assertNotNull(board.getBuildingDeck(1));
-        assertNotNull(board.getBuildingDeck(2));
-        assertNotNull(board.getBuildingDeck(3));
-    }
-
-    @Test
-    void testGetBuildingDeckInvalidEra() {
-        assertThrows(IllegalArgumentException.class,
-                () -> board.getBuildingDeck(99));
-    }
-
-    // -------------------------
-    // ERA / RESTORE TESTS
-    // -------------------------
-
-    @Test
-    void testRestoreRoundDoesNotCrash() {
-        assertDoesNotThrow(() -> board.restoreForRound(players.size()));
-    }
-
-    // -------------------------
-    // EVENT TESTS
-    // -------------------------
-
-    @Test
-    void testOrderEventsReturnsList() {
+    void orderEventsTest() {
         List<EventCard> events = board.orderEvents();
-
         assertNotNull(events);
     }
 
     @Test
-    void testEventResolveEndGameReturnsSortedList() {
-        List<EventCard> events = board.eventResolveEndGame(players);
+    void orderEventsEndGameTest(){
+        List<EventCard> events = board.orderEventsEndGame();
+        int size = (board.getUpperRow().getEventCardsList().size() + board.getLowerRow().getEventCardsList().size());
+        assertEquals(size, events.size());
 
-        assertNotNull(events);
+        Comparator<EventCard> comparator =
+                Comparator.comparingInt(EventCard::getOrder)
+                        .thenComparingInt(EventCard::getEra);
 
-        for (int i = 1; i < events.size(); i++) {
-            boolean ordered =
-                    events.get(i - 1).getOrder() <= events.get(i).getOrder();
-            assertTrue(ordered);
+        for (int i = 0; i < events.size() - 1; i++) {
+            assertTrue(comparator.compare(events.get(i), events.get(i + 1)) <= 0);
         }
-    }
-
-    // -------------------------
-    // STRESS TEST (IMPORTANT)
-    // -------------------------
-
-    @Test
-    void stressTestBoardOperations() {
-        for (int i = 0; i < 50; i++) {
-            try {
-                CardSearchResult result = new CardSearchResult();
-
-                if (!board.getUpperRow().getCharacterCardsList().isEmpty()) {
-                    CharacterCard c =
-                            board.getUpperRow().getCharacterCardsList().get(0);
-
-                    board.findCard(c.getId(), result);
-                    board.removeCard(result);
-                }
-
-                board.restoreForRound(players.size());
-
-            } catch (Exception ignored) {
-                // stress test: non deve crashare
-            }
-        }
-
-        assertTrue(true);
     }
 }

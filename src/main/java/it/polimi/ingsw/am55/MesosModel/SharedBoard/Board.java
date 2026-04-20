@@ -56,7 +56,10 @@ public class Board {
         setUpUpperRow(numPlayers);
     }
 
-
+    //Test Helper
+    public TribeDeck getTribeDeck(){
+        return tribeDeck;
+    }
 
     //getter
     public int getCurrentEra(){
@@ -77,7 +80,7 @@ public class Board {
 //    public TribeCard drawFromTribeDeck(){
 //        return tribeDeck.getNextCard();
 //    }
-    public BuildingDeck getBuildingDeck(int currentEra) {
+    public BuildingDeck getBuildingDeck(int currentEra) throws IllegalArgumentException {
         return switch (currentEra) {
             case 1 -> buildingDeckEra1;
             case 2 -> buildingDeckEra2;
@@ -126,14 +129,14 @@ public class Board {
             }
             tmp =tribeDeck.getNextCard();
             tmp.addInRightList(upperRow);
-            if (tmp.getEra() != currentEra) {
+            if (tmp.getEra() > currentEra) {
                 startNewEra();
             }
         }
         return true;
     }
 
-    private void startNewEra() {
+    public void startNewEra() {
         currentEra++;
         lowerRow.clearBuildingCards();
         moveBuildingDeck(upperRow, lowerRow);
@@ -160,7 +163,7 @@ public class Board {
         return biddingTrail.getFoodBonus(player);
     }*/ //***Unused we consider to assign 3 foods directly
 
-    public Optional<Player> nextPlayerSecondPhase(Player currentPlayer){
+    public Optional<Player> nextPlayerSecondPhase(Player currentPlayer) throws IllegalArgumentException{
         if(currentPlayer==null) throw new IllegalArgumentException("Player is null");
         return biddingTrail.nextPlayerSecondPhase(currentPlayer);
     }//***Changed by using optional
@@ -229,8 +232,8 @@ public class Board {
             return lowerRow.orderEvents();
     }
 
-    public List<EventCard> eventResolveEndGame(List<Player> players){
-        ArrayList<EventCard> events = new ArrayList<EventCard>();
+    public List<EventCard> orderEventsEndGame(){
+        ArrayList<EventCard> events = new ArrayList<>();
         events.addAll(lowerRow.getEventCardsList());
         events.addAll(upperRow.getEventCardsList());
 

@@ -277,13 +277,17 @@ public class Game implements GameModelInterface{
         List<EventCard> eventList = sharedBoard.orderEvents();
         eventList.forEach(card -> {card.activateEvent(players);});
     }
+    private void eventResolveEndGame(){
+        List<EventCard> eventList = sharedBoard.orderEventsEndGame();
+        eventList.forEach(card -> {card.activateEvent(players);});
+    }
     private void secondPartPick(){
         eventResolve();
 
         boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
         countRound++;
         if (countRound == 11 || !boardRestored){
-            sharedBoard.eventResolveEndGame(players);
+            eventResolveEndGame();
             endGame();
             return;
         }

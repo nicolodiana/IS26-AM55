@@ -17,6 +17,7 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -114,26 +115,6 @@ public class RowTest {
         assertEquals(0, donor.getCharacterCardsList().size());
         assertEquals(0, donor.getEventCardsList().size());
     }
-
-//    @Test
-//    void swapBuildingRowTest() {
-//        Row donor = new Row();
-//        BuildingDeck buildingDeck = new BuildingDeck();
-//        buildingDeck.initBuildingDeckEra3(3);
-//        donor.setBuildingCardsList(buildingDeck);
-//
-//        Row tmp = new Row();
-//        tmp.setBuildingCardsList(buildingDeck);
-//
-//        Row receiver = new Row();
-//        buildingDeck.initBuildingDeckEra1(3);
-//        receiver.setBuildingCardsList(buildingDeck);
-//
-//        receiver.swapBuildingRow(donor, receiver);
-//
-//        assertEquals(tmp.getBuildingCardsList().getBuildingDeck(), receiver.getBuildingCardsList().getBuildingDeck());
-//        assertEquals(0, donor.getBuildingCardsList().getBuildingDeck().size());
-//    }
 
     @Test
     void clearRoundEndTest() {
@@ -233,77 +214,37 @@ public class RowTest {
         assertEquals(1, row.getBuildingCardsList().getBuildingDeck().size());
     }
 
-//    @Test
-//    void eventResolveTest() {
-//        Row row = new Row();
-//        List<Integer> executionOrder = new ArrayList<>();
-//        HuntEventCard huntEventCard = new HuntEventCard(1,1,1) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(1);
-//            }
-//        };
-//        HuntEventCard huntEventCard2 = new HuntEventCard(2,3,1) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(2);
-//            }
-//        };
-//        PaintingsEventCard paintingsEventCard = new PaintingsEventCard(3, 1, 1,1,1,1) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(3);
-//            }
-//        };
-//        PaintingsEventCard paintingsEventCard2 = new PaintingsEventCard(4, 3, 1,1,1,1) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(4);
-//            }
-//        };
-//        ShamanRitualEventCard ShamanEventCard = new ShamanRitualEventCard(5, 2,1,1) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(5);
-//            }
-//        };
-//        ShamanRitualEventCard ShamanEventCard2 = new ShamanRitualEventCard(6, 2,1,2) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(6);
-//            }
-//        };
-//        SustenanceEventCard sustenance = new SustenanceEventCard(7, 2,1) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(7);
-//            }
-//        };
-//        SustenanceEventCard sustenance2 = new SustenanceEventCard(8, 2,2) {
-//            @Override
-//            public void activateEvent(List<Player> players) {
-//                executionOrder.add(8);
-//            }
-//        };
-//        row.addEventCard(paintingsEventCard2);
-//        row.addEventCard(sustenance);
-//        row.addEventCard(ShamanEventCard);
-//        row.addEventCard(huntEventCard2);
-//        row.addEventCard(ShamanEventCard2);
-//        row.addEventCard(sustenance2);
-//        row.addEventCard(paintingsEventCard);
-//        row.addEventCard(huntEventCard);
-//
-//        List<Player> players = new ArrayList<>();
-//
-//        row.eventResolve(players);
-//
-//        assertEquals(List.of(1,2,3,4,5,6,7,8), executionOrder);
-//
-//        executionOrder.clear();
-//        row.eventResolve(players, row.getEventCardsList());
-//        assertEquals(List.of(1,2,3,4,5,6,7,8), executionOrder);
-//    }
+    @Test
+    void orderEventsTest() {
+        Row row = new Row();
+        List<Integer> executionOrder = new ArrayList<>();
+        HuntEventCard huntEventCard = new HuntEventCard(1,1,1);
+        HuntEventCard huntEventCard2 = new HuntEventCard(2,3,1);
+        PaintingsEventCard paintingsEventCard = new PaintingsEventCard(3, 1, 1,1,1,1);
+        PaintingsEventCard paintingsEventCard2 = new PaintingsEventCard(4, 3, 1,1,1,1);
+        ShamanRitualEventCard ShamanEventCard = new ShamanRitualEventCard(5, 2,1,1);
+        ShamanRitualEventCard ShamanEventCard2 = new ShamanRitualEventCard(6, 2,1,2);
+        SustenanceEventCard sustenance = new SustenanceEventCard(7, 2,1);
+        SustenanceEventCard sustenance2 = new SustenanceEventCard(8, 2,2);
+        row.addEventCard(paintingsEventCard2);
+        row.addEventCard(sustenance);
+        row.addEventCard(ShamanEventCard);
+        row.addEventCard(huntEventCard2);
+        row.addEventCard(ShamanEventCard2);
+        row.addEventCard(sustenance2);
+        row.addEventCard(paintingsEventCard);
+        row.addEventCard(huntEventCard);
 
+        List<EventCard> events = row.orderEvents();
+        int size = (row.getEventCardsList().size());
+        assertEquals(size, events.size());
 
+        Comparator<EventCard> comparator =
+                Comparator.comparingInt(EventCard::getOrder)
+                        .thenComparingInt(EventCard::getEra);
+
+        for (int i = 0; i < events.size() - 1; i++) {
+            assertTrue(comparator.compare(events.get(i), events.get(i + 1)) <= 0);
+        }
+    }
 }
