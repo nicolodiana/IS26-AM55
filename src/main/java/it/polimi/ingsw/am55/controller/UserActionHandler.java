@@ -1,0 +1,10 @@
+package it.polimi.ingsw.am55.controller;
+
+public interface UserActionHandler {
+
+    void onCreateGameSelected(String playerId, String totem, int numPlayers);
+
+    void onJoinGameSelected(String playerId, String totem);
+
+    void onPlaceTotemSelected(int index);
+}

@@ -1,16 +1,43 @@
 package it.polimi.ingsw.am55.network.rmi.server;
 
-import it.polimi.ingsw.am55.network.rmi.VirtualClient;
-import it.polimi.ingsw.am55.network.rmi.VirtualServer;
-import it.polimi.ingsw.am55.network.rmi.client.VirtualClientRmi;
+
+
+import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
+import it.polimi.ingsw.am55.virtualview.VirtualServer;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
+/**
+ * Questa interfaccia specializza VirtualServer per la tecnologia RMI.
+ *
+ * Definisce i metodi remoti esposti dal server ai client.
+ * Include anche il metodo connect(...) per registrare la callback remota del client.
+ */
 public interface VirtualServerRmi extends Remote, VirtualServer {
-    void updateLobbyState(String message, VirtualClientRmi vcr) throws RemoteException;
-    void connectClient(int playerId, VirtualClientRmi virtualClientRmi) throws RemoteException;
-    void endMatchConnection(int matchId) throws RemoteException;
-    void createGame(int matchId, int playerId, int numPlayers, VirtualClientRmi vcr) throws RemoteException;
-    void joinGame(int matchId, int playerId, VirtualClientRmi vcr) throws RemoteException;
+
+    /**
+     * Metodo usato dal client per registrarsi presso il server,
+     * così il server può effettuare callback su di lui tramite onMessage(...).
+     */
+    void connect(String playerId, VirtualViewRmi client) throws RemoteException;
+
+
+    @Override
+    void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException;
+
+    @Override
+    void joinGame(String playerId, String totemColor) throws RemoteException;
+
+    @Override
+    void placeTotem(String playerId, int index) throws RemoteException;
+
+    /*
+    altri metodi da aggiungere: dovranno poi anche aggiungersi dentro RMIServer che
+    @Override
+    void pickCard(String playerId, int cardId) throws RemoteException;
+
+    @Override
+    void endTurn(String playerId) throws RemoteException;
+    */
 }

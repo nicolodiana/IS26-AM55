@@ -31,7 +31,7 @@ public class BuildingDeck {
         int numCards = buildingDeckEra1.size();
         if (numPlayers == 2){
             for (int i = numCards; i > 1; i--) {
-                    buildingDeckEra1.removeFirst();
+                buildingDeckEra1.removeFirst();
             }
         } else {
             for (int i = numCards; i > 2; i--) {
@@ -95,7 +95,7 @@ public class BuildingDeck {
     public void clear(){
         buildingCardsList.clear();
     }
-//    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
+    //    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
 //        receiver.buildingCardsList = new ArrayList<>(donor.buildingCardsList) ;
 //        donor.clear();
 //    }
