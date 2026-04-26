@@ -1,10 +1,7 @@
 package it.polimi.ingsw.am55.controller;
 import it.polimi.ingsw.am55.MesosModel.Game.Game;
 import it.polimi.ingsw.am55.MesosModel.Game.GameModelInterface;
-import it.polimi.ingsw.am55.message.BoardUpdatedMessage;
-import it.polimi.ingsw.am55.message.ErrorMessage;
-import it.polimi.ingsw.am55.message.GameCreatedMessage;
-import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.message.*;
 
 /**
  * Controller server-side.
@@ -20,6 +17,7 @@ import it.polimi.ingsw.am55.message.MessageToClient;
 public class GameController {
 
     private GameModelInterface gameModel;
+    private int numPlayers;
 
     //inizialmente nullo perchè assume un valore soltanto quando viene fatto un create game
     public GameController() {
@@ -35,17 +33,17 @@ public class GameController {
         try {
             gameModel = new Game(numPlayers);
             gameModel.addPlayer(playerId, totemColor);
+            this.numPlayers = numPlayers;
 
-            String currentPlayer = gameModel.getCurrentPlayer();
+            //String currentPlayer = gameModel.getCurrentPlayer();
 
-            //return new GameCreatedMessage(playerId, numPlayers, currentPlayer);
+            return new GameCreatedMessage(playerId, numPlayers, "Game has been created");
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
     }
-}
-    /*
+    
     public MessageToClient joinGame(String playerId, String totemColor) {
         if (gameModel == null) {
             return new ErrorMessage("Nessuna partita creata.");
@@ -53,13 +51,20 @@ public class GameController {
 
         try {
             gameModel.addPlayer(playerId, totemColor);
-            //return new InfoMessage("Il giocatore " + playerId + " si è unito alla partita.");
+
+            if (gameModel.getNumPlayers() == this.numPlayers) {
+                return new InfoMessage("Game has started");
+            }
+
+            return new InfoMessage("Il giocatore " + playerId + " si è unito alla partita.");
+
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
+
     }
 
-
+/*
     public MessageToClient placeTotem(String playerId, int index) {
         if (gameModel == null) {
             return new ErrorMessage("Nessuna partita creata.");
@@ -72,10 +77,10 @@ public class GameController {
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
-    }
+    }*/
 }
 
-
+/*
     public MessageToClient pickCard(String playerId, int cardId) {
         try {
             game.pickCard(playerId, cardId);

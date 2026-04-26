@@ -6,12 +6,13 @@ public class GameCreatedMessage implements MessageToClient {
 
     private final String creatorId;
     private final int numPlayers;
-    private final String currentPlayer;
+    //private final String currentPlayer;
+    private final String message;
 
-    public GameCreatedMessage(String creatorId, int numPlayers, String currentPlayer) {
+    public GameCreatedMessage(String creatorId, int numPlayers, String message) {
         this.creatorId = creatorId;
         this.numPlayers = numPlayers;
-        this.currentPlayer = currentPlayer;
+        this.message = message;
     }
 
     public String getCreatorId() {
@@ -22,14 +23,15 @@ public class GameCreatedMessage implements MessageToClient {
         return numPlayers;
     }
 
-    public String getCurrentPlayer() {
-        return currentPlayer;
-    }
+//    public String getCurrentPlayer() {
+//        return currentPlayer;
+//    }
 
     @Override
     public void update(CliModel model) {
         model.setNumPlayers(numPlayers);
-        model.setCurrentPlayer(currentPlayer);
+        model.setStateRequest(message);
+        //model.setCurrentPlayer(currentPlayer);
     }
 
     @Override

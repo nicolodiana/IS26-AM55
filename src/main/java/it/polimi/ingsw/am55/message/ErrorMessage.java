@@ -16,6 +16,7 @@ public class ErrorMessage implements MessageToClient {
 
     @Override
     public void update(CliModel model) {
+        model.setStateRequest(message);
         model.setLastError(message);
     }
 

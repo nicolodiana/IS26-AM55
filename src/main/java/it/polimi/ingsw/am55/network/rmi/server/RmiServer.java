@@ -1,6 +1,6 @@
 package it.polimi.ingsw.am55.network.rmi.server;
 
-import it.polimi.ingsw.am55.controller.GameController;
+import it.polimi.ingsw.am55.controller.*;
 import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
@@ -80,11 +80,9 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
      */
     @Override
     public void joinGame(String playerId, String totem) throws RemoteException {
-       /*
+
         MessageToClient message = controller.joinGame(playerId, totem);
         message.deliver(playerId, this);
-        /*
-        */
     }
 
     /**

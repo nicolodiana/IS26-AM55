@@ -12,6 +12,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Scanner;
 
 /**
  * Questa classe rappresenta la logica di rete del client implementata con tecnologia RMI.
@@ -39,9 +40,9 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
 
     public static void main(String[] args) throws RemoteException, NotBoundException {
         final String serverName = "GameServer";
-        String host = args[0];
+        //String host = args[0];
         // chiedo al registry il riferimento all'oggetto remoto del server
-        Registry registry = LocateRegistry.getRegistry(host, 1234);
+        Registry registry = LocateRegistry.getRegistry(args.length > 0 ? args[0] : "localhost", 1234);
 
         // lookup e cast allo stub del server
         VirtualServerRmi server = (VirtualServerRmi) registry.lookup(serverName);
@@ -85,6 +86,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
      */
     public void connect() throws RemoteException {
         this.server.connect(playerId, this);
+        start();
     }
 
     /**
@@ -106,7 +108,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
         this.server.connect(playerId, this);
         this.server.createGame(playerId, totemColor, numPlayers);
     }
-  /*
+
     public void joinGame(String playerId, String totemColor) throws RemoteException {
         this.playerId = playerId;
         this.server.connect(playerId, this);
@@ -129,4 +131,34 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
         server.endTurn(playerId);
     }
     */
+
+    public void start() throws RemoteException {
+        Scanner input = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("> ");
+            //String line = input.nextLine();
+
+            // solo per test in questo momento
+            String command = input.nextLine();
+            //String[] parts = line.split(", ");
+            //String command = parts[0];
+            //int matchId = Integer.parseInt((parts[1]));
+            //int playerId = Integer.parseInt((parts[2]));
+            //int numPlayers = 0;
+            //if (parts.length == 4) numPlayers= Integer.parseInt(parts[3]);
+            //
+
+            if (command.equalsIgnoreCase("create game")) {
+                createGame("abc", "red", 2);
+                System.out.println(model.getStateRequest());
+            }
+            else if (command.equalsIgnoreCase("join game")) {
+                joinGame("bcd", "purple");
+                System.out.println(model.getStateRequest());
+            }
+            else System.out.println("This command doesn't exist. Please try another one");
+        }
+    }
+
 }

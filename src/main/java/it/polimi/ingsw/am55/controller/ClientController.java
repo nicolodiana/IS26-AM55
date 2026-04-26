@@ -24,14 +24,12 @@ public class ClientController implements UserActionHandler {
 
     @Override
     public void onJoinGameSelected(String playerId, String totemColor) {
-        /*
+
         try {
             rmiClient.joinGame(playerId, totemColor);
         } catch (RemoteException e) {
             System.err.println("Errore durante joinGame: " + e.getMessage());
         }
-
-         */
     }
 
     @Override

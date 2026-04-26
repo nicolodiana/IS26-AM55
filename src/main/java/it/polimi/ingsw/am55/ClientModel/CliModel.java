@@ -17,6 +17,7 @@ public class CliModel {
     private String lastError;
     private int lastPlacedTotemIndex;
     private String currentPlayer;
+    private String stateRequest;
 
     public CliModel() {
         this.numPlayers = 0;
@@ -71,5 +72,13 @@ public class CliModel {
 
     public String getCurrentPlayer() {
         return currentPlayer;
+    }
+
+    public void setStateRequest(String stateRequest) {
+        this.stateRequest = stateRequest;
+    }
+
+    public String getStateRequest() {
+        return stateRequest;
     }
 }
