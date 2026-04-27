@@ -149,8 +149,8 @@ class PlayerTest {
 
         Player poor = new Player("poor", "totem6");
         poor.addFood(1);
-        poor.addTribeCard(new BuildingCard(6, 0, 3, 0, BuildingType.BUILDING9, null, 0));
-
+        //*****Changes
+        assertThrows(IllegalArgumentException.class,()->poor.addTribeCard(new BuildingCard(6, 0, 3, 0, BuildingType.BUILDING9, null, 0)));
         assertEquals(1, poor.getNumFoods());
         assertFalse(poor.hasBuilding(BuildingType.BUILDING9));
     }

@@ -108,7 +108,7 @@ public class RowTest {
         tmp.addEventCard(eventCard);
         tmp.addEventCard(eventCard2);
 
-        receiver.swapTribeRow(donor, receiver);
+        receiver.swapTribeRow(donor);
 
         assertEquals(tmp.getCharacterCardsList(), receiver.getCharacterCardsList());
         assertEquals(tmp.getEventCardsList(), receiver.getEventCardsList());

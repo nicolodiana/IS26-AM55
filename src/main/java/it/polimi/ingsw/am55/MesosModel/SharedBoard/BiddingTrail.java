@@ -15,10 +15,6 @@ import java.util.Optional;
  * player positions on the trail, and determining turn order for the second phase of the game.
  */
 public class BiddingTrail {
-
-    /**
-     * The list of active bidding tickets currently on the trail.
-     */
     private List<BiddingTicket> ticketList;
 
     /**
@@ -26,7 +22,7 @@ public class BiddingTrail {
      * Initializes an empty bidding trail.
      */
     public BiddingTrail() {
-        ticketList = new ArrayList<>();
+        ticketList = new ArrayList<BiddingTicket>();
     }
 
     /**
@@ -81,14 +77,6 @@ public class BiddingTrail {
                 .filter(b -> b.getNumPlayer() <= numPlayer)
                 .sorted(Comparator.comparing(BiddingTicket::getTrailPlacement))
                 .toList();
-
-        /*for (BiddingTicket biddingTicket : allBiddingTicket) {
-            if (biddingTicket.getNumPlayer() <= numPlayer) {
-                ticketList.add(biddingTicket);
-            }
-        }
-        ticketList.sort(Comparator.comparing(BiddingTicket::getTrailPlacement));
-        return ticketList;*/
     }
 
     /*public void movePlayerToBiddingTrail(Player player, int index) {
@@ -99,13 +87,13 @@ public class BiddingTrail {
      * Determines the next player to take a turn during the second phase by looking ahead
      * on the bidding trail from the current player's position.
      *
-     * @param currentPlayer the {@link Player} whose turn has just finished
+     *
      * @return an {@link Optional} containing the next {@link Player} on the trail,
      * or an empty Optional if no subsequent players are found
      */
-    public Optional<Player> nextPlayerSecondPhase(Player currentPlayer) {
-        for (int i = getPlayerPositionOnTrail(currentPlayer) + 1; i < ticketList.size(); i++) {
-            Player p = ticketList.get(i).getPlayer();
+    public Optional<Player> nextPlayerSecondPhase() {
+        for(BiddingTicket b : ticketList){
+            Player p = b.getPlayer();
             if (p != null) {
                 return Optional.of(p);
             }

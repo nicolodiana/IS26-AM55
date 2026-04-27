@@ -26,12 +26,12 @@ public class BuildingDeck {
         buildingDeckEra1.add(new BuildingCard(102, 1, 5, 3, BuildingType.BUILDING2, CharacterType.ARTIST, 0));
         buildingDeckEra1.add(new BuildingCard(103, 1, 5, 2, BuildingType.BUILDING3, null, 0));
         buildingDeckEra1.add(new BuildingCard(104, 1, 3, 3, BuildingType.BUILDING4, null, 0));
-        buildingDeckEra1.add(new BuildingCard(105, 1, 3, 4, BuildingType.BUILDING5, CharacterType.INVENTOR, 0));
+        buildingDeckEra1.add(new BuildingCard(105, 1, 3, 4, BuildingType.BUILDING5, null, 0));
         Collections.shuffle(buildingDeckEra1);
         int numCards = buildingDeckEra1.size();
         if (numPlayers == 2){
             for (int i = numCards; i > 1; i--) {
-                buildingDeckEra1.removeFirst();
+                    buildingDeckEra1.removeFirst();
             }
         } else {
             for (int i = numCards; i > 2; i--) {
@@ -45,9 +45,9 @@ public class BuildingDeck {
         buildingDeckEra2.add(new BuildingCard(106, 2, 7, 0, BuildingType.BUILDING7, null, 0));
         buildingDeckEra2.add(new BuildingCard(107, 2, 6, 4, BuildingType.BUILDING6, null, 0));
         buildingDeckEra2.add(new BuildingCard(108, 2, 7, 4, BuildingType.BUILDING2, CharacterType.INVENTOR, 0));
-        buildingDeckEra2.add(new BuildingCard(109, 2, 7, 2, BuildingType.BUILDING8, CharacterType.HUNTER, 0));
-        buildingDeckEra2.add(new BuildingCard(110, 2, 6, 4, BuildingType.BUILDING9, CharacterType.BUILDER, 0));
-        buildingDeckEra2.add(new BuildingCard(111, 2, 5, 6, BuildingType.BUILDING10, CharacterType.ARTIST, 0));
+        buildingDeckEra2.add(new BuildingCard(109, 2, 7, 2, BuildingType.BUILDING8, null, 0));
+        buildingDeckEra2.add(new BuildingCard(110, 2, 6, 4, BuildingType.BUILDING9, null, 0));
+        buildingDeckEra2.add(new BuildingCard(111, 2, 5, 6, BuildingType.BUILDING10, null, 0));
         buildingDeckEra2.add(new BuildingCard(112, 2, 5, 6, BuildingType.BUILDING11, null, 0));
         Collections.shuffle(buildingDeckEra2);
         int numCards = buildingDeckEra2.size();
@@ -95,7 +95,7 @@ public class BuildingDeck {
     public void clear(){
         buildingCardsList.clear();
     }
-    //    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
+//    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
 //        receiver.buildingCardsList = new ArrayList<>(donor.buildingCardsList) ;
 //        donor.clear();
 //    }

@@ -1,135 +1,789 @@
 package it.polimi.ingsw.am55.MesosModel.Game;
 
+import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
+import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
+import it.polimi.ingsw.am55.MesosModel.Effect.*;
+import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
+import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test class for the  Game model.
- * It provides unit tests to verify the correct behavior of the game's initialization,
- * player management, and state transitions.
+ * Test class for the Game model.
+ * It provides unit tests to verify the correct behavior of game initialization,
+ * player management, state transitions, card picking, and end-game evaluation.
  */
 class GameTest {
 
     private Game g;
-    private final int PLAYERS = 3;
 
     /**
      * Sets up the test environment before each test method is executed.
-     * Initializes a new Game instance with a standard configuration of 3 players.
+     * Initializes a new {@link Game} instance configured for 2 players.
      *
-     * @throws PlayerNumberOutOfRange if the number of players is invalid during initialization.
+     * @throws PlayerNumberOutOfRange if the game is initialized with an invalid number of players
      */
     @BeforeEach
     void setUp() throws PlayerNumberOutOfRange {
-        g = new Game(PLAYERS);
+        g = new Game(2);
     }
 
+    // =========================
+    // Constructor and setup
+    // =========================
+
     /**
-     * Tests the Game constructor and its initial getter methods.
-     * Verifies that the initial game state is CREATED, a game ID is generated,
-     * and getting winners before the game finishes throws an exception.
-     * Also checks that invalid player counts throw a  PlayerNumberOutOfRange exception
-     * and that the initial valid totem colors are correctly populated.
+     * Verifies the initial state of a newly created game.
+     * The test checks that:
+     *
+     *     the game state is {@code CREATED}
+     *     a game identifier is generated
+     *     invalid player counts throw {@link PlayerNumberOutOfRange}
+     *     all valid totem colors are initially available
+     *
      */
     @Test
     void testConstructorAndInitialGetters() {
         assertAll(
                 () -> assertEquals(GameState.CREATED, g.getGameState()),
-                () -> assertNotNull(g.getIdGame())
+                () -> assertNotNull(g.getIdGame()),
+                () -> assertThrows(PlayerNumberOutOfRange.class, () -> new Game(1)),
+                () -> assertThrows(PlayerNumberOutOfRange.class, () -> new Game(6)),
+                () -> assertTrue(g.getTotemColorsValid().contains("white")),
+                () -> assertTrue(g.getTotemColorsValid().contains("black")),
+                () -> assertTrue(g.getTotemColorsValid().contains("red")),
+                () -> assertTrue(g.getTotemColorsValid().contains("blue")),
+                () -> assertTrue(g.getTotemColorsValid().contains("yellow"))
         );
-        assertThrows(PlayerNumberOutOfRange.class, () -> new Game(1));
-        assertThrows(PlayerNumberOutOfRange.class, () -> new Game(6));
-
-        assertTrue(g.getTotemColorsValid().contains("white"));
-        assertTrue(g.getTotemColorsValid().contains("black"));
-        assertTrue(g.getTotemColorsValid().contains("red"));
-        assertTrue(g.getTotemColorsValid().contains("blue"));
-        assertTrue(g.getTotemColorsValid().contains("yellow"));
     }
 
     /**
-     * Tests that adding a player beyond the maximum allowed number (defined at initialization)
-     * correctly throws a PlayerNumberOutOfRange exception.
-     *
-     * @throws PlayerNumberOutOfRange if the player limit is exceeded.
-     * @throws NicknameAlreadyUsed if the chosen nickname is already taken.
-     * @throws TotemAlreadyUsed if the chosen totem color is already taken.
-     */
-    //DANIELE QUESSTO TEST DA ERRORE CORREGGILO PLSSS
-//    @Test
-//    void testAddPlayerToGame_ExceedingLimit() throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
-//        g.addPlayer("Player1", "white");
-//        g.addPlayer("Player2", "black");
-//        g.addPlayer("Player3", "yellow");
-//        assertThrows(PlayerNumberOutOfRange.class, () -> { g.addPlayer("Player4", "red"); });
-//    }
-
-    /**
-     * Tests that adding a player with a nickname that is already in use by another player
-     * throws a  NicknameAlreadyUsed exception.
-     *
-     * @throws PlayerNumberOutOfRange if the player limit is exceeded.
-     * @throws NicknameAlreadyUsed if the chosen nickname is already taken.
-     * @throws TotemAlreadyUsed if the chosen totem color is already taken.
-     */
-    @Test
-    void testAddPlayerToGame_NicknameAlreadyUsed() throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
-        g.addPlayer("Player1", "white");
-        assertThrows(NicknameAlreadyUsed.class, () -> { g.addPlayer("Player1", "black"); });
-    }
-
-    /**
-     * Tests that adding a player with a totem color that is already in use by another player
-     * throws a TotemAlreadyUsed exception.
-     *
-     * @throws PlayerNumberOutOfRange if the player limit is exceeded.
-     * @throws NicknameAlreadyUsed if the chosen nickname is already taken.
-     * @throws TotemAlreadyUsed if the chosen totem color is already taken.
-     */
-    @Test
-    void testAddPlayerToGame_TotemAlreadyUsed() throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
-        g.addPlayer("Player1", "white");
-        assertThrows(TotemAlreadyUsed.class, () -> { g.addPlayer("Player2", "white"); });
-    }
-
-    /**
-     * Tests the successful addition of multiple players to the game.
-     * Verifies that the internal player count increases correctly and that the chosen
-     * totem colors are properly removed from the pool of available valid colors.
-     *
-     * @throws PlayerNumberOutOfRange if the player limit is exceeded.
-     * @throws NicknameAlreadyUsed if the chosen nickname is already taken.
-     * @throws TotemAlreadyUsed if the chosen totem color is already taken.
-     */
-    //DANIELE QUESSTO TEST DA ERRORE CORREGGILO PLSSS
-//    @Test
-//    void testAddPlayerToGame_AddPlayersIntoTheGame() throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
-//        assertEquals(0, g.getNumPlayers());
-//        assertTrue(g.getTotemColorsValid().contains("white"));
-//        assertTrue(g.getTotemColorsValid().contains("black"));
-//        assertTrue(g.getTotemColorsValid().contains("yellow"));
-//
-//        g.addPlayer("Player1", "white");
-//        g.addPlayer("Player2", "black");
-//        g.addPlayer("Player3", "yellow");
-//
-//        assertFalse(g.getTotemColorsValid().contains("white"));
-//        assertFalse(g.getTotemColorsValid().contains("black"));
-//        assertFalse(g.getTotemColorsValid().contains("yellow"));
-//        assertEquals(3, g.getNumPlayers());
-//    }
-
-    /**
-     * Tests the transition of the game state when an unexpected crash is handled.
-     * Verifies that invoking the crash handler successfully updates the state to CRASHED.
+     * Verifies that the game state changes to {@code CRASHED}
+     * when the crash-handling method is invoked.
      */
     @Test
     void testChangeStateIfGameCrashed() {
         g.handleGameCrashed();
         assertEquals(GameState.CRASHED, g.getGameState());
+    }
+
+    // =========================
+    // addPlayer
+    // =========================
+
+    /**
+     * Verifies that adding a player beyond the configured player limit
+     * throws a {@link PlayerNumberOutOfRange} exception.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testAddPlayerToGame_ExceedingLimit() throws PlayerNumberOutOfRange{
+        g.addPlayer("Player1", "white");
+        g.addPlayer("Player2", "black");
+        assertEquals(2, g.getNumPlayers());
+        assertThrows(PlayerNumberOutOfRange.class, ()->g.addPlayer("Player3", "red"));
+        assertEquals(2, g.getNumPlayers());
+    }
+
+    /**
+     * Verifies that adding a player with a nickname that is already in use
+     * throws a {@link NicknameAlreadyUsed} exception.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testAddPlayerToGame_NicknameAlreadyUsed() throws PlayerNumberOutOfRange {
+        g.addPlayer("Player1", "white");
+        assertEquals(1, g.getNumPlayers());
+        assertThrows(NicknameAlreadyUsed.class,()->g.addPlayer("Player1", "black"));
+        assertEquals(1, g.getNumPlayers());
+    }
+
+    /**
+     * Verifies that adding a player with a totem color already assigned
+     * to another player throws a {@link TotemAlreadyUsed} exception.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testAddPlayerToGame_TotemAlreadyUsed() throws PlayerNumberOutOfRange {
+        g.addPlayer("Player1", "white");
+        assertEquals(1, g.getNumPlayers());
+        assertThrows(TotemAlreadyUsed.class, () -> g.addPlayer("Player2", "white"));
+        assertEquals(1, g.getNumPlayers());
+    }
+
+    /**
+     * Verifies that players are added correctly to the game and that,
+     * once the lobby is full, the game enters the {@code PLACETOTEM} phase.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testAddPlayerToGame_AddPlayersIntoTheGame() throws PlayerNumberOutOfRange {
+        assertAll(
+                () -> assertEquals(0, g.getNumPlayers()),
+                () -> assertEquals(GameState.CREATED, g.getGameState()),
+                () -> assertTrue(g.getTotemColorsValid().contains("white")),
+                () -> assertTrue(g.getTotemColorsValid().contains("black"))
+        );
+
+        g.addPlayer("Player1", "white");
+        g.addPlayer("Player2", "black");
+
+        assertAll(
+                () -> assertFalse(g.getTotemColorsValid().contains("white")),
+                () -> assertFalse(g.getTotemColorsValid().contains("black")),
+                () -> assertEquals(2, g.getNumPlayers()),
+                () -> assertEquals("Player1", g.getPlayers().getFirst().getNickname()),
+                () -> assertEquals("Player2", g.getPlayers().get(1).getNickname()),
+                () -> assertEquals(2,g.getSharedBoard().getPlayerFromTurnTicket(0).getNumFoods()),
+                () -> assertEquals(3,g.getSharedBoard().getPlayerFromTurnTicket(1).getNumFoods()),
+                () -> assertEquals(1, g.getCountRound()),
+                () -> assertEquals(GameState.PLACETOTEM, g.getGameState())
+        );
+    }
+
+    // =========================
+    // placeTotem
+    // =========================
+
+    /**
+     * Verifies that placing a totem with an invalid player while the game
+     * is not in a valid playable configuration throws an {@link IllegalStateException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPlaceTotem_GamePhaseInvalidAndPlayerInvalid() throws PlayerNumberOutOfRange {
+        g.addPlayer("Player1", "white");
+        assertThrows(IllegalStateException.class, () -> g.placeTotem(1, "invalid"));
+    }
+
+    /**
+     * Verifies that placing valid totems in sequence starts the card-picking phase
+     * and preserves the expected current player order.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPlaceTotem_GamePhaseValidAndPlayerValid() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+        assertEquals(GameState.PLACETOTEM, g.getGameState());
+
+        String firstPlayer = g.getCurrentPlayer();
+
+        g.placeTotem(1, g.getCurrentPlayer());
+        g.placeTotem(2, g.getCurrentPlayer());
+
+        assertAll(
+                () -> assertEquals(GameState.PICKCARD, g.getGameState()),
+                () -> assertEquals(firstPlayer, g.getCurrentPlayer())
+        );
+    }
+
+    /**
+     * Verifies that placing a totem with an invalid player identifier
+     * during a valid game phase throws an {@link IllegalStateException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPlaceTotem_GamePhaseValidAndPlayerNotValid() throws PlayerNumberOutOfRange{
+        addTwoPlayers();
+        assertEquals(GameState.PLACETOTEM, g.getGameState());
+
+        assertThrows(IllegalStateException.class, () -> g.placeTotem(1, "invalid"));
+    }
+
+
+    // =========================
+    // pickFood
+    // =========================
+
+    /**
+     * Verifies that attempting to pick food in an invalid player-count scenario
+     * results in an {@link IllegalStateException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickFood_WrongNumbersOfPlayer() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+
+        String firstPlayer = g.getCurrentPlayer();
+        g.placeTotem(1, g.getCurrentPlayer());
+        g.placeTotem(2, g.getCurrentPlayer());
+
+        assertThrows(IllegalStateException.class, () -> g.pickFood(firstPlayer));
+    }
+
+    /**
+     * Verifies that the correct player can legally pick food from the proper position
+     * in a five-player game.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickFood_CorrectNumberOfPlayerCorrectPosition() throws PlayerNumberOutOfRange{
+        Game game = createFivePlayerGame();
+
+        String firstPlayer = game.getCurrentPlayer();
+        game.placeTotem(0, game.getCurrentPlayer());
+        game.placeTotem(2, game.getCurrentPlayer());
+        game.placeTotem(5, game.getCurrentPlayer());
+        game.placeTotem(4, game.getCurrentPlayer());
+        game.placeTotem(3, game.getCurrentPlayer());
+
+        assertEquals(firstPlayer, game.getCurrentPlayer());
+        assertDoesNotThrow(() -> game.pickFood(firstPlayer));
+    }
+
+    /**
+     * Verifies that a player cannot pick food from the wrong position
+     * even if the action would otherwise be available in a five-player game.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickFood_CorrectNumberOfPlayerWrongPosition() throws PlayerNumberOutOfRange {
+        Game game = createFivePlayerGame();
+
+        String firstPlayer = game.getCurrentPlayer();
+        game.placeTotem(0, game.getCurrentPlayer());
+        // Save the second player and let that player attempt to pick food from the wrong position.
+        String secondPlayer = game.getCurrentPlayer();
+        game.placeTotem(2, game.getCurrentPlayer());
+        game.placeTotem(5, game.getCurrentPlayer());
+        game.placeTotem(4, game.getCurrentPlayer());
+        game.placeTotem(3, game.getCurrentPlayer());
+
+        assertAll(
+                () -> assertEquals(firstPlayer, game.getCurrentPlayer()),
+                () -> assertThrows(IllegalStateException.class, () -> game.pickFood(secondPlayer))
+        );
+    }
+
+    // =========================
+    // pickCard
+    // =========================
+
+    /**
+     * Verifies that attempting to pick a card during the wrong game phase
+     * throws an {@link IllegalStateException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_GameStateNotValid() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+
+        String player1 = g.getCurrentPlayer();
+        g.placeTotem(0, g.getCurrentPlayer());
+        // Attempt to pick a card during the wrong phase.
+        assertThrows(IllegalStateException.class, () -> g.pickCard(2, player1));
+    }
+
+    /**
+     * Verifies that attempting to pick a card with an invalid card identifier
+     * throws an {@link IllegalArgumentException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_IndexCardNotValid() throws PlayerNumberOutOfRange{
+        addTwoPlayers();
+
+        String player1 = g.getCurrentPlayer();
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> g.pickCard(-1, player1)),
+                () -> assertThrows(IllegalArgumentException.class, () -> g.pickCard(121, player1))
+        );
+    }
+
+    /**
+     * Verifies that a player identifier different from the current player
+     * cannot be used to pick a card.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_PlayerIdNotValid() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+        assertThrows(IllegalStateException.class, () -> g.pickCard(2, "wrong"));
+    }
+
+
+
+    /**
+     * Verifies a valid pick-card flow across a full round and checks that
+     * the game correctly advances to the next round.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_pickValidAndEndRound() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+
+        //Player firstPlayer = g.getSharedBoard().getFirstPlayerFirstPhase();
+        g.placeTotem(3, g.getCurrentPlayer());// Bidding tile F: upper and upper.
+        //Optional<Player> secondPlayer = g.getSharedBoard().getNextPlayerFirstPhase(firstPlayer);
+        g.placeTotem(2, g.getCurrentPlayer());// Bidding tile E: upper and lower.
+
+        CharacterCard firstUpperCard = firstUpperCharacterCard();
+        g.pickCard(firstUpperCard.getId(), g.getCurrentPlayer());
+
+        CharacterCard firstLowerCard = firstLowerCharacterCard();
+        g.pickCard(firstLowerCard.getId(), g.getCurrentPlayer());
+        // The first player has finished picking cards.
+        Optional<Player> nextPlayer = g.getSharedBoard().nextPlayerSecondPhase();
+        assertTrue(nextPlayer.isPresent());
+        assertEquals(nextPlayer.get().getNickname(), g.getCurrentPlayer());
+        // The next player is now picking cards.
+        CharacterCard secondUpperCard = firstUpperCharacterCard();
+        g.pickCard(secondUpperCard.getId(), g.getCurrentPlayer());
+
+        CharacterCard thirdUpperCard = firstUpperCharacterCard();
+        g.pickCard(thirdUpperCard.getId(), g.getCurrentPlayer());
+
+        String expectedFirstPlayerNextRound = g.getSharedBoard().getFirstPlayerFirstPhase().getNickname();
+
+        assertAll(
+                () -> assertEquals(GameState.PLACETOTEM, g.getGameState()),
+                () -> assertEquals(expectedFirstPlayerNextRound, g.getCurrentPlayer()),
+                () -> assertEquals(2, g.getCountRound()) // A new round starts.
+        );
+    }
+
+    /**
+     * Verifies the interaction between a normal card pick and the special-pick phase
+     * granted by Building 13.
+     *
+     * @throws Exception if the setup triggers checked exceptions during test preparation
+     */
+    @Test
+    void testPickCardAndPickSpecial_PlayerWithBuilding13() throws Exception {
+        addTwoPlayers();
+
+        // Since the order is randomly generated on the turn-order tile,
+        // the test assumes that the first player is the one who will receive Building 13.
+        // That player is saved in a variable and then retrieved from the game player list.
+        Player playerWithSpecialBuilding = g.getSharedBoard().getFirstPlayerFirstPhase();
+        g.placeTotem(1, g.getCurrentPlayer());
+        g.placeTotem(0, g.getCurrentPlayer());
+        // The first player picks from the lower row, so a character card is retrieved from the lower row.
+        CharacterCard lowerCard = firstLowerCharacterCard();
+        g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
+
+        // Now the second player should pick a character card and, once everyone has repositioned,
+        // the game state should change to PICKSPECIAL so that the player can make an additional pick.
+        BuildingCard building13 = new BuildingCard(119, 3, 9, 3, BuildingType.BUILDING13, null, 0);
+        Player targetPlayer = g.getPlayers().get(g.getPlayers().indexOf(playerWithSpecialBuilding));
+        targetPlayer.addFood(7); // The player has 2 food
+        //  6 additional food so that the building can be afforded.
+
+        targetPlayer.addTribeCard(building13);
+
+        // Advance the game so that all players have repositioned on the turn-order tile.
+        CharacterCard upperCard = firstUpperCharacterCard();
+        g.pickCard(upperCard.getId(), targetPlayer.getNickname());
+
+        assertAll(
+                () -> assertEquals(GameState.PICKSPECIAL, g.getGameState()), // Verify that the state changes.
+                () -> assertEquals(targetPlayer.getNickname(), g.getCurrentPlayer())
+        );
+
+        CharacterCard specialPickCard = firstUpperCharacterCard(); // Only picking from the upper row is allowed.
+        g.pickSpecial(specialPickCard.getId(), g.getCurrentPlayer());
+
+        assertEquals(GameState.PLACETOTEM, g.getGameState());
+    }
+
+    /**
+     * Verifies that a player cannot pick an Era I building when the available food
+     * is not sufficient to pay its cost.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_PlayerCannotAffordBuildingEra1() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+
+        Player firstPhasePlayer = g.getSharedBoard().getFirstPlayerFirstPhase();
+        g.placeTotem(0, g.getCurrentPlayer());
+
+        // This is required to normalize the food amount so that the exception is triggered,
+        // because the player must not be able to afford adding the building to the tribe.
+        Optional<Player> secondPlayer = g.getSharedBoard().getNextPlayerFirstPhase(firstPhasePlayer);
+        assertTrue(secondPlayer.isPresent());
+        g.placeTotem(1, g.getCurrentPlayer());
+
+        CharacterCard lowerCard = firstLowerCharacterCard();
+        g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
+
+        BuildingCard buildingCard = g.getSharedBoard().getUpperRow().getBuildingCardsList().getBuildingCardByIndex(0);
+        secondPlayer.get().payFood(1);// Since the second player always starts with 3 food,
+        // the player could afford a building in the best case because a building costs at least 3 food.
+        // Therefore, the food amount is reduced by 1.
+
+        assertAll(
+                () -> assertThrows(CannotAffordBuildingException.class,
+                        () -> g.pickCard(buildingCard.getId(), g.getCurrentPlayer())),
+                () -> assertEquals(GameState.PICKCARD, g.getGameState())
+        );
+    }
+
+    /**
+     * Verifies that a player can successfully pick an Era I building
+     * when enough food is available.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_PlayerCanAffordBuildingEra1() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+
+        Player firstPhasePlayer = g.getSharedBoard().getFirstPlayerFirstPhase();
+        g.placeTotem(0, g.getCurrentPlayer());
+
+        Optional<Player> secondPlayer = g.getSharedBoard().getNextPlayerFirstPhase(firstPhasePlayer);
+        assertTrue(secondPlayer.isPresent());
+
+        g.placeTotem(1, g.getCurrentPlayer());
+
+        CharacterCard lowerCard = firstLowerCharacterCard();
+        g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
+
+        BuildingCard buildingCard = g.getSharedBoard().getUpperRow().getBuildingCardsList().getBuildingCardByIndex(0);
+        secondPlayer.get().addFood(buildingCard.getFoodCost());
+
+        g.pickCard(buildingCard.getId(), g.getCurrentPlayer());
+
+        assertTrue(secondPlayer.get().getBuildings().contains(buildingCard));
+    }
+
+    /**
+     * Verifies that a card cannot be picked from the upper row
+     * when the current offer tile does not allow it.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_InvalidUpperRow() throws PlayerNumberOutOfRange{
+        addTwoPlayers();
+
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+
+        CharacterCard upperCard = firstUpperCharacterCard();
+        assertThrows(CantPickFromRow.class, () -> g.pickCard(upperCard.getId(), g.getCurrentPlayer()));
+    }
+
+    /**
+     * Verifies that a second illegal pick from the lower row
+     * throws a {@link CantPickFromRow} exception.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     * @throws NicknameAlreadyUsed never expected in this test flow, but declared by the current method signature
+     * @throws TotemAlreadyUsed never expected in this test flow, but declared by the current method signature
+     */
+    @Test
+    void testPickCard_InvalidLowerRow()
+            throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+        addTwoPlayers();
+
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+
+        CharacterCard firstLowerCard = firstLowerCharacterCard();
+        g.pickCard(firstLowerCard.getId(), g.getCurrentPlayer());
+
+        CharacterCard secondLowerCard = firstLowerCharacterCard();
+        assertThrows(CantPickFromRow.class, () -> g.pickCard(secondLowerCard.getId(), g.getCurrentPlayer()));
+    }
+
+    /**
+     * Verifies that the game reaches the {@code ENDED} state
+     * when the final round is completed.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     * @throws NicknameAlreadyUsed never expected in this test flow, but declared by the current method signature
+     * @throws TotemAlreadyUsed never expected in this test flow, but declared by the current method signature
+     */
+    @Test
+    void testPickCard_endGame()
+            throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+        addTwoPlayers();
+
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+        g.setCountRound(10); // Assume the game is at the final round even though it has just started.
+
+        CharacterCard lowerCard = firstLowerCharacterCard();
+        g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
+
+        CharacterCard upperCard = firstUpperCharacterCard();
+        g.pickCard(upperCard.getId(), g.getCurrentPlayer());
+
+        assertAll(
+                () -> assertEquals(11, g.getCountRound()),
+                () -> assertEquals(GameState.ENDED, g.getGameState())
+        );
+    }
+
+    // =========================
+    // pickSpecial
+    // =========================
+
+    /**
+     * Verifies that calling {@code pickSpecial} in the wrong game phase
+     * throws an {@link IllegalStateException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     * @throws NicknameAlreadyUsed never expected in this test flow, but declared by the current method signature
+     * @throws TotemAlreadyUsed never expected in this test flow, but declared by the current method signature
+     */
+    @Test
+    void testPickSpecial_GameStateNotValid()
+            throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+        addTwoPlayers();
+
+        g.placeTotem(0, g.getCurrentPlayer());
+
+        CharacterCard upperCard = firstUpperCharacterCard();
+        assertThrows(IllegalStateException.class, () -> g.pickSpecial(upperCard.getId(), g.getCurrentPlayer()));
+    }
+
+    /**
+     * Verifies that invalid card identifiers passed to {@code pickSpecial}
+     * throw an {@link IllegalArgumentException}.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     * @throws NicknameAlreadyUsed never expected in this test flow, but declared by the current method signature
+     * @throws TotemAlreadyUsed never expected in this test flow, but declared by the current method signature
+     */
+    @Test
+    void testPickSpecial_IdCardNotValid()
+            throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+        addTwoPlayers();
+
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+        g.changeState(GameState.PICKSPECIAL);
+        // Out of the valid card index range.
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(-1, g.getCurrentPlayer())),
+                () -> assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(121, g.getCurrentPlayer()))
+        );
+    }
+
+    /**
+     * Verifies that picking from the lower row during the special-pick phase
+     * is rejected as an illegal action.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testPickCard_NotValidRow() throws PlayerNumberOutOfRange {
+        addTwoPlayers();
+        // Illegal attempt to pick from the lower row.
+        g.placeTotem(0, g.getCurrentPlayer());
+        g.placeTotem(1, g.getCurrentPlayer());
+        g.changeState(GameState.PICKSPECIAL);
+        CharacterCard lowerCard = firstLowerCharacterCard();
+        assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(lowerCard.getId(), g.getCurrentPlayer()));
+    }
+
+    // =========================
+    // endGame / effects
+    // =========================
+
+    /**
+     * Verifies that all end-game effects inside the scoring loop are applied correctly
+     * and that a single winner is produced.
+     *
+     * @throws Exception if checked exceptions are raised during test preparation
+     */
+    @Test
+    void testEndGame_ShouldApplyAllEffectsInsideForLoopOneWinner() throws Exception {
+        g.addPlayer("rich", "white");
+        g.addPlayer("plain", "black");
+
+        Player rich = g.getPlayers().getFirst();
+        Player plain = g.getPlayers().get(1);
+
+        // Rich player setup.
+        rich.addTribeCard(new Shaman(1, 1, 1));
+        rich.addTribeCard(new Hunter(2, false, 1));
+        rich.addTribeCard(new Hunter(3, false, 1));
+        rich.addTribeCard(new Hunter(4, false, 1));
+        rich.addTribeCard(new Artist(5, 1));
+        rich.addTribeCard(new Artist(6, 1));
+        rich.addTribeCard(new Artist(7, 1));
+        rich.addTribeCard(new Artist(8, 1));
+        rich.addTribeCard(new Artist(9, 1));
+        rich.addTribeCard(new Collector(10, 1));
+        rich.addTribeCard(new Builder(11, 3, 0, 1));
+        rich.addTribeCard(new Builder(12, 4, 0, 1));
+        rich.addTribeCard(new Inventor("hammer", 13, 1));
+        rich.addTribeCard(new Inventor("saw", 14, 1));
+        rich.addTribeCard(new Inventor("hammer", 15, 1));
+
+        rich.getBuildings().add(new BuildingCard(16, 1, 0, 0, BuildingType.BUILDING2, CharacterType.HUNTER, 0));
+        rich.getBuildings().add(new BuildingCard(17, 1, 0, 0, BuildingType.BUILDING9, null, 0));
+        rich.getBuildings().add(new BuildingCard(18, 1, 0, 0, BuildingType.BUILDING11, null, 0));
+        rich.getBuildings().add(new BuildingCard(19, 1, 0, 2, BuildingType.BUILDING12, CharacterType.HUNTER, 0));
+        rich.getBuildings().add(new BuildingCard(20, 1, 0, 0, BuildingType.BUILDING14, null, 0));
+
+        // Plain player setup.
+        plain.addTribeCard(new Builder(21, 5, 0, 1));
+        plain.addTribeCard(new Inventor("stone", 22, 1));
+        plain.addTribeCard(new Inventor("rope", 23, 1));
+        plain.addTribeCard(new Artist(24, 1));
+
+        Map<String, Integer> winners = g.endGame();
+
+        assertAll(
+                () -> assertEquals(77, rich.getNumPP()),
+                () -> assertEquals(9, plain.getNumPP()),
+                () -> assertEquals(1, winners.size()),
+                () -> assertTrue(winners.containsKey(rich.getNickname())),
+                () -> assertTrue(winners.containsValue(77)),
+                () -> assertEquals(GameState.ENDED, g.getGameState())
+        );
+    }
+
+    /**
+     * Verifies that two players can end the game in a shared victory
+     * after applying the same effect-based setup.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    @Test
+    void testEndGame_SharedVictory_WithAppliedEffects() throws PlayerNumberOutOfRange {
+
+        Game game = new Game(2);
+        game.addPlayer("alice", "red");
+        game.addPlayer("bob", "blue");
+
+        Player p1 = game.getPlayers().get(0);
+        Player p2 = game.getPlayers().get(1);
+
+        p1.addFood(4 - p1.getNumFoods());
+        p2.addFood(4 - p2.getNumFoods());
+
+        giveTieSetup(p1);
+        giveTieSetup(p2);
+
+        List<Player> players = List.of(p1, p2);
+
+        new HuntEventCard(21, 1, 1).activateEvent(players);
+        new PaintingsEventCard(20, 1, 2, 1, 1, 0).activateEvent(players);
+        new SustenanceEventCard(19, 1, 1).activateEvent(players);
+
+        Map<String, Integer> winners = game.endGame();
+
+        assertAll(
+                () -> assertEquals(GameState.ENDED, game.getGameState()),
+                () -> assertEquals(2, winners.size()),
+                () -> assertTrue(winners.containsKey("alice")),
+                () -> assertTrue(winners.containsKey("bob")),
+                () -> assertEquals(1, winners.get("alice")),
+                () -> assertEquals(1, winners.get("bob")),
+                () -> assertEquals(20, p1.getNumPP()),
+                () -> assertEquals(20, p2.getNumPP()),
+                () -> assertEquals(1, p1.getNumFoods()),
+                () -> assertEquals(1, p2.getNumFoods())
+        );
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+
+    /**
+     * Adds two players to the shared game instance.
+     *
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    private void addTwoPlayers() throws PlayerNumberOutOfRange{
+        g.addPlayer("Player1", "white");
+        g.addPlayer("Player2", "black");
+    }
+
+    /**
+     * Creates and returns a five-player game ready for testing.
+     *
+     * @return a game initialized with five players
+     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+     */
+    private Game createFivePlayerGame() throws PlayerNumberOutOfRange {
+        Game game = new Game(5);
+        game.addPlayer("Player1", "white");
+        game.addPlayer("Player2", "black");
+        game.addPlayer("Player3", "red");
+        game.addPlayer("Player4", "blue");
+        game.addPlayer("Player 5", "yellow");
+        return game;
+    }
+
+    /**
+     * Retrieves the first available character card from the upper row.
+     *
+     * @return the first character card currently available in the upper row
+     * @throws AssertionError if no character card is present in the upper row
+     */
+    private CharacterCard firstUpperCharacterCard() {
+        return g.getSharedBoard()
+                .getUpperRow()
+                .getCharacterCardsList()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Expected at least one character card in upper row"));
+    }
+
+    /**
+     * Retrieves the first available character card from the lower row.
+     *
+     * @return the first character card currently available in the lower row
+     * @throws AssertionError if no character card is present in the lower row
+     */
+    private CharacterCard firstLowerCharacterCard() {
+        return g.getSharedBoard()
+                .getLowerRow()
+                .getCharacterCardsList()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Expected at least one character card in lower row"));
+    }
+
+    /**
+     * Adds the same predefined tie-oriented card setup to the given player.
+     *
+     * @param p the player who receives the setup
+     */
+    private void giveTieSetup(Player p) {
+        new Artist(6, 1).addToPlayer(p);
+        new Artist(7, 1).addToPlayer(p);
+        new Builder(9, 3, 1, 1).addToPlayer(p);
+        new Inventor("Boat", 14, 1).addToPlayer(p);
+        new Inventor("Arrowhead", 15, 1).addToPlayer(p);
+        new Hunter(3, false, 1).addToPlayer(p);
+        new Collector(12, 1).addToPlayer(p);
     }
 }

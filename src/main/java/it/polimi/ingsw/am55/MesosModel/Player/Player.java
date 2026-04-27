@@ -25,7 +25,6 @@ import java.util.*;
  */
 public class Player {
     private final String nickname;
-    private final String id;
     private String totem;
     private int numPP;
     private int numFoods;
@@ -43,7 +42,6 @@ public class Player {
     private int minSetCompleted;
 
     public Player(String nickname, String totem) {
-        this.id = UUID.randomUUID().toString();
         this.nickname = nickname;
         this.totem = totem;
         this.numFoods = 0;
@@ -68,8 +66,6 @@ public class Player {
         characterLists.put(CharacterType.BUILDER, builderList);
         characterLists.put(CharacterType.COLLECTOR, collectorList);
     }
-
-
     /**
      * Returns the player's nickname.
      * @return the nickname of the player
@@ -132,9 +128,11 @@ public class Player {
      * Decreases the player's food by the specified amount.
      * @param amount the amount of food to pay, it must be zero or greater than zero.
      * @throws IllegalArgumentException if  amount is negative
+     * @throws IllegalArgumentException if the amount > numFoods because the numFoods cannot be negative
      */
     public void payFood(int amount){
         if(amount < 0) throw new IllegalArgumentException("Amount is negative");
+        if(amount > numFoods) throw new IllegalArgumentException("The player cannot pay");
         numFoods = numFoods - amount;
     }
 
@@ -226,7 +224,7 @@ public class Player {
     }
 
     public void addTribeCard(BuildingCard card) {
-        try {
+
             int builderDiscount = 0;
             //calcolo costo degli sconti in base ai costruttori che ho
             for (Builder b : builderList) {
@@ -236,9 +234,6 @@ public class Player {
             int buildingCost = card.getFoodCost() - builderDiscount;
             buildingCost = Math.max(0, buildingCost); //se lo sconto è maggiore del costo dovuto, setto un minimo di 0
 
-            if (this.getNumFoods() < buildingCost) { //se non ho abbastanza cibo non la prendo e lancio eccezione poi inviata anche alla view
-                throw new IllegalArgumentException("Non puoi pescarla!");
-            }
 
             this.payFood(buildingCost);
             buildings.add(card);
@@ -249,9 +244,7 @@ public class Player {
                 minSetCompleted = minCardSet();
             }
 
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        }
+
     }
 
     // ─── GETTER LISTE ────────────────────────────────────────────────────────────

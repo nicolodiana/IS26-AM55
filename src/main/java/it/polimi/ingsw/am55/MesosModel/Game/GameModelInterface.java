@@ -26,9 +26,9 @@ public interface GameModelInterface {
      * @throws PlayerNumberOutOfRange if player is equals or greater than 5
      * @throws NicknameAlreadyUsed if the nickname has been already taken
      * **/
-    void addPlayer(String nickname, String totem) throws NicknameAlreadyUsed,TotemAlreadyUsed,PlayerNumberOutOfRange;
+    String addPlayer(String nickname, String totem) throws NicknameAlreadyUsed,TotemAlreadyUsed,PlayerNumberOutOfRange;
     /**
-     * Returns the players in the game
+     * Returns the current numbers of players in the game
      * @return the number of players in the game
      **/
     int getNumPlayers();
@@ -37,11 +37,7 @@ public interface GameModelInterface {
      * @return GameState which consist of game's state
      **/
     GameState getGameState();
-//    /**
-//     * Allows start a new game
-//     * @throws GameAlreadyStarted if the game is already started
-//     * **/
-//    void startGame() throws GameAlreadyStarted;
+
     /**
      * Allows to have the current player in the game
      * @return current player's nickname
@@ -60,14 +56,9 @@ public interface GameModelInterface {
      * @throws BiddingTicketIsTaken if the indicated bidding ticket has already taken
      * @throws IndexOutOfBoundsException if the index is out of the range of bidding tickets
      * */
-    void placeTotem(int index) throws BiddingTicketIsTaken,IndexOutOfBoundsException,IllegalArgumentException;
+    void placeTotem(int index, String id) throws BiddingTicketIsTaken,IndexOutOfBoundsException,IllegalArgumentException;
 
-    /**
-     * Returns the map in which there are player's nickname and player's point
-     * @return  map in which there are player's nickname and player's point
-     * @throws GameNotFinished If the game isn't ended
-     */
-    Map<String,Integer> getWinners() throws GameNotFinished;
+
     /**
      * Return the available color for totems in this game
      * @return available color for totems in this game
@@ -88,17 +79,26 @@ public interface GameModelInterface {
      * @throws CantPickFromRow if the player has already reached their limit for the row containing the card.
      * @throws CannotAffordBuildingException if the player lacks sufficient food to pay for a building card.
      */
-    void pickCard(int index);
+    void pickCard(int index,String idPlayer);
 
     /**
      * Allows for a client player gets foods
      * @throws IllegalStateException if it will be when there are less than 5 players
      **/
-    void pickFood() throws IllegalStateException;
+    void pickFood(String id) throws IllegalStateException;
 
     /**
      * Allows a controller terminates the game if one player crashed
      * **/
     void handleGameCrashed();
+
+    /**
+     * Ends the game and determines the winners.
+     * The method selects the players with the highest number of victory points.
+     * If multiple players are tied, a tie-break is applied based on the amount
+     * of food. Only the players with the highest food among them remain winners.
+     * @return map that cointains players winner with points
+     */
+    Map<String,Integer> endGame();
 
 }

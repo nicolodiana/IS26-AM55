@@ -77,7 +77,7 @@ public class Board {
     public BiddingTrail getBiddingTrail(){
         return biddingTrail;
     }
-//    public TribeCard drawFromTribeDeck(){
+    //    public TribeCard drawFromTribeDeck(){
 //        return tribeDeck.getNextCard();
 //    }
     public BuildingDeck getBuildingDeck(int currentEra) throws IllegalArgumentException {
@@ -85,12 +85,12 @@ public class Board {
             case 1 -> buildingDeckEra1;
             case 2 -> buildingDeckEra2;
             case 3 -> buildingDeckEra3;
-        default -> throw new IllegalArgumentException("BuildingDeck of era: " + currentEra + "doesn't exist");
+            default -> throw new IllegalArgumentException("BuildingDeck of era: " + currentEra + "doesn't exist");
         };
     }
 
     public void setUpLowerRow(int numPlayers){
-        while( (lowerRow.getCharacterCardsList().size() + lowerRow.getEventCardsList().size()) < numPlayers){
+        while( (lowerRow.getCharacterCardsList().size() + lowerRow.getEventCardsList().size()) < numPlayers+1){
             tribeDeck.getNextCard().addInRightRow(upperRow, lowerRow);
         }
     }
@@ -115,19 +115,22 @@ public class Board {
     }
 
     public void movePlayerToTurnTicket(Player player){
+        biddingTrail.removePlayer(player);
         playerOrder.addPlayer(player);
+        playerOrder.giveMalusOrBonus(player);
     }
 
     //after all the event in order to restore the board
     public boolean restoreForRound(int numPlayers) throws EmptyTribeDeckException{
         lowerRow.clearRoundEnd();
-        lowerRow.swapTribeRow(upperRow, lowerRow);
+        lowerRow.swapTribeRow(upperRow);
         TribeCard tmp;
         for (int i = 0; i < numPlayers + 4; i++) {
             if (tribeDeck.isEmpty()){
                 return false;
             }
-            tmp =tribeDeck.getNextCard();
+            tmp =tribeDeck.getNextCard();//Return a TribeCard to put in the row for next round
+            //By using polymorfism we can insert the card in the correct list
             tmp.addInRightList(upperRow);
             if (tmp.getEra() > currentEra) {
                 startNewEra();
@@ -163,9 +166,9 @@ public class Board {
         return biddingTrail.getFoodBonus(player);
     }*/ //***Unused we consider to assign 3 foods directly
 
-    public Optional<Player> nextPlayerSecondPhase(Player currentPlayer) throws IllegalArgumentException{
-        if(currentPlayer==null) throw new IllegalArgumentException("Player is null");
-        return biddingTrail.nextPlayerSecondPhase(currentPlayer);
+    public Optional<Player> nextPlayerSecondPhase() throws IllegalArgumentException{
+        //if(currentPlayer==null) throw new IllegalArgumentException("Player is null");
+        return biddingTrail.nextPlayerSecondPhase();
     }//***Changed by using optional
 
     public Player getPlayerFromTurnTicket(int index){
@@ -182,14 +185,6 @@ public class Board {
 
     public int getChooseLowerCard(Player player){
         return biddingTrail.getChooseLowerCard(player);
-    }
-
-    public void giveMalusOrBonus(Player player){
-        playerOrder.giveMalusOrBonus(player);
-    }
-
-    public void removePlayerFromBiddingTrail(Player player){
-        biddingTrail.removePlayer(player);
     }
 
     public void findCardUpperRow(int id, CardSearchResult cardSearchResult) throws IllegalArgumentException{
@@ -229,7 +224,7 @@ public class Board {
     }
 
     public List<EventCard> orderEvents(){
-            return lowerRow.orderEvents();
+        return lowerRow.orderEvents();
     }
 
     public List<EventCard> orderEventsEndGame(){

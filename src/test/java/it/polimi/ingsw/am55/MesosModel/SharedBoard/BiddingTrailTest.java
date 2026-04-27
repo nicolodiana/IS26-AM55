@@ -26,12 +26,36 @@ class BiddingTrailTest {
      * a player at negative or out-of-bounds indices on the initialized bidding trail.
      */
     @Test
-    void testSetPlayerException(){
+    void testSetPlayerExceptionTwoPlayers(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(2);
         Player p1 = new Player("Player1","black");
         assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(-1,p1));
         assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(4,p1));
+    }
+    @Test
+    void testSetPlayerExceptionThreePlayers(){
+        BiddingTrail biddingTrail = new BiddingTrail();
+        biddingTrail.initBiddingTrail(3);
+        Player p1 = new Player("Player1","black");
+        assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(-1,p1));
+        assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(5,p1));
+    }
+    @Test
+    void testSetPlayerExceptionFourPlayers(){
+        BiddingTrail biddingTrail = new BiddingTrail();
+        biddingTrail.initBiddingTrail(4);
+        Player p1 = new Player("Player1","black");
+        assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(-1,p1));
+        assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(6,p1));
+    }
+    @Test
+    void testSetPlayerExceptionFivePlayers(){
+        BiddingTrail biddingTrail = new BiddingTrail();
+        biddingTrail.initBiddingTrail(5);
+        Player p1 = new Player("Player1","black");
+        assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(-1,p1));
+        assertThrows(IndexOutOfBoundsException.class, ()->biddingTrail.setPlayer(7,p1));
     }
 
     /**
@@ -77,8 +101,10 @@ class BiddingTrailTest {
         Player p2 = new Player("Player2","white");
         trail.setPlayer(0,p1);
         trail.setPlayer(1,p2);
-        assertEquals(p2, trail.nextPlayerSecondPhase(p1).get());
-        assertEquals(Optional.empty(), trail.nextPlayerSecondPhase(p2));
+        trail.removePlayer(p1);
+        assertEquals(p2, trail.nextPlayerSecondPhase().get());
+        trail.removePlayer(p2);
+        assertEquals(Optional.empty(), trail.nextPlayerSecondPhase());
     }
 
     /**
@@ -139,6 +165,14 @@ class BiddingTrailTest {
         biddingTrail.setPlayer(0,p1);
         assertEquals(0, biddingTrail.getPlayerPositionOnTrail(p1));
     }
+    @Test
+    void testPlayerPositionException(){
+        BiddingTrail biddingTrail = new BiddingTrail();
+        biddingTrail.initBiddingTrail(2);
+        Player p1 = new Player("Player1","black");
+        biddingTrail.setPlayer(0,p1);
+        assertThrows(IllegalArgumentException.class, ()->biddingTrail.getPlayerPositionOnTrail(null));
+    }
 
     /**
      * Tests  BiddingTrail#getChooseLowerCard(Player) and  BiddingTrail#getChooseUpperCard(Player).
@@ -146,7 +180,7 @@ class BiddingTrailTest {
      * depending on the specific properties of the bidding ticket they occupy.
      */
     @Test
-    void testChooseUpperLowerCards(){
+    void testChooseUpperLowerCardsFivePlayers(){
         BiddingTrail biddingTrail = new BiddingTrail();
         biddingTrail.initBiddingTrail(5);
         Player p1 = new Player("Player1","black");
@@ -175,5 +209,21 @@ class BiddingTrailTest {
 
         assertEquals(1, biddingTrail.getChooseLowerCard(p5));
         assertEquals(2, biddingTrail.getChooseUpperCard(p5));
+    }
+    @Test
+    void testChooseUpperLowerCardsTwoPlayers(){
+        BiddingTrail biddingTrail = new BiddingTrail();
+        biddingTrail.initBiddingTrail(2);
+        Player p1 = new Player("Player1","black");
+        Player p2 = new Player("Player2","white");
+
+        biddingTrail.setPlayer(2,p1);
+        biddingTrail.setPlayer(3,p2);
+
+        assertEquals(1, biddingTrail.getChooseLowerCard(p1));
+        assertEquals(1, biddingTrail.getChooseUpperCard(p1));
+
+        assertEquals(0, biddingTrail.getChooseLowerCard(p2));
+        assertEquals(2, biddingTrail.getChooseUpperCard(p2));
     }
 }

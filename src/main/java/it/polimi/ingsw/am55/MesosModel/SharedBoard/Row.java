@@ -83,9 +83,14 @@ public class Row {
 //        donor.characterCardsList.clear();
 //        donor.eventCardsList.clear();
 //    }
-    public void swapTribeRow(Row donor, Row receiver){
-        receiver.characterCardsList = new ArrayList<CharacterCard>(donor.characterCardsList);
-        receiver.eventCardsList = new ArrayList<EventCard>(donor.eventCardsList);
+    public void swapTribeRow(Row donor){
+        //This referes to the lowerRow
+        this.characterCardsList.clear();
+        this.eventCardsList.clear();
+        //Now putting all cards in lower row list
+        this.characterCardsList.addAll(donor.characterCardsList);
+        this.eventCardsList.addAll(donor.eventCardsList);
+        //Clear all upper row list
         donor.characterCardsList.clear();
         donor.eventCardsList.clear();
     }
