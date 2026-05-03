@@ -2,18 +2,19 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 
-public class ErrorMessage implements MessageToClient {
+public class WaitingMessage implements MessageToClient {
 
     private final String message;
 
-    public ErrorMessage(String message) {
+    public WaitingMessage(String message) {
         this.message = message;
     }
 
     @Override
     public void update(ClientModel model) {
-        model.setLastError(message);
+        model.clearError();
         model.setStateRequest(message);
+        model.setGameStarted(false);
     }
 
     @Override

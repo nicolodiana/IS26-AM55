@@ -1,10 +1,20 @@
 module it.polimi.ingsw.am55 {
+    requires java.rmi;
     requires javafx.controls;
     requires javafx.fxml;
-    requires java.desktop;
-    requires java.rmi;
+    requires org.controlsfx.controls;
 
+    exports it.polimi.ingsw.am55.network.rmi.server;
+    exports it.polimi.ingsw.am55.network.rmi.client;
+    exports it.polimi.ingsw.am55.message;
+    exports it.polimi.ingsw.am55.dto;
+    exports it.polimi.ingsw.am55.ClientModel;
+    exports it.polimi.ingsw.am55.controller;
+    exports it.polimi.ingsw.am55.view;
 
-    opens it.polimi.ingsw.am55 to javafx.fxml;
-    exports it.polimi.ingsw.am55;
+    opens it.polimi.ingsw.am55.network.rmi.server to java.rmi;
+    opens it.polimi.ingsw.am55.network.rmi.client to java.rmi;
+    opens it.polimi.ingsw.am55.message to java.rmi;
+    opens it.polimi.ingsw.am55.dto to java.rmi;
+    opens it.polimi.ingsw.am55.ClientModel to java.rmi;
 }

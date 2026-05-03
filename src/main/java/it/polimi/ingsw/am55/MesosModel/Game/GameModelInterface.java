@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.MesosModel.Game;
 
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
+import it.polimi.ingsw.am55.dto.GameView;
 
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,8 @@ public interface GameModelInterface {
      * Returns the game's id
      * @return game's id
     **/
+    GameView toView();
+    //serve per ottenere il dto dello stato di gioco dal server
     String getIdGame();
     /**
      * A modifier method that allows a new player to join the game.

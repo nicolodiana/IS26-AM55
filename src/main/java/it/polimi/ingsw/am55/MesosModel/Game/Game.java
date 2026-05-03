@@ -10,6 +10,8 @@ import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.GameView;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.UUID;
@@ -82,12 +84,15 @@ public class Game implements GameModelInterface{
      * A modifier method that allows a new player to join the game.
      * It allocates a new Player object using the two parameters received and adds it to the end of the players list.
      *
-     * @param nickname that is the player's nickname to add in the game. Requires a lower case string.
+     * @param id that is the player's nickname to add in the game. Requires a lower case string.
      * @param totem that is the player's totem to add in the game. Requires a lower case string.
      * @throws TotemAlreadyUsed if the totem has been already taken.
      * @throws PlayerNumberOutOfRange if player is equals or greater than 5
      * @throws NicknameAlreadyUsed if the nickname has been already taken
      * **/
+    public GameView toView() {
+        return new GameView(this);
+    }
     public String addPlayer(String nickname, String totem) throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
         for(Player p:players){
             if(p.getNickname().equals(nickname)){

@@ -24,7 +24,7 @@ import java.util.*;
  *
  */
 public class Player {
-    private final String nickname;
+    private final String id;
     private String totem;
     private int numPP;
     private int numFoods;
@@ -42,7 +42,7 @@ public class Player {
     private int minSetCompleted;
 
     public Player(String nickname, String totem) {
-        this.nickname = nickname;
+        this.id = nickname;
         this.totem = totem;
         this.numFoods = 0;
         this.numPP = 0;
@@ -67,11 +67,11 @@ public class Player {
         characterLists.put(CharacterType.COLLECTOR, collectorList);
     }
     /**
-     * Returns the player's nickname.
-     * @return the nickname of the player
+     * Returns the player's id.
+     * @return the id of the player
      */
     public String getNickname() {
-        return nickname;
+        return id;
     }
     /**
      * Returns the current amount of player points.
@@ -296,4 +296,9 @@ public class Player {
                 inventorList.size()
         ));
     }
+
+    public String getId() {
+        return id;
+    }
 }
+
