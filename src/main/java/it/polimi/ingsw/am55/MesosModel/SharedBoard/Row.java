@@ -1,12 +1,10 @@
 package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
-import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
-import it.polimi.ingsw.am55.MesosModel.Cards.CardSearchResult;
-import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
-import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
+import it.polimi.ingsw.am55.MesosModel.Cards.*;
 import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.CardType;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.CannotPickEventCard;
+import it.polimi.ingsw.am55.dto.CardView;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -159,5 +157,41 @@ public class Row {
                         .thenComparingInt(EventCard::getEra)
         );
         return this.getEventCardsList();
+    }
+
+    ///
+    /*public List<Integer> getRowIds() {
+        List<Integer> listOfIds = new ArrayList<>();
+
+        for (Card c : this.characterCardsList) {
+            listOfIds.add(c.getId());
+        }
+
+        for (Card c : this.eventCardsList) {
+                listOfIds.add(c.getId());
+        }
+
+        /*for (Card c : this.buildingCardsList) {
+                listOfIds.add(c.getId());
+        }
+
+        if (listOfIds != null) {
+            return listOfIds;
+        }
+        return null;
+    }*/
+
+    public List<CardView> createCardView() {
+        List<CardView> listOfViews = new ArrayList<>();
+
+        for (Card c : characterCardsList) {
+            listOfViews.add(c.toView());
+        }
+
+        for (Card c : eventCardsList) {
+            listOfViews.add(c.toView());
+        }
+
+        return listOfViews;
     }
 }

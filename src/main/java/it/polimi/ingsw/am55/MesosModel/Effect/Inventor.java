@@ -1,4 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.ArtistCardView;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.InventorCardView;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
@@ -20,4 +22,6 @@ public class Inventor extends CharacterCard {
     public String getIconInvention() {
         return iconInvention;
     }
+
+    public InventorCardView toView() { return new InventorCardView(iconInvention, era, getId()); }
 }

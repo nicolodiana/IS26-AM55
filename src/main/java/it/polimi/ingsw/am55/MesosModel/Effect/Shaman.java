@@ -1,4 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.ArtistCardView;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.ShamanCardView;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
@@ -22,4 +24,6 @@ public class Shaman extends CharacterCard {
     public int getNumStars() {
         return this.numStars;
     }
+
+    public ShamanCardView toView() { return new ShamanCardView(getId(), era, numStars); }
 }

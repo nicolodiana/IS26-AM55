@@ -2,10 +2,7 @@ package it.polimi.ingsw.am55.controller;
 
 import it.polimi.ingsw.am55.MesosModel.Game.Game;
 import it.polimi.ingsw.am55.MesosModel.Game.GameModelInterface;
-import it.polimi.ingsw.am55.message.ErrorMessage;
-import it.polimi.ingsw.am55.message.MessageToClient;
-import it.polimi.ingsw.am55.message.UpdateViewMessage;
-import it.polimi.ingsw.am55.message.WaitingMessage;
+import it.polimi.ingsw.am55.message.*;
 
 public class GameController {
 
@@ -66,6 +63,20 @@ public class GameController {
             return new ErrorMessage(e.getMessage());
         }
     }
+
+    public MessageToClient pickCard(String playerId, int cardId) {
+//        return new PickCardMessage("The pick is valid", cardId);
+        try {
+            gameModel.pickCard(cardId, playerId);
+
+            //BoardDto boardDto = BoardDto.from(game.getBoard());
+            return new PickCardMessage("The pick is valid", cardId);
+
+        } catch (Exception e) {
+            return new ErrorMessage(e.getMessage());
+        }
+    }
+
     /*
 
     public MessageToClient placeTotem(String playerId, int index) {

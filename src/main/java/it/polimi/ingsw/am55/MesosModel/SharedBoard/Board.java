@@ -10,6 +10,9 @@ import it.polimi.ingsw.am55.MesosModel.Enum.RowType;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.EmptyTribeDeckException;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.BiddingTicketView;
+import it.polimi.ingsw.am55.dto.BoardView;
+import it.polimi.ingsw.am55.dto.CardView;
 
 import java.util.*;
 
@@ -243,4 +246,22 @@ public class Board {
     public int getPlayerPositionOnTrail(Player player){
         return biddingTrail.getPlayerPositionOnTrail(player);
     }
+
+    //------------------------
+
+    public BoardView toView() {
+        List<CardView> upperRow = new ArrayList<>();
+        List<CardView> lowerRow = new ArrayList<>();
+        List<BiddingTicketView> biddingTrailView = new ArrayList<>();
+
+        for (BiddingTicket ticket : biddingTrail.getTicketList()) {
+            biddingTrailView.add(ticket.toView());
+        }
+
+        upperRow = this.upperRow.createCardView();
+        lowerRow = this.lowerRow.createCardView();
+
+        return new BoardView(upperRow, lowerRow, biddingTrailView);
+    }
+
 }

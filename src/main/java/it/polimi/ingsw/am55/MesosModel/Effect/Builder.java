@@ -1,4 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.ArtistCardView;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.BuilderCardView;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
@@ -25,4 +27,6 @@ public class Builder extends CharacterCard {
         //player.getBuildersList().add(this);
         player.addTribeCard(this);
     }
+
+    public BuilderCardView toView() { return new BuilderCardView(getId(), era, numPP, pickbuildingdiscount); }
 }

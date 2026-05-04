@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.BiddingTicketView;
 
 /**
  * The {@code BiddingTicket} class represents a ticket available during the bidding phase of the game.
@@ -10,6 +11,7 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
  */
 public class BiddingTicket {
 
+    private final int id;
     /**
      * The amount of bonus food provided to the player who takes this ticket.
      */
@@ -52,7 +54,18 @@ public class BiddingTicket {
      * @param numPlayer       the player count parameter determining if this ticket is used in the game
      * @param trailPlacement  the character indicating the ticket's placement on the trail
      */
+    public BiddingTicket(int id, int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement) {
+        this.id = id;
+        this.foodBonus = foodBonus;
+        this.chooseLowerCard = chooseLowerCard;
+        this.chooseUpperCard = chooseUpperCard;
+        this.numPlayer = numPlayer;
+        this.trailPlacement = trailPlacement;
+        this.player = null;
+    }
+
     public BiddingTicket(int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement) {
+        this.id = 0;
         this.foodBonus = foodBonus;
         this.chooseLowerCard = chooseLowerCard;
         this.chooseUpperCard = chooseUpperCard;
@@ -135,4 +148,10 @@ public class BiddingTicket {
     public void removePlayer() {
         this.player = null;
     }
+
+    public int getId() {
+        return this.id;
+    }
+
+    public BiddingTicketView toView() { return new BiddingTicketView(this); }
 }

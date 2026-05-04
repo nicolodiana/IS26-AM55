@@ -1,6 +1,8 @@
 package it.polimi.ingsw.am55.ClientModel;
 
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.factory_registry.CardFactory;
+import it.polimi.ingsw.am55.factory_registry.CardLoader;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.view.ClientModelObserver;
 
@@ -9,12 +11,17 @@ import java.util.List;
 
 public class ClientModel {
 
+    // PER CREARE LE CARTE
+    //CardLoader loader = CardLoader.loadFromJson();
+    //CardFactory cardFactory = new CardFactory(loader);
+    //
     private GameView gameView;
     private String stateRequest;
     private String lastError;
     private boolean gameStarted;
 
     private final List<ClientModelObserver> observers;
+    private List<ClientCard> myHand = new ArrayList<>();
 
     public ClientModel() {
         this.gameView = null;
@@ -61,6 +68,10 @@ public class ClientModel {
         this.stateRequest = stateRequest;
     }
 
+    public List<ClientCard> getMyHand() {
+        return myHand;
+    }
+
     public String getLastError() {
         return lastError;
     }
@@ -79,5 +90,11 @@ public class ClientModel {
 
     public void setGameStarted(boolean gameStarted) {
         this.gameStarted = gameStarted;
+    }
+
+    //------------------METODI CHE MODIFICANO IL MODEL----------------------
+    public void addCard(int cardId) {
+        //ClientCard card = cardFactory.createCard(String.valueOf(cardId));
+        //this.myHand.add(card);
     }
 }

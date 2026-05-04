@@ -1,0 +1,20 @@
+package it.polimi.ingsw.am55.ClientModel.ClientCards;
+
+import it.polimi.ingsw.am55.ClientModel.ClientCard;
+import it.polimi.ingsw.am55.dto.CardView;
+
+public class HunterCardView extends CardView {
+    private Boolean icon;
+    //final CharacterType type = CharacterType.COLLECTOR;
+
+    public HunterCardView(int id, Boolean icon, int era) {
+        super(id, era);
+        this.icon = icon;
+        //this.era= era;
+    }
+
+    public Boolean getIcon() {
+        return icon;
+    }
+
+}

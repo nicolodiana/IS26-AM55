@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.Cards;
 
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.CardView;
 
 public abstract class Card {
     private final int id ;
@@ -18,7 +19,6 @@ public abstract class Card {
 
     //Metodo override per gestire aggiunta nel player con i tipi dinamici
     public void addToPlayer(Player player) {}
-
-
+    public CardView toView() { return new CardView(); }
 
 }

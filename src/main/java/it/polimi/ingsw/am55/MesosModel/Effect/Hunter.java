@@ -1,4 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.Effect;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.ArtistCardView;
+import it.polimi.ingsw.am55.ClientModel.ClientCards.HunterCardView;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 //cacciatori
@@ -20,4 +22,6 @@ public class Hunter extends CharacterCard {
     public Boolean getIcon() {
         return icon;
     }
+
+    public HunterCardView toView() { return new HunterCardView(getId(), icon, era); }
 }

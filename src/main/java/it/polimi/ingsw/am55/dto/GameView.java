@@ -28,7 +28,8 @@ public class GameView implements Serializable {
                 .map(PlayerView::new)
                 .toList();
 
-        this.board = new BoardView(game.getSharedBoard());
+        //this.board = new BoardView(game.getSharedBoard());
+        this.board = game.getSharedBoard().toView();
     }
 
     public String getGameId() {

@@ -32,10 +32,11 @@ public interface VirtualServerRmi extends Remote, VirtualServer {
     @Override
     void placeTotem(String playerId, int index) throws RemoteException;
 
+
+    void pickCard(String playerId, int cardId) throws RemoteException;
+
     /*
     altri metodi da aggiungere: dovranno poi anche aggiungersi dentro RMIServer che
-    @Override
-    void pickCard(String playerId, int cardId) throws RemoteException;
 
     @Override
     void endTurn(String playerId) throws RemoteException;

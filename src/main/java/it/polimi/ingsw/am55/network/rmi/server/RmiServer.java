@@ -97,6 +97,10 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
 
     }
 
+    public void pickCard(String playerId, int cardId) throws RemoteException {
+        MessageToClient message = controller.pickCard(playerId, cardId);
+        message.deliver(playerId,this);
+    }
     /**
      * Invio in broadcast a tutti i client registrati.
      *

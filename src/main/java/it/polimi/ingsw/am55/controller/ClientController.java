@@ -21,7 +21,6 @@ public class ClientController implements UserActionHandler {
         }
     }
 
-
     @Override
     public void onJoinGameSelected(String playerId, String totemColor) {
 
@@ -41,5 +40,14 @@ public class ClientController implements UserActionHandler {
             System.err.println("Errore durante placeTotem: " + e.getMessage());
         }
         */
+    }
+
+    @Override
+    public void onPickCardSelected(String playerId, int cardId) {
+        try {
+            rmiClient.pickCard(playerId, cardId);
+        } catch (RemoteException e) {
+            System.err.println("Errore durante createGame: " + e.getMessage());
+        }
     }
 }

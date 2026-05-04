@@ -6,5 +6,7 @@ public interface UserActionHandler {
 
     void onJoinGameSelected(String playerId, String totem);
 
+    void onPickCardSelected(String playerId, int cardId);
+
     void onPlaceTotemSelected(int index);
 }

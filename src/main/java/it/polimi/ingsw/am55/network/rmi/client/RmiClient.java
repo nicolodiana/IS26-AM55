@@ -98,6 +98,11 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
         server.placeTotem(playerId, index);
     }
 
+    public void pickCard(String playerId, int cardId) throws RemoteException{
+        this.server.pickCard(playerId, cardId);
+    }
+
+
     public String getPlayerId() {
         return playerId;
     }

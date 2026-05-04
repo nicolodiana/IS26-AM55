@@ -1,5 +1,6 @@
 package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
+import it.polimi.ingsw.am55.MesosModel.Cards.Card;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.PlayerNotOnTrail;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
@@ -204,5 +205,22 @@ public class BiddingTrail {
      */
     public void removePlayer(Player player) {
         ticketList.get(getPlayerPositionOnTrail(player)).removePlayer();
+    }
+
+    public List<Integer> getTicketIds() {
+        List<Integer> listOfIds = new ArrayList<>();
+
+        for (BiddingTicket ticket : this.ticketList) {
+            listOfIds.add(ticket.getId());
+        }
+
+        if (listOfIds != null) {
+            return listOfIds;
+        }
+        return null;
+    }
+
+    public List<BiddingTicket> getTicketList() {
+        return ticketList;
     }
 }
