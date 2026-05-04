@@ -15,4 +15,9 @@ public class ShamanCardView extends CardView {
     public int getNumStars() {
         return this.numStars;
     }
+
+    @Override
+    public String toString() {
+        return "Shaman";
+    }
 }

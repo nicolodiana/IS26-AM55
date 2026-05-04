@@ -10,18 +10,24 @@ import java.util.Scanner;
 public class CLIView implements ClientModelObserver {
 
     private UserActionHandler actionHandler;
-
+    private ClientModel model;
     public void setActionHandler(UserActionHandler actionHandler) {
         this.actionHandler = actionHandler;
     }
 
+
+    public CLIView(ClientModel model) {
+        this.model = model;
+    }
+
     public void start() {
         Scanner input = new Scanner(System.in);
-
+        Boolean menuShowed = false;
         System.out.println("Client CLI avviato.");
         printMenu();
 
         while (true) {
+        //if (!menuShowed) {
             System.out.print("Scelta: ");
             String choice = input.nextLine();
 
@@ -39,7 +45,17 @@ public class CLIView implements ClientModelObserver {
                     printMenu();
                 }
             }
+        System.out.println(model.getStateRequest());
+            menuShowed = true;
+
+            if (model.isGameStarted()) {
+            //while (true) {
+                System.out.println("Current player is: ");
+            //}
         }
+        //}
+        }
+
     }
 
     private void printMenu() {
@@ -159,7 +175,7 @@ public class CLIView implements ClientModelObserver {
 
         System.out.println();
         System.out.println("Board:");
-        System.out.println(gameView.getBoard());
+        System.out.println(gameView.getBoard().toString());
 
         System.out.println("==========================");
     }

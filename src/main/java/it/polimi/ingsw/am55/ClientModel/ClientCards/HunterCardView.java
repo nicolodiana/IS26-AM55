@@ -17,4 +17,8 @@ public class HunterCardView extends CardView {
         return icon;
     }
 
+    @Override
+    public String toString() {
+        return "Hunter";
+    }
 }

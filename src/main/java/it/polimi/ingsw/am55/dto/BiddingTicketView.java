@@ -27,7 +27,8 @@ public class BiddingTicketView implements Serializable {
         if (player == null) { nickname = "none"; }
         else { nickname = player.getNickname(); }
 
-        return ("Food: " + this.foodBonus + "\n" +
+        return ("\n---TICKET---\n" +
+                "Food: " + this.foodBonus + "\n" +
                 "Card to choose in the upper row: " + this.chooseUpperCard + "\n" +
                 "Card to choose in the upper row: " + this.chooseUpperCard + "\n" +
                 "Card to choose in the lower row: " + this.chooseLowerCard + "\n" +

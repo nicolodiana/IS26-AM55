@@ -8,4 +8,9 @@ public class ArtistCardView extends CardView {
     public ArtistCardView(int id, int era){
         super(id, era);
     }
+
+    @Override
+    public String toString() {
+        return "Artist";
+    }
 }

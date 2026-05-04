@@ -1,5 +1,6 @@
 package it.polimi.ingsw.am55.ClientModel;
 
+import it.polimi.ingsw.am55.dto.CardView;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.factory_registry.CardFactory;
 import it.polimi.ingsw.am55.factory_registry.CardLoader;
@@ -21,7 +22,7 @@ public class ClientModel {
     private boolean gameStarted;
 
     private final List<ClientModelObserver> observers;
-    private List<ClientCard> myHand = new ArrayList<>();
+    private List<CardView> myHand = new ArrayList<>();
 
     public ClientModel() {
         this.gameView = null;
@@ -68,7 +69,7 @@ public class ClientModel {
         this.stateRequest = stateRequest;
     }
 
-    public List<ClientCard> getMyHand() {
+    public List<CardView> getMyHand() {
         return myHand;
     }
 

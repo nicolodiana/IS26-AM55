@@ -12,4 +12,9 @@ public class CollectorCardView extends CardView {
         super(id, era);
         //this.era= era;
     }
+
+    @Override
+    public String toString() {
+        return "Collector";
+    }
 }

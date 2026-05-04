@@ -47,7 +47,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
 
         ClientModel model = new ClientModel();
 
-        CLIView view = new CLIView();
+        CLIView view = new CLIView(model);
         model.addObserver(view);
 
         RmiClient rmiClient = new RmiClient(server, model);

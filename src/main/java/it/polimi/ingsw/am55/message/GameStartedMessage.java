@@ -14,6 +14,7 @@ public class GameStartedMessage implements MessageToClient {
     @Override
     public void update(ClientModel model) {
         //model.setCurrentPlayer(playerId);
+        model.setStateRequest(this.message);
     }
 
     @Override

@@ -26,6 +26,11 @@ public class BoardView implements Serializable {
                 : "Board non disponibile";*/
     }
 
+    public String toString() {
+        return ("UpperRow: " + upperRow + "\n" +
+                "BiddingTrail: " + biddingTrail +"\n" +
+                "Lower Row: " + lowerRow + "\n");
+    }
     /*public String getPrintableBoard() {
         return printableBoard;
     }

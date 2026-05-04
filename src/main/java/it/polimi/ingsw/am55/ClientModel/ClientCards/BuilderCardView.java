@@ -22,4 +22,8 @@ public class BuilderCardView extends CardView {
         return pickbuildingdiscount;
     }
 
+    @Override
+    public String toString() {
+        return "Builder";
+    }
 }
