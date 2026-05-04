@@ -11,6 +11,7 @@ public class ArtistCardView extends CardView {
 
     @Override
     public String toString() {
-        return "Artist";
+        return "| Artist {id=" + id + "} |";
     }
+
 }

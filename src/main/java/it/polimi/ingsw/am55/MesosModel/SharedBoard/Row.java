@@ -188,6 +188,10 @@ public class Row {
             listOfViews.add(c.toView());
         }
 
+        for (Card c : buildingCardsList.getBuildingDeck()) {
+            listOfViews.add(c.toView());
+        }
+
         for (Card c : eventCardsList) {
             listOfViews.add(c.toView());
         }

@@ -3,6 +3,7 @@ import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.ClientCards.HuntEventView;
 
 
 import java.util.List;
@@ -29,5 +30,7 @@ public class HuntEventCard extends EventCard {
     public int getOrder(){
         return 0;
     }
+
+    public HuntEventView toView() { return new HuntEventView(getId(), this.era, this.numPP); }
 }
 

@@ -24,6 +24,6 @@ public class BuilderCardView extends CardView {
 
     @Override
     public String toString() {
-        return "Builder";
+        return "| Builder with " + numPP + "PP {id=" + id + "} |";
     }
 }

@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.MesosModel.Effect;
 import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.ClientCards.ShamanRitualView;
 
 import java.util.List;
 
@@ -61,4 +62,6 @@ public class ShamanRitualEventCard extends EventCard {
     public int getOrder(){
         return 2;
     }
+
+    public ShamanRitualView toView() { return new ShamanRitualView(getId(), this.era, this.maxPP, this.minPP); }
 }

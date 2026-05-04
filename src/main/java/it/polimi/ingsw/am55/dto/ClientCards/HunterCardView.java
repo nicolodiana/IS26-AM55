@@ -19,6 +19,7 @@ public class HunterCardView extends CardView {
 
     @Override
     public String toString() {
-        return "Hunter";
+        if (icon == false) { return "| Hunter |"; }
+        return "| Hunter with icon { id=" + id + "} |";
     }
 }

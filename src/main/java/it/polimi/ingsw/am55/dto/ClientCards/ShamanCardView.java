@@ -18,6 +18,6 @@ public class ShamanCardView extends CardView {
 
     @Override
     public String toString() {
-        return "Shaman";
+    return "| Shaman with " + numStars + " stars {id=" + id + "} |";
     }
 }

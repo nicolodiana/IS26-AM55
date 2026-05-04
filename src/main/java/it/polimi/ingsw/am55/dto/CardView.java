@@ -3,15 +3,15 @@ package it.polimi.ingsw.am55.dto;
 import java.io.Serializable;
 
 public class CardView implements Serializable {
-    private int id;
+    protected int id;
     private int era;
-    private int numStars = 0;
+    /*private int numStars = 0;
     private Boolean icon = false;
     private int numPP = 0;
     private int buildingDiscount = 0;
     private String iconInvention = null;
 
-    private String type;
+    private String type;*/
 
     public CardView() {
 
@@ -22,7 +22,7 @@ public class CardView implements Serializable {
         this.era = era;
     }
 
-    public int getId() {
+   /* public int getId() {
         return id;
     }
 
@@ -52,5 +52,5 @@ public class CardView implements Serializable {
 
     public String getIconInvention() {
         return iconInvention;
-    }
+    }*/
 }

@@ -3,6 +3,7 @@ import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
 import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.ClientCards.SustenanceEventView;
 
 import java.util.List;
 
@@ -81,4 +82,6 @@ public class SustenanceEventCard extends EventCard {
     public int getOrder(){
         return 3;
     }
+
+    public SustenanceEventView toView() { return new SustenanceEventView(getId(), this.era, this.numPP); }
 }

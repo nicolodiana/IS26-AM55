@@ -3,6 +3,7 @@ import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.ClientCards.PaintingsEventView;
 
 import java.util.List;
 
@@ -45,4 +46,7 @@ public class PaintingsEventCard extends EventCard {
     public int getOrder(){
         return 1;
     }
+
+    public PaintingsEventView toView() { return new PaintingsEventView(getId(), this.era, this.upperPP, this.lowerPP,
+            this.upperNumberOfArtist, this.lowerNumberOfArtist); }
 }
