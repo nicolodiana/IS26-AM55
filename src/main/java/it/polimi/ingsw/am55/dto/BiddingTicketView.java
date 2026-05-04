@@ -30,7 +30,6 @@ public class BiddingTicketView implements Serializable {
         return ("\n---TICKET---\n" +
                 "Food: " + this.foodBonus + "\n" +
                 "Card to choose in the upper row: " + this.chooseUpperCard + "\n" +
-                "Card to choose in the upper row: " + this.chooseUpperCard + "\n" +
                 "Card to choose in the lower row: " + this.chooseLowerCard + "\n" +
                 "Player on this ticket: " + nickname + "\n");
     }

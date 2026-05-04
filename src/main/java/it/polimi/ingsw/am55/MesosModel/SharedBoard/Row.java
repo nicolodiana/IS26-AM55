@@ -183,7 +183,7 @@ public class Row {
 
     public List<CardView> createCardView() {
         List<CardView> listOfViews = new ArrayList<>();
-
+//scorro le row, converto le carte che contiene in cardview e dopo le aggiungo alla rowview che sarebbe listofViews
         for (Card c : characterCardsList) {
             listOfViews.add(c.toView());
         }

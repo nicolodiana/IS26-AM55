@@ -69,7 +69,7 @@ public class CLIView implements ClientModelObserver {
         System.out.println("==========================");
         System.out.println();
     }
-
+//METODI DI INTERAZIONE INIZIALE CLIENT - SERVER
     private void askCreateGameFromInput(Scanner input) {
         System.out.print("Nickname: ");
         String playerId = input.nextLine();
@@ -129,7 +129,7 @@ public class CLIView implements ClientModelObserver {
             actionHandler.onPlaceTotemSelected(index);
         }
     }
-
+//metodo di ascolto dell'observable (clientmodel) gli passa ciò per cui deve essere notificato
     @Override
     public void onModelChanged(ClientModel model) {
         System.out.println();
@@ -143,7 +143,8 @@ public class CLIView implements ClientModelObserver {
         if (model.getStateRequest() != null) {
             showMessage(model.getStateRequest());
         }
-
+//se il gameview non è piu nullo significa che dovrò aggiornare la mia schermata di gioco perche e iniziata la partita
+//poi non dovrà essere solo questa la condizione di aggiornamento, ma ad ogni fase che affronto dovrà riaggiornarsi
         if (model.getGameView() != null) {
             renderGame(model.getGameView());
         }
