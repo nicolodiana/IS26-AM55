@@ -1,7 +1,5 @@
 package it.polimi.ingsw.am55.factory_registry;
 
-import it.polimi.ingsw.am55.ClientModel.ClientCards.*;
-
 import java.util.HashMap;
 import java.util.Map;
 

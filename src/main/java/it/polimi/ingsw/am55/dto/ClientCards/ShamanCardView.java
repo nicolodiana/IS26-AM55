@@ -1,4 +1,4 @@
-package it.polimi.ingsw.am55.ClientModel.ClientCards;
+package it.polimi.ingsw.am55.dto.ClientCards;
 
 import it.polimi.ingsw.am55.dto.CardView;
 

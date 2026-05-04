@@ -13,6 +13,7 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.BiddingTicketView;
 import it.polimi.ingsw.am55.dto.BoardView;
 import it.polimi.ingsw.am55.dto.CardView;
+import it.polimi.ingsw.am55.dto.PlayerView;
 
 import java.util.*;
 
@@ -253,15 +254,26 @@ public class Board {
         List<CardView> upperRow = new ArrayList<>();
         List<CardView> lowerRow = new ArrayList<>();
         List<BiddingTicketView> biddingTrailView = new ArrayList<>();
-
+//ogni carta bidding ticket la trasformo in ticket view e la inserisco nella biddingtrailView
         for (BiddingTicket ticket : biddingTrail.getTicketList()) {
             biddingTrailView.add(ticket.toView());
         }
 
+        List<PlayerView> turnOrderView = new ArrayList<>();
+
+        for (Player player : playerOrder.getTurnOrder()) {
+            if (player != null) {
+                turnOrderView.add(new PlayerView(player));
+            } else {
+                turnOrderView.add(null);
+            }
+        }
+
+
         upperRow = this.upperRow.createCardView();
         lowerRow = this.lowerRow.createCardView();
 
-        return new BoardView(upperRow, lowerRow, biddingTrailView);
+        return new BoardView(upperRow, lowerRow, turnOrderView, biddingTrailView);
     }
 
 }

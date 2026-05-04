@@ -1,14 +1,10 @@
 package it.polimi.ingsw.am55.factory_registry;
 
-import it.polimi.ingsw.am55.ClientModel.ClientCards.*;
-import it.polimi.ingsw.am55.MesosModel.Cards.Card;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import static it.polimi.ingsw.am55.MesosModel.Enum.CharacterType.*;
 
 public class CardViewRegistry {
     private static final Map<CharacterType, CharacterCard> registry = new HashMap<>();
