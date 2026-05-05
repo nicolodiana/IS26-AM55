@@ -22,5 +22,5 @@ public class Inventor extends CharacterCard {
         return iconInvention;
     }
 
-    public InventorCardView toView() { return new InventorCardView(iconInvention, era, getId()); }
+    public InventorCardView toView() { return new InventorCardView(iconInvention, getId(), era); }
 }

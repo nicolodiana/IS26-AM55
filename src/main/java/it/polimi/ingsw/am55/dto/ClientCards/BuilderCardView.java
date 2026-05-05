@@ -8,7 +8,7 @@ public class BuilderCardView extends CardView {
     int pickbuildingdiscount; //sconto che forniscono su ogni edificio
     //final CharacterType type = CharacterType.BUILDER;
 
-    public BuilderCardView(int id, int numPP, int pickbuildingdiscount, int era) {
+    public BuilderCardView(int id, int era, int numPP, int pickbuildingdiscount) {
         super(id, era);
         this.numPP = numPP;
         this.pickbuildingdiscount = pickbuildingdiscount;

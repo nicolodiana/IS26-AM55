@@ -27,5 +27,12 @@ public class Builder extends CharacterCard {
         player.addTribeCard(this);
     }
 
-    public BuilderCardView toView() { return new BuilderCardView(getId(), era, numPP, pickbuildingdiscount); }
+    public BuilderCardView toView() {
+        return new BuilderCardView(
+                getId(),
+                getEra(),
+                numPP,
+                pickbuildingdiscount
+        );
+    }
 }

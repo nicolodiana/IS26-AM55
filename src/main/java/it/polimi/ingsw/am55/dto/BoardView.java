@@ -1,20 +1,14 @@
 package it.polimi.ingsw.am55.dto;
 
-import it.polimi.ingsw.am55.MesosModel.SharedBoard.Board;
-import it.polimi.ingsw.am55.MesosModel.SharedBoard.Board;
-
 import java.io.Serializable;
 import java.util.List;
 
 public class BoardView implements Serializable {
 
-    private List<CardView> upperRow;
-    private List<CardView> lowerRow;
-    private List<BiddingTicketView> biddingTrail;
-    private List<PlayerView> turnTicket;
-
-
-    //private final String printableBoard;
+    private final List<CardView> upperRow;
+    private final List<CardView> lowerRow;
+    private final List<BiddingTicketView> biddingTrail;
+    private final List<PlayerView> turnTicket;
 
     public BoardView(
             List<CardView> upperRow,
@@ -27,29 +21,30 @@ public class BoardView implements Serializable {
         this.turnTicket = turnTicket;
         this.biddingTrail = biddingTrail;
     }
+
+    public List<CardView> getUpperRow() {
+        return upperRow;
+    }
+
+    public List<CardView> getLowerRow() {
+        return lowerRow;
+    }
+
+    public List<BiddingTicketView> getBiddingTrail() {
+        return biddingTrail;
+    }
+
+    public List<PlayerView> getTurnTicket() {
+        return turnTicket;
+    }
+
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-
-        sb.append("Turn Ticket:\n");
-
-        for (PlayerView playerView : turnTicket) {
-            if (playerView == null) {
-                sb.append("- [vuoto]\n");
-            } else {
-                sb.append("- ")
-                        .append(playerView.getNickname())
-                        .append(" | Totem: ")
-                        .append(playerView.getTotemColor())
-                        .append("\n");
-            }
-        }
-
-        sb.append("\n");
-        sb.append("Upper Row: ").append(upperRow).append("\n");
-        sb.append("Bidding Trail: ").append(biddingTrail).append("\n");
-        sb.append("Lower Row: ").append(lowerRow).append("\n");
-
-        return sb.toString();
+        return "BoardView{" +
+                "upperRow=" + upperRow +
+                ", lowerRow=" + lowerRow +
+                ", biddingTrail=" + biddingTrail +
+                ", turnTicket=" + turnTicket +
+                '}';
     }
 }

@@ -4,7 +4,7 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.controller.ClientController;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
-import it.polimi.ingsw.am55.view.CLIView;
+import it.polimi.ingsw.am55.view.cli.CLIView;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -91,6 +91,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
      * Metodo chiamato dal ClientController quando l'utente vuole piazzare il totem.
      */
     public void placeTotem(int index) throws RemoteException {
+
         if (playerId == null) {
             throw new RemoteException("Player non ancora registrato tramite createGame/joinGame.");
         }

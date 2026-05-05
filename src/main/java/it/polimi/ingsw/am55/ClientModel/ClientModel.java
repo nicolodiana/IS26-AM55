@@ -2,10 +2,8 @@ package it.polimi.ingsw.am55.ClientModel;
 
 import it.polimi.ingsw.am55.dto.CardView;
 import it.polimi.ingsw.am55.dto.GameView;
-import it.polimi.ingsw.am55.factory_registry.CardFactory;
-import it.polimi.ingsw.am55.factory_registry.CardLoader;
 import it.polimi.ingsw.am55.message.MessageToClient;
-import it.polimi.ingsw.am55.view.ClientModelObserver;
+import it.polimi.ingsw.am55.view.cli.ClientModelObserver;
 
 import java.util.ArrayList;
 import java.util.List;

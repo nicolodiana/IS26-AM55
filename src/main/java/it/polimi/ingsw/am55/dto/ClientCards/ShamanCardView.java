@@ -6,7 +6,7 @@ public class ShamanCardView extends CardView {
     private int numStars;
     //final CharacterType type = CharacterType.SHAMAN;
 
-    public ShamanCardView(int id, int numStars, int era) {
+    public ShamanCardView(int id,  int era, int numStars) {
         super(id, era);
         this.numStars = numStars;
         //this.era = era;
