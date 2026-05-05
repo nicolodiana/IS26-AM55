@@ -8,7 +8,6 @@ import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Decks.TribeDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.RowType;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
-import it.polimi.ingsw.am55.MesosModel.Exceptions.EmptyTribeDeckException;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.BiddingTicketView;
 import it.polimi.ingsw.am55.dto.BoardView;
@@ -125,7 +124,7 @@ public class Board {
     }
 
     //after all the event in order to restore the board
-    public boolean restoreForRound(int numPlayers) throws EmptyTribeDeckException{
+    public boolean restoreForRound(int numPlayers) {
         lowerRow.clearRoundEnd();
         lowerRow.swapTribeRow(upperRow);
         TribeCard tmp;
