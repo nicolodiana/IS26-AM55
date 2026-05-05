@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.view.cli;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
+import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.PlayerView;
@@ -10,12 +11,15 @@ import java.util.Scanner;
 public class CLIView implements ClientModelObserver {
 
     private final ClientModel model;
+    private final Scanner input;
+    private String id = null;
+    private boolean gameStarted = false;
     private final CLIRenderHelper cliRenderHelper;
-
     private UserActionHandler actionHandler;
 
     public CLIView(ClientModel model) {
         this.model = model;
+        this.input = new Scanner(System.in);
         this.cliRenderHelper = new CLIRenderHelper();
     }
 
@@ -24,8 +28,6 @@ public class CLIView implements ClientModelObserver {
     }
 
     public void start() {
-        Scanner input = new Scanner(System.in);
-
         System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
         printMenu();
 
@@ -34,15 +36,35 @@ public class CLIView implements ClientModelObserver {
             String choice = input.nextLine();
 
             switch (choice) {
-                case "1" -> askCreateGameFromInput(input);
-                case "2" -> askJoinGameFromInput(input);
-                case "3" -> askPlaceTotemFromInput(input);
+                case "1" -> {
+                    askCreateGameFromInput();
+
+                    /*
+                     * Da questo momento il client ha mandato una richiesta al server.
+                     * Non deve più mostrare il menu create/join.
+                     * Gli aggiornamenti arriveranno tramite onModelChanged().
+                     */
+                    return;
+                }
+
+                case "2" -> {
+                    askJoinGameFromInput();
+
+                    /*
+                     * Dopo la join, il client aspetta gli update dal server.
+                     */
+                    return;
+                }
+
                 case "4" -> printMenu();
+
                 case "5" -> refresh();
+
                 case "0" -> {
                     System.out.println("Chiusura client.");
                     return;
                 }
+
                 default -> {
                     System.out.println(ConsoleColor.RED_BOLD + "Scelta non valida." + ConsoleColor.RESET);
                     printMenu();
@@ -56,7 +78,6 @@ public class CLIView implements ClientModelObserver {
         System.out.println(ConsoleColor.YELLOW_BOLD + "========== MENU ==========" + ConsoleColor.RESET);
         System.out.println("1) Create game");
         System.out.println("2) Join game");
-        System.out.println("3) Place totem");
         System.out.println("4) Mostra menu");
         System.out.println("5) Refresh board");
         System.out.println("0) Quit");
@@ -74,7 +95,7 @@ public class CLIView implements ClientModelObserver {
         printMenu();
     }
 
-    private void askCreateGameFromInput(Scanner input) {
+    private void askCreateGameFromInput() {
         System.out.print("Nickname: ");
         String playerId = input.nextLine();
 
@@ -82,12 +103,12 @@ public class CLIView implements ClientModelObserver {
         String totemColor = input.nextLine();
 
         System.out.print("Numero giocatori: ");
-        int numPlayers = readInt(input);
+        int numPlayers = readInt();
 
         askCreateGame(playerId, totemColor, numPlayers);
     }
 
-    private void askJoinGameFromInput(Scanner input) {
+    private void askJoinGameFromInput() {
         System.out.print("Nickname: ");
         String playerId = input.nextLine();
 
@@ -97,14 +118,22 @@ public class CLIView implements ClientModelObserver {
         askJoinGame(playerId, totemColor);
     }
 
-    private void askPlaceTotemFromInput(Scanner input) {
-        System.out.print("Indice posizione: ");
-        int index = readInt(input);
+    private void askPlaceTotemFromInput() {
+        if (id == null) {
+            showError("Non sei ancora registrato in una partita.");
+            return;
+        }
+
+        System.out.println();
+        System.out.println(ConsoleColor.YELLOW_BOLD + "È il tuo turno: piazza il totem." + ConsoleColor.RESET);
+        System.out.print("Indice posizione bidding trail: ");
+
+        int index = readInt();
 
         askPlaceTotem(index);
     }
 
-    private int readInt(Scanner input) {
+    private int readInt() {
         while (true) {
             String line = input.nextLine();
 
@@ -118,12 +147,14 @@ public class CLIView implements ClientModelObserver {
 
     public void askCreateGame(String playerId, String totemColor, int numPlayers) {
         if (actionHandler != null) {
+            this.id = playerId;
             actionHandler.onCreateGameSelected(playerId, totemColor, numPlayers);
         }
     }
 
     public void askJoinGame(String playerId, String totemColor) {
         if (actionHandler != null) {
+            this.id = playerId;
             actionHandler.onJoinGameSelected(playerId, totemColor);
         }
     }
@@ -133,14 +164,13 @@ public class CLIView implements ClientModelObserver {
             actionHandler.onPlaceTotemSelected(index);
         }
     }
-
+    
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         System.out.println();
 
         if (updatedModel.getLastError() != null) {
             showError(updatedModel.getLastError());
-            printMenu();
             return;
         }
 
@@ -148,11 +178,37 @@ public class CLIView implements ClientModelObserver {
             showMessage(updatedModel.getStateRequest());
         }
 
-        if (updatedModel.getGameView() != null) {
-            renderGame(updatedModel.getGameView());
+        GameView gameView = updatedModel.getGameView();
+
+        if (gameView != null) {
+            renderGame(gameView);
+
+            if (GameState.PLACETOTEM.equals(gameView.getState()) && isMyTurn(gameView)) {
+                askPlaceTotemFromInput();
+
+                /*
+                 * Non ristampo subito la board.
+                 * Ho appena mandato placeTotem al server.
+                 * La board aggiornata arriverà con il prossimo UpdateViewMessage.
+                 */
+                return;
+            }
+        }
+    }
+    private boolean isMyTurn(GameView gameView) {
+        if (gameView == null) {
+            return false;
         }
 
-        printMenu();
+        if (gameView.getCurrentPlayer() == null) {
+            return false;
+        }
+
+        if (id == null) {
+            return false;
+        }
+
+        return gameView.getCurrentPlayer().equals(id);
     }
 
     private void showMessage(String message) {
@@ -203,5 +259,9 @@ public class CLIView implements ClientModelObserver {
         }
 
         System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
+    }
+
+    public String getId() {
+        return id;
     }
 }

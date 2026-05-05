@@ -77,7 +77,6 @@ public class GameController {
         }
     }
 
-    /*
 
     public MessageToClient placeTotem(String playerId, int index) {
         if (gameModel == null) {
@@ -96,6 +95,6 @@ public class GameController {
             return new ErrorMessage(e.getMessage());
         }
     }
-    */
+
 }
 

@@ -90,10 +90,10 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
      */
     @Override
     public void placeTotem(String playerId, int index) throws RemoteException {
-       /*
+
         MessageToClient message = controller.placeTotem(playerId, index);
         message.deliver(playerId, this);
-        */
+
 
     }
 
