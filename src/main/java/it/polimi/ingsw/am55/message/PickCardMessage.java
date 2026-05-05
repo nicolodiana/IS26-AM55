@@ -13,7 +13,7 @@ public class PickCardMessage implements MessageToClient {
 
     @Override
     public void update(ClientModel model) {
-        model.addCard(this.cardId);
+       // model.addCard(this.cardId);
         model.setStateRequest(message);
     }
 

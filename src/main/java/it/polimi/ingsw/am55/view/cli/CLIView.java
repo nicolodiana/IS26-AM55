@@ -12,15 +12,27 @@ public class CLIView implements ClientModelObserver {
 
     private final ClientModel model;
     private final Scanner input;
-    private String id = null;
-    private boolean gameStarted = false;
     private final CLIRenderHelper cliRenderHelper;
+
     private UserActionHandler actionHandler;
+
+    private volatile GameView currentGameView;
+    private volatile String currentInfoMessage;
+    private volatile String currentErrorMessage;
+    private volatile boolean waitingServerResponse;
+
+    private String id;
 
     public CLIView(ClientModel model) {
         this.model = model;
         this.input = new Scanner(System.in);
         this.cliRenderHelper = new CLIRenderHelper();
+
+        this.currentGameView = null;
+        this.currentInfoMessage = null;
+        this.currentErrorMessage = null;
+        this.waitingServerResponse = false;
+        this.id = null;
     }
 
     public void setActionHandler(UserActionHandler actionHandler) {
@@ -28,201 +40,352 @@ public class CLIView implements ClientModelObserver {
     }
 
     public void start() {
-        boolean isPrinted = false;
         System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
-        printMenu();
+        printLobbyHelp();
 
+        Thread inputThread = new Thread(this::inputLoop);
+        inputThread.setName("CLI-Input-Thread");
+        inputThread.start();
+    }
+
+    private void inputLoop() {
         while (true) {
+            System.out.print("> ");
+            String line = input.nextLine().trim();
 
-            if (!model.isGameStarted()) {
-                System.out.print("Scelta: ");
-                String choice = input.nextLine();
-
-                switch (choice) {
-                    case "1" -> {
-                        askCreateGameFromInput();
-
-                        /*
-                         * Da questo momento il client ha mandato una richiesta al server.
-                         * Non deve più mostrare il menu create/join.
-                         * Gli aggiornamenti arriveranno tramite onModelChanged().
-                         */
-                        //return;
-                    }
-
-                    case "2" -> {
-                        askJoinGameFromInput();
-
-                        /*
-                         * Dopo la join, il client aspetta gli update dal server.
-                         */
-                        //return;
-                    }
-
-                    case "3" -> printMenu();
-
-                    case "4" -> refresh();
-
-                    case "0" -> {
-                        System.out.println("Chiusura client.");
-                        return;
-                    }
-
-                    default -> {
-                        System.out.println(ConsoleColor.RED_BOLD + "Scelta non valida." + ConsoleColor.RESET);
-                        printMenu();
-                    }
-                }
+            if (line.isEmpty()) {
+                continue;
             }
-//            System.out.println("sono dentro " + model.isGameStarted());
-//            break;
-            if (model.isGameStarted() && model.getGameView().getState() == GameState.PLACETOTEM && isMyTurn(model.getGameView())) {
-                askPlaceTotemFromInput();
-            }
-            /*else if (!isPrinted && model.isGameStarted() ) {
-                System.out.println("Wait it's not your turn");
-                isPrinted = true;
-            }*/
+
+            handleCommand(line);
         }
     }
 
-    private void printMenu() {
-        System.out.println();
-        System.out.println(ConsoleColor.YELLOW_BOLD + "========== MENU ==========" + ConsoleColor.RESET);
-        System.out.println("1) Create game");
-        System.out.println("2) Join game");
-        System.out.println("3) Mostra menu");
-        System.out.println("4) Refresh board");
-        System.out.println("0) Quit");
-        System.out.println(ConsoleColor.YELLOW_BOLD + "==========================" + ConsoleColor.RESET);
-        System.out.println();
-    }
+    private void handleCommand(String line) {
+        String[] parts = line.split("\\s+");
+        String command = parts[0].toLowerCase();
 
-    private void refresh() {
-        if (model.getGameView() != null) {
-            renderGame(model.getGameView());
+        if (command.equals("quit") || command.equals("exit")) {
+            System.out.println("Chiusura client.");
+            System.exit(0);
+        }
+
+        if (command.equals("help")) {
+            printHelp();
+            return;
+        }
+
+        if (command.equals("refresh")) {
+            refresh();
+            return;
+        }
+
+        if (waitingServerResponse) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "In attesa della risposta del server..."
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        GameView gameView = currentGameView;
+
+        if (gameView == null) {
+            handleLobbyCommand(command, parts);
         } else {
-            showMessage("Nessuna partita da mostrare.");
+            handleGameCommand(command, parts, gameView);
         }
-
-        printMenu();
     }
 
-    private void askCreateGameFromInput() {
-        System.out.print("Nickname: ");
-        String playerId = input.nextLine();
+    private void handleLobbyCommand(String command, String[] parts) {
+        switch (command) {
+            case "create" -> handleCreateCommand(parts);
+            case "join" -> handleJoinCommand(parts);
+            default -> {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Comando non valido in lobby."
+                        + ConsoleColor.RESET);
+                printLobbyHelp();
+            }
+        }
+    }
 
-        System.out.print("Colore totem: ");
-        String totemColor = input.nextLine();
+    private void handleCreateCommand(String[] parts) {
+        if (parts.length != 4) {
+            System.out.println(ConsoleColor.RED_BOLD
+                    + "Uso corretto: create <nickname> <totemColor> <numPlayers>"
+                    + ConsoleColor.RESET);
+            return;
+        }
 
-        System.out.print("Numero giocatori: ");
-        int numPlayers = readInt();
+        String playerId = parts[1].trim();
+        String totemColor = parts[2].trim();
+
+        Integer numPlayers = parseInt(parts[3]);
+        if (numPlayers == null) {
+            System.out.println(ConsoleColor.RED_BOLD
+                    + "Il numero di giocatori deve essere un intero."
+                    + ConsoleColor.RESET);
+            return;
+        }
 
         askCreateGame(playerId, totemColor, numPlayers);
     }
 
-    private void askJoinGameFromInput() {
-        System.out.print("Nickname: ");
-        String playerId = input.nextLine();
+    private void handleJoinCommand(String[] parts) {
+        if (parts.length != 3) {
+            System.out.println(ConsoleColor.RED_BOLD
+                    + "Uso corretto: join <nickname> <totemColor>"
+                    + ConsoleColor.RESET);
+            return;
+        }
 
-        System.out.print("Colore totem: ");
-        String totemColor = input.nextLine();
+        String playerId = parts[1].trim();
+        String totemColor = parts[2].trim();
 
         askJoinGame(playerId, totemColor);
     }
 
-    private void askPlaceTotemFromInput() {
-        if (id == null) {
-            showError("Non sei ancora registrato in una partita.");
+    private void handleGameCommand(String command, String[] parts, GameView gameView) {
+        if (!isMyTurn(gameView)) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Non è il tuo turno. Current player: "
+                    + gameView.getCurrentPlayer()
+                    + ConsoleColor.RESET);
             return;
         }
 
-        System.out.println();
-        System.out.println(ConsoleColor.YELLOW_BOLD + "È il tuo turno: piazza il totem." + ConsoleColor.RESET);
-        System.out.print("Indice posizione bidding trail: ");
+        GameState state = gameView.getState();
 
-        int index = readInt();
+        if (state == null) {
+            System.out.println(ConsoleColor.RED_BOLD
+                    + "Stato di gioco non disponibile."
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        switch (state) {
+            case PLACETOTEM -> handlePlaceTotemCommand(command, parts);
+
+            /*
+             * In futuro aggiungerai qui le prossime fasi.
+             *
+             * case PICKCARD -> handlePickCardCommand(command, parts);
+             * case CHOOSECARD -> handleChooseCardCommand(command, parts);
+             * case ENDTURN -> handleEndTurnCommand(command, parts);
+             */
+
+            default -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Nessuna azione gestita dalla CLI per lo stato: "
+                    + state
+                    + ConsoleColor.RESET);
+        }
+    }
+
+    private void handlePlaceTotemCommand(String command, String[] parts) {
+        if (!command.equals("placetotem")) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: placeTotem <index>"
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        if (parts.length != 2) {
+            System.out.println(ConsoleColor.RED_BOLD
+                    + "Uso corretto: placeTotem <index>"
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        Integer index = parseInt(parts[1]);
+        if (index == null) {
+            System.out.println(ConsoleColor.RED_BOLD
+                    + "L'indice deve essere un numero intero."
+                    + ConsoleColor.RESET);
+            return;
+        }
 
         askPlaceTotem(index);
     }
 
-    private int readInt() {
-        while (true) {
-            String line = input.nextLine();
-
-            try {
-                return Integer.parseInt(line);
-            } catch (NumberFormatException e) {
-                System.out.print(ConsoleColor.RED_BOLD + "Inserisci un numero valido: " + ConsoleColor.RESET);
-            }
-        }
-    }
-
     public void askCreateGame(String playerId, String totemColor, int numPlayers) {
         if (actionHandler != null) {
-            this.id = playerId;
-            actionHandler.onCreateGameSelected(playerId, totemColor, numPlayers);
+            this.id = playerId.trim();
+            this.waitingServerResponse = true;
+
+            actionHandler.onCreateGameSelected(this.id, totemColor, numPlayers);
         }
     }
 
     public void askJoinGame(String playerId, String totemColor) {
         if (actionHandler != null) {
-            this.id = playerId;
-            actionHandler.onJoinGameSelected(playerId, totemColor);
+            this.id = playerId.trim();
+            this.waitingServerResponse = true;
+
+            actionHandler.onJoinGameSelected(this.id, totemColor);
         }
     }
 
     public void askPlaceTotem(int index) {
         if (actionHandler != null) {
+            this.waitingServerResponse = true;
+
             actionHandler.onPlaceTotemSelected(index);
         }
     }
-    
+
     @Override
     public void onModelChanged(ClientModel updatedModel) {
+        /*
+         * Questo metodo può essere chiamato dal thread RMI.
+         * Qui NON leggiamo mai input.
+         * Salviamo solo lo stato ricevuto e renderizziamo.
+         */
+
+        this.waitingServerResponse = false;
+        this.currentErrorMessage = updatedModel.getLastError();
+        this.currentInfoMessage = updatedModel.getStateRequest();
+        this.currentGameView = updatedModel.getGameView();
+
         System.out.println();
 
-        if (updatedModel.getLastError() != null) {
-            showError(updatedModel.getLastError());
+        if (currentErrorMessage != null) {
+            showError(currentErrorMessage);
+            printNextAction();
             return;
         }
 
-        if (updatedModel.getStateRequest() != null) {
-            showMessage(updatedModel.getStateRequest());
+        if (currentInfoMessage != null) {
+            showMessage(currentInfoMessage);
         }
 
-        GameView gameView = updatedModel.getGameView();
+        if (currentGameView != null) {
+            renderGame(currentGameView);
+        }
 
-        if (gameView != null) {
-            renderGame(gameView);
+        printNextAction();
+    }
 
-            /*if (GameState.PLACETOTEM.equals(gameView.getState()) && isMyTurn(gameView)) {
-                //askPlaceTotemFromInput();
-                System.out.println("Sono DENTRO");
+    private void printNextAction() {
+        GameView gameView = currentGameView;
 
+        System.out.println();
 
-                 * Non ristampo subito la board.
-                 * Ho appena mandato placeTotem al server.
-                 * La board aggiornata arriverà con il prossimo UpdateViewMessage.
+        if (gameView == null) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: create <nickname> <totemColor> <numPlayers>"
+                    + " oppure join <nickname> <totemColor>"
+                    + ConsoleColor.RESET);
+            return;
+        }
 
-                return;
-            }*/
+        if (!isMyTurn(gameView)) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: attendi il turno di "
+                    + gameView.getCurrentPlayer()
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        GameState state = gameView.getState();
+
+        if (state == null) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: attendi aggiornamento stato."
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        switch (state) {
+            case PLACETOTEM -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: placeTotem <index>"
+                    + ConsoleColor.RESET);
+
+            /*
+             * In futuro:
+             *
+             * case PICKCARD -> System.out.println("Prossima azione da compiere: pickCard <cardId>");
+             * case CHOOSECARD -> System.out.println("Prossima azione da compiere: chooseCard <row> <index>");
+             */
+
+            default -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: attendi aggiornamento."
+                    + ConsoleColor.RESET);
         }
     }
-    private boolean isMyTurn(GameView gameView) {
+
+    private void printLobbyHelp() {
+        System.out.println();
+        System.out.println(ConsoleColor.YELLOW_BOLD + "========== COMANDI LOBBY ==========" + ConsoleColor.RESET);
+        System.out.println("create <nickname> <totemColor> <numPlayers>");
+        System.out.println("join <nickname> <totemColor>");
+        System.out.println("refresh");
+        System.out.println("help");
+        System.out.println("quit");
+        System.out.println(ConsoleColor.YELLOW_BOLD + "===================================" + ConsoleColor.RESET);
+        System.out.println();
+        System.out.println(ConsoleColor.YELLOW_BOLD
+                + "Prossima azione da compiere: create <nickname> <totemColor> <numPlayers>"
+                + " oppure join <nickname> <totemColor>"
+                + ConsoleColor.RESET);
+    }
+
+    private void printHelp() {
+        GameView gameView = currentGameView;
+
         if (gameView == null) {
+            printLobbyHelp();
+            return;
+        }
+
+        System.out.println();
+        System.out.println(ConsoleColor.YELLOW_BOLD + "========== COMANDI GAME ==========" + ConsoleColor.RESET);
+        System.out.println("refresh");
+        System.out.println("help");
+        System.out.println("quit");
+
+        if (GameState.PLACETOTEM.equals(gameView.getState())) {
+            System.out.println("placeTotem <index>");
+        }
+
+        /*
+         * In futuro:
+         *
+         * if (GameState.PICKCARD.equals(gameView.getState())) {
+         *     System.out.println("pickCard <cardId>");
+         * }
+         */
+
+        System.out.println(ConsoleColor.YELLOW_BOLD + "==================================" + ConsoleColor.RESET);
+        printNextAction();
+    }
+
+    private void refresh() {
+        if (currentGameView != null) {
+            renderGame(currentGameView);
+            printNextAction();
+        } else if (model.getGameView() != null) {
+            renderGame(model.getGameView());
+            printNextAction();
+        } else {
+            showMessage("Nessuna partita da mostrare.");
+            printNextAction();
+        }
+    }
+
+    private boolean isMyTurn(GameView gameView) {
+        if (gameView == null || gameView.getCurrentPlayer() == null || id == null) {
             return false;
         }
 
-        if (gameView.getCurrentPlayer() == null) {
-            return false;
-        }
+        return gameView.getCurrentPlayer().trim().equalsIgnoreCase(id.trim());
+    }
 
-        if (id == null) {
-            return false;
+    private Integer parseInt(String value) {
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            return null;
         }
-
-        return gameView.getCurrentPlayer().equals(id);
     }
 
     private void showMessage(String message) {

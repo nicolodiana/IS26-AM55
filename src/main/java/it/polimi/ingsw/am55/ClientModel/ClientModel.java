@@ -10,17 +10,16 @@ import java.util.List;
 
 public class ClientModel {
 
-    // PER CREARE LE CARTE
-    //CardLoader loader = CardLoader.loadFromJson();
-    //CardFactory cardFactory = new CardFactory(loader);
-    //
+    private final Object lock = new Object();
+
     private GameView gameView;
     private String stateRequest;
     private String lastError;
     private boolean gameStarted;
     private boolean commandDone = false;
+
     private final List<ClientModelObserver> observers;
-    private List<CardView> myHand = new ArrayList<>();
+    private final List<CardView> myHand;
 
     public ClientModel() {
         this.gameView = null;
@@ -28,72 +27,146 @@ public class ClientModel {
         this.lastError = null;
         this.gameStarted = false;
         this.observers = new ArrayList<>();
+        this.myHand = new ArrayList<>();
     }
 
     public void update(MessageToClient message) {
+        /*
+         * message.update(this) modificherà il ClientModel
+         * chiamando setGameView, setStateRequest, setLastError, ecc.
+         *
+         * Dopo l'update notifico gli observer.
+         */
         message.update(this);
         notifyObservers();
     }
 
     public void addObserver(ClientModelObserver observer) {
-        if (observer != null && !observers.contains(observer)) {
-            observers.add(observer);
+        synchronized (lock) {
+            if (observer != null && !observers.contains(observer)) {
+                observers.add(observer);
+            }
         }
     }
 
     public void removeObserver(ClientModelObserver observer) {
-        observers.remove(observer);
+        synchronized (lock) {
+            observers.remove(observer);
+        }
     }
 
     private void notifyObservers() {
-        for (ClientModelObserver observer : observers) {
+        List<ClientModelObserver> observersCopy;
+
+        synchronized (lock) {
+            observersCopy = new ArrayList<>(observers);
+        }
+
+        for (ClientModelObserver observer : observersCopy) {
             observer.onModelChanged(this);
         }
     }
 
     public GameView getGameView() {
-        return gameView;
+        synchronized (lock) {
+            return gameView;
+        }
     }
 
     public void setGameView(GameView gameView) {
-        this.gameView = gameView;
+        synchronized (lock) {
+            this.gameView = gameView;
+        }
     }
 
     public String getStateRequest() {
-        return stateRequest;
+        synchronized (lock) {
+            return stateRequest;
+        }
     }
 
     public void setStateRequest(String stateRequest) {
-        this.stateRequest = stateRequest;
-    }
-
-    public List<CardView> getMyHand() {
-        return myHand;
+        synchronized (lock) {
+            this.stateRequest = stateRequest;
+        }
     }
 
     public String getLastError() {
-        return lastError;
+        synchronized (lock) {
+            return lastError;
+        }
     }
 
     public void setLastError(String lastError) {
-        this.lastError = lastError;
+        synchronized (lock) {
+            this.lastError = lastError;
+        }
     }
 
     public void clearError() {
-        this.lastError = null;
+        synchronized (lock) {
+            this.lastError = null;
+        }
     }
 
     public boolean isGameStarted() {
-        return gameStarted;
+        synchronized (lock) {
+            return gameStarted;
+        }
     }
 
     public void setGameStarted(boolean gameStarted) {
-        this.gameStarted = gameStarted;
+        synchronized (lock) {
+            this.gameStarted = gameStarted;
+        }
+    }
+
+    public boolean isCommandDone() {
+        synchronized (lock) {
+            return commandDone;
+        }
+    }
+
+    public void setCommandDone(boolean commandDone) {
+        synchronized (lock) {
+            this.commandDone = commandDone;
+        }
+    }
+
+    public List<CardView> getMyHand() {
+        synchronized (lock) {
+            return new ArrayList<>(myHand);
+        }
+    }
+
+    public void setMyHand(List<CardView> cards) {
+        synchronized (lock) {
+            this.myHand.clear();
+
+            if (cards != null) {
+                this.myHand.addAll(cards);
+            }
+        }
+    }
+
+    public void addCard(CardView card) {
+        synchronized (lock) {
+            if (card != null) {
+                this.myHand.add(card);
+            }
+        }
     }
 
     //------------------METODI CHE MODIFICANO IL MODEL----------------------
+
     public void addCard(int cardId) {
-        //ClientCard card = cardFactory.createCard(String.valueOf(cardId));
-        //this.myHand.add(card);
+        synchronized (lock) {
+            /*
+             * Quando riattiverai CardLoader/CardFactory:
+             *
+             * ClientCard card = cardFactory.createCard(String.valueOf(cardId));
+             * this.myHand.add(card);
+             */
+        }
     }
 }
