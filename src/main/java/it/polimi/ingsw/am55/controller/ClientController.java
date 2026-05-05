@@ -33,13 +33,12 @@ public class ClientController implements UserActionHandler {
 
     @Override
     public void onPlaceTotemSelected(int index) {
-        /*
+
         try {
             rmiClient.placeTotem(index);
         } catch (RemoteException e) {
             System.err.println("Errore durante placeTotem: " + e.getMessage());
         }
-        */
     }
 
     @Override

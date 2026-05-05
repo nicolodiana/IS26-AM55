@@ -18,7 +18,7 @@ public class ClientModel {
     private String stateRequest;
     private String lastError;
     private boolean gameStarted;
-
+    private boolean commandDone = false;
     private final List<ClientModelObserver> observers;
     private List<CardView> myHand = new ArrayList<>();
 

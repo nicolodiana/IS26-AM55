@@ -8,6 +8,7 @@ public class UpdateViewMessage implements MessageToClient {
     private final GameView gameView;
     private final String message;
 
+
     public UpdateViewMessage(GameView gameView) {
         this.gameView = gameView;
         this.message = "La partita è iniziata!";

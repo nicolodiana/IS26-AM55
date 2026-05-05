@@ -28,48 +28,61 @@ public class CLIView implements ClientModelObserver {
     }
 
     public void start() {
+        boolean isPrinted = false;
         System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
         printMenu();
 
         while (true) {
-            System.out.print("Scelta: ");
-            String choice = input.nextLine();
 
-            switch (choice) {
-                case "1" -> {
-                    askCreateGameFromInput();
+            if (!model.isGameStarted()) {
+                System.out.print("Scelta: ");
+                String choice = input.nextLine();
 
-                    /*
-                     * Da questo momento il client ha mandato una richiesta al server.
-                     * Non deve più mostrare il menu create/join.
-                     * Gli aggiornamenti arriveranno tramite onModelChanged().
-                     */
-                    return;
-                }
+                switch (choice) {
+                    case "1" -> {
+                        askCreateGameFromInput();
 
-                case "2" -> {
-                    askJoinGameFromInput();
+                        /*
+                         * Da questo momento il client ha mandato una richiesta al server.
+                         * Non deve più mostrare il menu create/join.
+                         * Gli aggiornamenti arriveranno tramite onModelChanged().
+                         */
+                        //return;
+                    }
 
-                    /*
-                     * Dopo la join, il client aspetta gli update dal server.
-                     */
-                    return;
-                }
+                    case "2" -> {
+                        askJoinGameFromInput();
 
-                case "4" -> printMenu();
+                        /*
+                         * Dopo la join, il client aspetta gli update dal server.
+                         */
+                        //return;
+                    }
 
-                case "5" -> refresh();
+                    case "3" -> printMenu();
 
-                case "0" -> {
-                    System.out.println("Chiusura client.");
-                    return;
-                }
+                    case "4" -> refresh();
 
-                default -> {
-                    System.out.println(ConsoleColor.RED_BOLD + "Scelta non valida." + ConsoleColor.RESET);
-                    printMenu();
+                    case "0" -> {
+                        System.out.println("Chiusura client.");
+                        return;
+                    }
+
+                    default -> {
+                        System.out.println(ConsoleColor.RED_BOLD + "Scelta non valida." + ConsoleColor.RESET);
+                        printMenu();
+                    }
                 }
             }
+//            System.out.println("sono dentro " + model.isGameStarted());
+//            break;
+            if (model.isGameStarted() && model.getGameView().getState() == GameState.PLACETOTEM && isMyTurn(model.getGameView())) {
+                askPlaceTotemFromInput();
+            }
+            /*else if (!isPrinted && model.isGameStarted() ) {
+                System.out.println("Wait it's not your turn");
+                isPrinted = true;
+            }*/
         }
     }
 
@@ -78,8 +91,8 @@ public class CLIView implements ClientModelObserver {
         System.out.println(ConsoleColor.YELLOW_BOLD + "========== MENU ==========" + ConsoleColor.RESET);
         System.out.println("1) Create game");
         System.out.println("2) Join game");
-        System.out.println("4) Mostra menu");
-        System.out.println("5) Refresh board");
+        System.out.println("3) Mostra menu");
+        System.out.println("4) Refresh board");
         System.out.println("0) Quit");
         System.out.println(ConsoleColor.YELLOW_BOLD + "==========================" + ConsoleColor.RESET);
         System.out.println();
@@ -183,16 +196,17 @@ public class CLIView implements ClientModelObserver {
         if (gameView != null) {
             renderGame(gameView);
 
-            if (GameState.PLACETOTEM.equals(gameView.getState()) && isMyTurn(gameView)) {
-                askPlaceTotemFromInput();
+            /*if (GameState.PLACETOTEM.equals(gameView.getState()) && isMyTurn(gameView)) {
+                //askPlaceTotemFromInput();
+                System.out.println("Sono DENTRO");
 
-                /*
+
                  * Non ristampo subito la board.
                  * Ho appena mandato placeTotem al server.
                  * La board aggiornata arriverà con il prossimo UpdateViewMessage.
-                 */
+
                 return;
-            }
+            }*/
         }
     }
     private boolean isMyTurn(GameView gameView) {
