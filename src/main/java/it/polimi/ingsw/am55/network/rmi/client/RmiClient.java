@@ -100,6 +100,11 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi {
     }
 
     public void pickCard(String playerId, int cardId) throws RemoteException{
+
+        if (playerId == null) {
+            throw new RemoteException("Player non ancora registrato tramite createGame/joinGame.");
+        }
+
         this.server.pickCard(playerId, cardId);
     }
 

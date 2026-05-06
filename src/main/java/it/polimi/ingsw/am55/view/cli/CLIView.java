@@ -165,7 +165,7 @@ public class CLIView implements ClientModelObserver {
 
         switch (state) {
             case PLACETOTEM -> handlePlaceTotemCommand(command, parts);
-
+            case PICKCARD -> handlePickCardCommand(command, parts);
             /*
              * In futuro aggiungerai qui le prossime fasi.
              *
@@ -207,6 +207,32 @@ public class CLIView implements ClientModelObserver {
         askPlaceTotem(index);
     }
 
+    private void handlePickCardCommand(String command, String[] parts) {
+            if (!command.equals("pickcard")) {
+                System.out.println(ConsoleColor.YELLOW_BOLD
+                        + "Riprova -> prossima azione da compiere: pickCard <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            if (parts.length != 2) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Uso corretto: pickCard <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            Integer cardId = parseInt(parts[1]);
+            if (cardId == null) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "L'indice deve essere un numero intero."
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            askPickCard(cardId);
+        }
+
     public void askCreateGame(String playerId, String totemColor, int numPlayers) {
         if (actionHandler != null) {
             this.id = playerId.trim();
@@ -232,6 +258,14 @@ public class CLIView implements ClientModelObserver {
             actionHandler.onPlaceTotemSelected(index);
         }
     }
+
+    public void askPickCard(int cardId) {
+            if (actionHandler != null) {
+                this.waitingServerResponse = true;
+
+                actionHandler.onPickCardSelected(this.id, cardId);
+            }
+        }
 
     @Override
     public void onModelChanged(ClientModel updatedModel) {
@@ -299,7 +333,9 @@ public class CLIView implements ClientModelObserver {
             case PLACETOTEM -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: placeTotem <index>"
                     + ConsoleColor.RESET);
-
+            case PICKCARD -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: pickCard <card id>"
+                    + ConsoleColor.RESET);
             /*
              * In futuro:
              *

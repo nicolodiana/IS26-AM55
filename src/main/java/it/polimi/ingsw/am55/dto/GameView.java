@@ -55,4 +55,6 @@ public class GameView implements Serializable {
     public BoardView getBoard() {
         return board;
     }
+
+    //public void addCardToPlayer(String nickname, )
 }

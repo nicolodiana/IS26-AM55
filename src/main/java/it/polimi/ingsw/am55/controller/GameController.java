@@ -66,11 +66,17 @@ public class GameController {
 
     public MessageToClient pickCard(String playerId, int cardId) {
 //        return new PickCardMessage("The pick is valid", cardId);
+        if (gameModel == null) {
+            return new ErrorMessage("Nessuna partita creata.");
+        }
+
         try {
             gameModel.pickCard(cardId, playerId);
 
-            //BoardDto boardDto = BoardDto.from(game.getBoard());
-            return new PickCardMessage("The pick is valid", cardId);
+            return new UpdateViewMessage(
+                    gameModel.toView(),
+                    "pick done"
+            );
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());

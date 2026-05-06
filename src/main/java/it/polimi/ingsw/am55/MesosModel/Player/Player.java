@@ -6,6 +6,7 @@ import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Game.Game;
+import it.polimi.ingsw.am55.dto.CardView;
 
 import java.util.*;
 /**
