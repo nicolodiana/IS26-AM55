@@ -11,6 +11,9 @@ import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveHuntingView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +28,7 @@ import java.util.UUID;
  * the current round, and the set of winners (if any).
  */
 public class Game implements GameModelInterface{
+    private List<EventCard> eventList = new ArrayList<>();
     /**
      * The unique identifier for this specific game or match.
      */
@@ -282,9 +286,21 @@ public class Game implements GameModelInterface{
 
         secondPartPick();
     }
-    private void eventResolve(){
-        List<EventCard> eventList = sharedBoard.orderEvents();
-        eventList.forEach(card -> {card.activateEvent(players);});
+    public void eventResolve(){//era private
+        System.out.println("SONO in event resolve");
+        //List<EventCard> eventList = sharedBoard.orderEvents();
+        this.eventList = new ArrayList<>(sharedBoard.orderEvents());
+        System.out.println("EventList: " + eventList);
+        eventList.forEach(card -> {
+            System.out.println("Attivo evento: " + card.getClass().getName());
+            card.activateEvent(players);
+            System.out.println("Dopo attivazione: " + card.toViewResolve());
+        });
+
+        boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
+        countRound++;
+        changeState(GameState.PLACETOTEM);
+        currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
     }
     private void eventResolveEndGame(){
         List<EventCard> eventList = sharedBoard.orderEventsEndGame();
@@ -292,18 +308,19 @@ public class Game implements GameModelInterface{
     }
     private void secondPartPick(){
         //Resolve event at the end of round
-        eventResolve();
+        //eventResolve();
 
+        changeState(GameState.EVENTRESOLVE); /// se teniamo questo modello possiamo togliere questo metodo e mettere change state dove viene chiamato
 
-        boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
-        countRound++;
-        if (countRound == 11 || !boardRestored){
+        //boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
+        //countRound++;
+        /*if (countRound == 11 || !boardRestored){
             eventResolveEndGame();
             endGame();
             return;
-        }
-        changeState(GameState.PLACETOTEM);
-        currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
+        }*/
+//        changeState(GameState.PLACETOTEM);
+//        currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
     }
     /**
      * Internal logic for moving a card from the shared board to the player's inventory.
@@ -509,4 +526,15 @@ public class Game implements GameModelInterface{
         changeState(GameState.CRASHED);
     }
 
+    public List<ResolveEventView> giveResolveEvents() {
+        List<ResolveEventView> list = new ArrayList<>();
+
+        for(EventCard event : eventList) {
+            System.out.println("SONO GIVE RESOLVE EVENTS");
+            System.out.println("VIEW CREATA = " + event);
+            list.add(event.toViewResolve());
+        }
+
+        return list;
+    }
 }

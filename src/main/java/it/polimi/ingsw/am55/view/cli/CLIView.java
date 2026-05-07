@@ -5,6 +5,7 @@ import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.PlayerView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 
 import java.util.Scanner;
 
@@ -20,7 +21,7 @@ public class CLIView implements ClientModelObserver {
     private volatile String currentInfoMessage;
     private volatile String currentErrorMessage;
     private volatile boolean waitingServerResponse;
-
+    private volatile int currentRound = 0;
     private String id;
 
     public CLIView(ClientModel model) {
@@ -184,7 +185,7 @@ public class CLIView implements ClientModelObserver {
     private void handlePlaceTotemCommand(String command, String[] parts) {
         if (!command.equals("placetotem")) {
             System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Prossima azione da compiere: placeTotem <index>"
+                    + "Riprova -> Prossima azione da compiere: placeTotem <index>"
                     + ConsoleColor.RESET);
             return;
         }
@@ -210,7 +211,7 @@ public class CLIView implements ClientModelObserver {
     private void handlePickCardCommand(String command, String[] parts) {
             if (!command.equals("pickcard")) {
                 System.out.println(ConsoleColor.YELLOW_BOLD
-                        + "Riprova -> prossima azione da compiere: pickCard <cardId>"
+                        + "Riprova -> Prossima azione da compiere: pickCard <cardId>"
                         + ConsoleColor.RESET);
                 return;
             }
@@ -292,6 +293,14 @@ public class CLIView implements ClientModelObserver {
             showMessage(currentInfoMessage);
         }
 
+        /*if (currentGameView != null && this.currentRound != currentGameView.getRound()) {
+            this.currentRound = currentGameView.getRound();
+
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "========== ROUND " + this.currentRound + " =========="
+                    + ConsoleColor.RESET);
+        }*/
+
         if (currentGameView != null) {
             renderGame(currentGameView);
         }
@@ -335,6 +344,9 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
             case PICKCARD -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: pickCard <card id>"
+                    + ConsoleColor.RESET);
+            case EVENTRESOLVE -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Time to resolve the events on the boards, wait for the results"
                     + ConsoleColor.RESET);
             /*
              * In futuro:
@@ -472,6 +484,15 @@ public class CLIView implements ClientModelObserver {
         }
 
         System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
+
+       // if (gameView.getState().equals(GameState.EVENTRESOLVE)) {
+            if (gameView.getResolveEvents() != null && !gameView.getResolveEvents().isEmpty()) {
+                System.out.println(ConsoleColor.YELLOW_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
+                for (ResolveEventView view : gameView.getResolveEvents()) {
+                    System.out.println("- " + view);
+                }
+            }
+        //}
     }
 
     public String getId() {

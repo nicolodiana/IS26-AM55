@@ -4,8 +4,11 @@ import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.ClientCards.SustenanceEventView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // Evento Sostentamento:
 // - ogni personaggio della tribù costa 1 cibo
@@ -14,7 +17,8 @@ import java.util.List;
 // - se il giocatore non riesce a pagare tutto, perde numPP
 //   per ogni personaggio rimasto non sfamato
 public class SustenanceEventCard extends EventCard {
-
+    private Map<String, Integer> effectToFood = new HashMap<>();
+    private Map<String, Integer> effectToPP = new HashMap<>();
     // Numero di punti prestigio persi per ogni personaggio non sfamato
     private int numPP;
 
@@ -27,7 +31,6 @@ public class SustenanceEventCard extends EventCard {
 
     @Override
     public void activateEvent(List<Player> players) {
-
         // Scorro tutti i giocatori coinvolti nell'evento
         for (Player p : players) {
 
@@ -72,11 +75,14 @@ public class SustenanceEventCard extends EventCard {
             // Non tolgo foodToPay direttamente, perché il giocatore potrebbe
             // non avere abbastanza cibo.
             p.payFood(paidFood);
-
+            effectToFood.put(p.getNickname(), paidFood);
             // 9) Applico la penalità in punti prestigio.
             // Per ogni personaggio non sfamato il giocatore perde numPP.
             p.payPP(unfedCharacters * numPP);
+            effectToPP.put(p.getNickname(), unfedCharacters * numPP);
         }
+        System.out.println("DOPO PUT PP: " + effectToPP);
+        System.out.println("DOPO PUT food: " + effectToFood);
     }
 
     public int getOrder(){
@@ -84,4 +90,7 @@ public class SustenanceEventCard extends EventCard {
     }
 
     public SustenanceEventView toView() { return new SustenanceEventView(getId(), this.era, this.numPP); }
+    public ResolveSustenanceView toViewResolve() {
+        System.out.println("SONO TO VIEW REOSLVE DI SUSTENANCE");
+        return new ResolveSustenanceView(effectToFood, effectToPP, "SUSTENANCE"); }
 }

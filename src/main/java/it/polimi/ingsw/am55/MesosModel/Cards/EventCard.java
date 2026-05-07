@@ -2,6 +2,8 @@ package it.polimi.ingsw.am55.MesosModel.Cards;
 
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.MesosModel.SharedBoard.Row;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveHuntingView;
 
 import java.util.List;
 
@@ -25,4 +27,6 @@ public class EventCard extends TribeCard {
     }
 
     public int getOrder(){return 0;}
+
+    public ResolveEventView toViewResolve(){ return new ResolveEventView(null, null); }
 }

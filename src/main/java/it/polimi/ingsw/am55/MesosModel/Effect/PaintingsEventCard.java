@@ -4,8 +4,12 @@ import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.ClientCards.PaintingsEventView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolvePaintingsView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //evento pitture rupestri
 
@@ -14,6 +18,8 @@ public class PaintingsEventCard extends EventCard {
     private int lowerPP;
     private int upperNumberOfArtist;
     private int lowerNumberOfArtist;
+    private Map<String, Integer> effectToFood = new HashMap<>();
+    private Map<String, Integer> effectToPP = new HashMap<>();
 
 
     public PaintingsEventCard(int id, int era, int upperPP, int lowerPP, int upperNumberOfArtist, int lowerNumberOfArtist) {
@@ -32,15 +38,21 @@ public class PaintingsEventCard extends EventCard {
 
             if (p.hasBuilding(BuildingType.BUILDING10)) {
                 p.addFood(counterArtist);
+                effectToFood.put(p.getNickname(), counterArtist);
             }
 
             // nessun controllo: può andare sotto zero la riserva di punti prestigio
             if (counterArtist <= upperNumberOfArtist) {
                 p.payPP(upperPP);
+                effectToPP.put(p.getNickname(), - upperPP);
             } else if (counterArtist >= lowerNumberOfArtist) {
                 p.addPP(counterArtist * lowerPP);
+                effectToPP.put(p.getNickname(), counterArtist * lowerPP);
             }
         }
+
+        System.out.println("DOPO PUT PP: " + effectToPP);
+        System.out.println("DOPO PUT PP: " + effectToFood);
     }
 
     public int getOrder(){
@@ -49,4 +61,9 @@ public class PaintingsEventCard extends EventCard {
 
     public PaintingsEventView toView() { return new PaintingsEventView(getId(), this.era, this.upperPP, this.lowerPP,
             this.upperNumberOfArtist, this.lowerNumberOfArtist); }
+
+    public ResolvePaintingsView toViewResolve() {
+        System.out.println("SONO TO VIEW REOSLVE DI PAINTINGS");
+        return new ResolvePaintingsView(effectToFood, effectToPP, "PAINTINGS"); }
+
 }

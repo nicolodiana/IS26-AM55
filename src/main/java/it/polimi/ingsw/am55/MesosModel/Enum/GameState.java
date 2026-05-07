@@ -5,6 +5,7 @@ public enum GameState {
     PLACETOTEM,
     PICKCARD,
     PICKSPECIAL,
+    EVENTRESOLVE,
     CRASHED,
     ENDED
 }

@@ -2,8 +2,10 @@ package it.polimi.ingsw.am55.dto;
 
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Game.Game;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameView implements Serializable {
@@ -14,6 +16,7 @@ public class GameView implements Serializable {
     private final int round;
     private final List<PlayerView> players;
     private final BoardView board;
+    private List<ResolveEventView> resolveEvents = new ArrayList<>();
 
     public GameView(Game game) {
         this.gameId = game.getIdGame();
@@ -54,6 +57,21 @@ public class GameView implements Serializable {
 
     public BoardView getBoard() {
         return board;
+    }
+
+    public void setResolveEvents(List<ResolveEventView> list) {
+        this.resolveEvents = list;
+    }
+
+    @Override
+    public String toString() {
+        return "GameView{" +
+                "resolveEvents=" + resolveEvents +
+                '}';
+    }
+
+    public List<ResolveEventView> getResolveEvents() {
+        return resolveEvents;
     }
 
     //public void addCardToPlayer(String nickname, )

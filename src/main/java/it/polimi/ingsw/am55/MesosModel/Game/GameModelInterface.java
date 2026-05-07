@@ -3,7 +3,9 @@ package it.polimi.ingsw.am55.MesosModel.Game;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -103,5 +105,8 @@ public interface GameModelInterface {
      * @return map that cointains players winner with points
      */
     Map<String,Integer> endGame();
+
+    void eventResolve();
+    List<ResolveEventView> giveResolveEvents();
 
 }

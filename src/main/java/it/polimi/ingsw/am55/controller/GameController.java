@@ -1,8 +1,14 @@
 package it.polimi.ingsw.am55.controller;
 
+import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Game.Game;
 import it.polimi.ingsw.am55.MesosModel.Game.GameModelInterface;
+import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import it.polimi.ingsw.am55.message.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameController {
 
@@ -72,9 +78,25 @@ public class GameController {
 
         try {
             gameModel.pickCard(cardId, playerId);
+            List<MessageToClient> messages = new ArrayList<>();
+            GameView view = gameModel.toView();
+
+            messages.add(new UpdateViewMessage(view, "pick done"));
+
+            if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
+                System.out.println("----------------RESOLVE EVENT--------------------");
+                gameModel.eventResolve();
+                List<ResolveEventView> list = gameModel.giveResolveEvents();
+                view = gameModel.toView();
+                view.setResolveEvents(list);
+                System.out.println("Lista Event Resolve: " + list);
+                System.out.println("----------------DOPO RESOLVE EVENT--------------------");
+                messages.add(new UpdateViewMessage(view, "pick done"));
+                return new MultipleMessages(messages);
+            }
 
             return new UpdateViewMessage(
-                    gameModel.toView(),
+                    view,
                     "pick done"
             );
 

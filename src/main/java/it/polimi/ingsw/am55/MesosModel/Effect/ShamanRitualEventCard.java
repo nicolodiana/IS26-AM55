@@ -3,13 +3,18 @@ import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.ClientCards.ShamanRitualView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveShamanRitualView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // Evento Rituale Sciamanico
 public class ShamanRitualEventCard extends EventCard {
     private int maxPP;
     private int minPP;
+    private Map<String, Integer> effectToPP = new HashMap<>();
 
     public ShamanRitualEventCard(int id, int era,int maxPP, int minPP) {
         super(id,era);
@@ -48,6 +53,7 @@ public class ShamanRitualEventCard extends EventCard {
             if (stars == maxStars) {
                 int gain = p.hasBuilding(BuildingType.BUILDING7) ? maxPP * 2 : maxPP;
                 p.addPP(gain);
+                effectToPP.put(p.getNickname(), gain);
             }
 
             // Chi ha il minimo perde PP
@@ -55,13 +61,22 @@ public class ShamanRitualEventCard extends EventCard {
             if (stars == minStars) {
                 if (!p.hasBuilding(BuildingType.BUILDING3)) {
                     p.payPP(minPP);
+                    effectToPP.put(p.getNickname(), - minPP);
                 }
             }
         }
+
+        /// occhio sono test
+        System.out.println("DOPO PUT PP: " + effectToPP);
     }
     public int getOrder(){
         return 2;
     }
 
     public ShamanRitualView toView() { return new ShamanRitualView(getId(), this.era, this.maxPP, this.minPP); }
+
+    public ResolveShamanRitualView toViewResolve() {
+        System.out.println("SONO TO VIEW REOSLVE DI SHAMAN RITUAL");
+        return new ResolveShamanRitualView(effectToPP, "SHAMAN RITUAL"); }
+
 }

@@ -4,12 +4,18 @@ import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.ClientCards.HuntEventView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveHuntingView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class HuntEventCard extends EventCard {
     private final int numPP;
+    private Map<String, Integer> effectToFood = new HashMap<>();
+    private Map<String, Integer> effectToPP = new HashMap<>();
 
     public HuntEventCard(int id, int era, int numPP) {
         this.numPP = numPP;
@@ -24,7 +30,12 @@ public class HuntEventCard extends EventCard {
 
             p.addPP(numHunters * numPP + bonusPerBuilding8);
             p.addFood(numHunters + bonusPerBuilding8);
+            effectToPP.put(p.getNickname(), numHunters * numPP + bonusPerBuilding8);
+            effectToFood.put(p.getNickname(), numHunters + bonusPerBuilding8);
         }
+
+        System.out.println("DOPO PUT PP: " + effectToPP);
+        System.out.println("DOPO PUT PP: " + effectToFood);
     }
 
     public int getOrder(){
@@ -32,5 +43,10 @@ public class HuntEventCard extends EventCard {
     }
 
     public HuntEventView toView() { return new HuntEventView(getId(), this.era, this.numPP); }
+
+    public ResolveHuntingView toViewResolve() {
+        System.out.println("SONO TO VIEW REOSLVE DI HUNTING");
+        return new ResolveHuntingView(effectToFood, effectToPP, "HUNTING"); }
+
 }
 
