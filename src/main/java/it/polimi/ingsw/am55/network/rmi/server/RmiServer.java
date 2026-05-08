@@ -4,6 +4,9 @@ import it.polimi.ingsw.am55.controller.*;
 import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
+import it.polimi.ingsw.am55.network.rmi.server.commandServer.PickCardCommand;
+import it.polimi.ingsw.am55.network.rmi.server.commandServer.PlaceTotemCommand;
+import it.polimi.ingsw.am55.network.rmi.server.commandServer.ServerCommand;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -11,6 +14,9 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Server RMI.
@@ -29,11 +35,15 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
 
     private final GameController controller;
     private final Map<String, VirtualViewRmi> clients;
+    private final BlockingQueue<ServerCommand> commandQueue = new LinkedBlockingQueue<>();
 
     public RmiServer() throws RemoteException {
         super(); // esporta l'oggetto remoto server-side
         this.controller = new GameController();
         this.clients = new HashMap<>();
+
+        // start commands worker
+        startCommandWorker();
     }
 
     public static void main(String[] args) throws Exception {
@@ -90,16 +100,16 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
      */
     @Override
     public void placeTotem(String playerId, int index) throws RemoteException {
+        commandQueue.add(new PlaceTotemCommand(playerId, index));
 
-        MessageToClient message = controller.placeTotem(playerId, index);
-        message.deliver(playerId, this);
-
-
+        /*MessageToClient message = controller.placeTotem(playerId, index);
+        message.deliver(playerId, this);*/
     }
 
     public void pickCard(String playerId, int cardId) throws RemoteException {
-        MessageToClient message = controller.pickCard(playerId, cardId);
-        message.deliver(playerId,this);
+        /*MessageToClient message = controller.pickCard(playerId, cardId);
+        message.deliver(playerId,this);*/
+        commandQueue.add(new PickCardCommand(playerId, cardId));
     }
     /**
      * Invio in broadcast a tutti i client registrati.
@@ -140,5 +150,26 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
                 System.out.println("Client disconnesso durante invio mirato.");
             }
         }
+    }
+
+    // RUN SERVER COMMANDS
+
+    public void startCommandWorker() {
+        Thread worker = new Thread(() -> {
+            while (true) {
+                try {
+                    ServerCommand command = commandQueue.take();
+
+                    MessageToClient message = command.execute(this.controller);
+
+                    message.deliver(command.getPlayerId(), this);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+            }
+        });
+
+        worker.start();
     }
 }
