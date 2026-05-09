@@ -107,6 +107,9 @@ public interface GameModelInterface {
     Map<String,Integer> endGame();
 
     void eventResolve();
+
     List<ResolveEventView> giveResolveEvents();
+
+    void pickSpecial(int id,String idPlayer);
 
 }

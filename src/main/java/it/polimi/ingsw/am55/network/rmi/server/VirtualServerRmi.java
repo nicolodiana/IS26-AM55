@@ -35,6 +35,8 @@ public interface VirtualServerRmi extends Remote, VirtualServer {
 
     void pickCard(String playerId, int cardId) throws RemoteException;
 
+    void pickSpecial(String playerId, int cardId) throws RemoteException;
+
     /*
     altri metodi da aggiungere: dovranno poi anche aggiungersi dentro RMIServer che
 

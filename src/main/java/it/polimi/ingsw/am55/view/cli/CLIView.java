@@ -167,6 +167,7 @@ public class CLIView implements ClientModelObserver {
         switch (state) {
             case PLACETOTEM -> handlePlaceTotemCommand(command, parts);
             case PICKCARD -> handlePickCardCommand(command, parts);
+            case PICKSPECIAL -> handlePickSpecialCommand(command, parts);
             /*
              * In futuro aggiungerai qui le prossime fasi.
              *
@@ -234,6 +235,32 @@ public class CLIView implements ClientModelObserver {
             askPickCard(cardId);
         }
 
+        public void handlePickSpecialCommand(String command, String[] parts) {
+            if (!command.equals("pick")) {
+                System.out.println(ConsoleColor.YELLOW_BOLD
+                        + "Try again -> Next action to write: pick <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            if (parts.length != 2) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Uso corretto: pickCard <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            Integer cardId = parseInt(parts[1]);
+            if (cardId == null) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Index has to be an integer"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            askPickSpecial(cardId);
+        }
+
     public void askCreateGame(String playerId, String totemColor, int numPlayers) {
         if (actionHandler != null) {
             this.id = playerId.trim();
@@ -261,12 +288,21 @@ public class CLIView implements ClientModelObserver {
     }
 
     public void askPickCard(int cardId) {
-            if (actionHandler != null) {
-                this.waitingServerResponse = true;
+        if (actionHandler != null) {
+            this.waitingServerResponse = true;
 
-                actionHandler.onPickCardSelected(this.id, cardId);
-            }
+            actionHandler.onPickCardSelected(this.id, cardId);
         }
+    }
+
+    public void askPickSpecial(int cardId) {
+        if (actionHandler != null) {
+            this.waitingServerResponse = true;
+
+            actionHandler.onPickSpecialSelected(this.id, cardId);
+        }
+    }
+
 
     @Override
     public void onModelChanged(ClientModel updatedModel) {
@@ -344,6 +380,9 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
             case PICKCARD -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: pickCard <card id>"
+                    + ConsoleColor.RESET);
+            case PICKSPECIAL -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "You have Building 13 please choose another with command: pick <cardId>"
                     + ConsoleColor.RESET);
             case EVENTRESOLVE -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Time to resolve the events on the boards, wait for the results"
@@ -487,10 +526,14 @@ public class CLIView implements ClientModelObserver {
 
        // if (gameView.getState().equals(GameState.EVENTRESOLVE)) {
             if (gameView.getResolveEvents() != null && !gameView.getResolveEvents().isEmpty()) {
-                System.out.println(ConsoleColor.YELLOW_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
+                System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
                 for (ResolveEventView view : gameView.getResolveEvents()) {
-                    System.out.println("- " + view);
+                    view.showEvent();
+                    System.out.println();
                 }
+
+                System.out.println(ConsoleColor.CYAN_BOLD + " END RESOLVE EVENTS" + ConsoleColor.RESET);
+                System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
             }
         //}
     }

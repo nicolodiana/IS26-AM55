@@ -78,20 +78,22 @@ public class GameController {
 
         try {
             gameModel.pickCard(cardId, playerId);
+
             List<MessageToClient> messages = new ArrayList<>();
             GameView view = gameModel.toView();
 
             messages.add(new UpdateViewMessage(view, "pick done"));
 
             if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
-                System.out.println("----------------RESOLVE EVENT--------------------");
+                //System.out.println("----------------RESOLVE EVENT--------------------");
                 gameModel.eventResolve();
                 List<ResolveEventView> list = gameModel.giveResolveEvents();
                 view = gameModel.toView();
                 view.setResolveEvents(list);
-                System.out.println("Lista Event Resolve: " + list);
-                System.out.println("----------------DOPO RESOLVE EVENT--------------------");
+                //System.out.println("Lista Event Resolve: " + list);
+                //System.out.println("----------------DOPO RESOLVE EVENT--------------------");
                 messages.add(new UpdateViewMessage(view, "pick done"));
+
                 return new MultipleMessages(messages);
             }
 
@@ -123,6 +125,44 @@ public class GameController {
             return new ErrorMessage(e.getMessage());
         }
     }
+
+    public MessageToClient pickSpecial(String playerId, int cardId) {
+//        return new PickCardMessage("The pick is valid", cardId);
+        if (gameModel == null) {
+            return new ErrorMessage("Nessuna partita creata.");
+        }
+
+        try {
+            gameModel.pickSpecial(cardId, playerId);
+
+            List<MessageToClient> messages = new ArrayList<>();
+            GameView view = gameModel.toView();
+
+            messages.add(new UpdateViewMessage(view, "pick done"));
+
+            if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
+                gameModel.eventResolve();
+
+                List<ResolveEventView> list = gameModel.giveResolveEvents();
+
+                view = gameModel.toView();
+                view.setResolveEvents(list);
+
+                messages.add(new UpdateViewMessage(view, "pick done"));
+
+                return new MultipleMessages(messages);
+            }
+
+            return new UpdateViewMessage(
+                    view,
+                    "pick done"
+            );
+
+        } catch (Exception e) {
+            return new ErrorMessage(e.getMessage());
+        }
+    }
+
 
 }
 

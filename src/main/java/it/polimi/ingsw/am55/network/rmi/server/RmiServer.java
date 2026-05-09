@@ -5,6 +5,7 @@ import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
 import it.polimi.ingsw.am55.network.rmi.server.commandServer.PickCardCommand;
+import it.polimi.ingsw.am55.network.rmi.server.commandServer.PickSpecialCommand;
 import it.polimi.ingsw.am55.network.rmi.server.commandServer.PlaceTotemCommand;
 import it.polimi.ingsw.am55.network.rmi.server.commandServer.ServerCommand;
 
@@ -110,6 +111,10 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi, 
         /*MessageToClient message = controller.pickCard(playerId, cardId);
         message.deliver(playerId,this);*/
         commandQueue.add(new PickCardCommand(playerId, cardId));
+    }
+
+    public void pickSpecial(String playerId, int cardId) throws RemoteException {
+        commandQueue.add(new PickSpecialCommand(playerId, cardId));
     }
     /**
      * Invio in broadcast a tutti i client registrati.

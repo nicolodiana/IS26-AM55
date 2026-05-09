@@ -1,5 +1,7 @@
 package it.polimi.ingsw.am55.dto.resolveEvents;
 
+import it.polimi.ingsw.am55.view.cli.ConsoleColor;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,7 +22,16 @@ public class ResolvePaintingsView extends ResolveEventView implements Serializab
     public String toString() {
         return "ResolvePaintingsView{" +
                 "effectToPP=" + effectToPP +
-                ", effectToPlayer=" + effectToPlayer +
+                ", effectToFood=" + effectToPlayer +
                 '}';
+    }
+
+    public void showEvent() {
+        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+
+        for (String id : effectToPP.keySet()) {
+            System.out.println("Food gained by " + id + ": " + effectToPP.get(id));
+            System.out.println("PP gained by " + id + ": " + effectToPlayer.get(id));
+        }
     }
 }

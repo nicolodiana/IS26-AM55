@@ -8,5 +8,7 @@ public interface UserActionHandler {
 
     void onPickCardSelected(String playerId, int cardId);
 
+    void onPickSpecialSelected(String playerId, int cardId);
+
     void onPlaceTotemSelected(int index);
 }

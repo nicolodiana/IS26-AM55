@@ -286,6 +286,7 @@ public class Game implements GameModelInterface{
 
         secondPartPick();
     }
+
     public void eventResolve(){//era private
         System.out.println("SONO in event resolve");
         //List<EventCard> eventList = sharedBoard.orderEvents();
@@ -299,13 +300,20 @@ public class Game implements GameModelInterface{
 
         boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
         countRound++;
+        if (countRound == 11 || !boardRestored){
+            eventResolveEndGame();
+            endGame();
+            return;
+        }
         changeState(GameState.PLACETOTEM);
         currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
     }
+
     private void eventResolveEndGame(){
         List<EventCard> eventList = sharedBoard.orderEventsEndGame();
         eventList.forEach(card -> {card.activateEvent(players);});
     }
+
     private void secondPartPick(){
         //Resolve event at the end of round
         //eventResolve();

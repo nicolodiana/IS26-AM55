@@ -48,4 +48,12 @@ public class ClientController implements UserActionHandler {
             System.err.println("Errore durante createGame: " + e.getMessage());
         }
     }
+
+    public void onPickSpecialSelected(String playerId, int cardId) {
+        try {
+            rmiClient.pickSpecial(playerId, cardId);
+        } catch (RemoteException e) {
+            System.err.println("Errore durante createGame: " + e.getMessage());
+        }
+    }
 }

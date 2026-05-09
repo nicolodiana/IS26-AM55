@@ -14,4 +14,10 @@ public class ResolveEventView implements Serializable {
         this.effectToPlayer = effectToPlayer;
         this.nameEvent = nameEvent;
     }
+
+    public String getNameEvent() {
+        return nameEvent;
+    }
+
+    public void showEvent() {}
 }
