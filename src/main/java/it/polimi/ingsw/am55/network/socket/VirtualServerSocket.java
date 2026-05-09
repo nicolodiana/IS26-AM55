@@ -1,4 +1,4 @@
-package it.polimi.ingsw.am55.Socket;
+package it.polimi.ingsw.am55.network.socket;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 
 public interface VirtualServerSocket extends VirtualServer {
