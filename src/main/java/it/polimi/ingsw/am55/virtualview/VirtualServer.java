@@ -18,8 +18,10 @@ public interface VirtualServer {
 
     void placeTotem(String playerId, int index) throws Exception;
 
-    /*
     void pickCard(String playerId, int cardId) throws Exception;
+    void pickSpecial(String playerId, int cardId) throws Exception;
+
+    /*
 
     void endTurn(String playerId) throws Exception;
     */

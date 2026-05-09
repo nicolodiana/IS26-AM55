@@ -1,32 +1,31 @@
 package it.polimi.ingsw.am55.controller;
 
-import it.polimi.ingsw.am55.network.rmi.client.RmiClient;
-
-import java.rmi.RemoteException;
+import it.polimi.ingsw.am55.network.ClientCommands;
 
 public class ClientController implements UserActionHandler {
+/*il riferimento che ha il controller è un riferimento generico ClientCommands, poi in base alla tecnologia scelta l'override eseguira
+i metodi di socket o di RMI
+ */
+    private final ClientCommands client;
 
-    private final RmiClient rmiClient;
-
-    public ClientController(RmiClient rmiClient) {
-        this.rmiClient = rmiClient;
+    public ClientController(ClientCommands client) {
+        this.client = client;
     }
 
     @Override
     public void onCreateGameSelected(String playerId, String totemColor, int numPlayers) {
         try {
-            rmiClient.createGame(playerId, totemColor, numPlayers);
-        } catch (RemoteException e) {
+            client.createGame(playerId, totemColor, numPlayers);
+        } catch (Exception e) {
             System.err.println("Errore durante createGame: " + e.getMessage());
         }
     }
 
     @Override
     public void onJoinGameSelected(String playerId, String totemColor) {
-
         try {
-            rmiClient.joinGame(playerId, totemColor);
-        } catch (RemoteException e) {
+            client.joinGame(playerId, totemColor);
+        } catch (Exception e) {
             System.err.println("Errore durante joinGame: " + e.getMessage());
         }
     }
@@ -34,8 +33,8 @@ public class ClientController implements UserActionHandler {
     @Override
     public void onPlaceTotemSelected(int index) {
         try {
-            rmiClient.placeTotem(index);
-        } catch (RemoteException e) {
+            client.placeTotem(index);
+        } catch (Exception e) {
             System.err.println("Errore durante placeTotem: " + e.getMessage());
         }
     }
@@ -43,17 +42,18 @@ public class ClientController implements UserActionHandler {
     @Override
     public void onPickCardSelected(String playerId, int cardId) {
         try {
-            rmiClient.pickCard(playerId, cardId);
-        } catch (RemoteException e) {
-            System.err.println("Errore durante createGame: " + e.getMessage());
+            client.pickCard(playerId, cardId);
+        } catch (Exception e) {
+            System.err.println("Errore durante pickCard: " + e.getMessage());
         }
     }
 
+    @Override
     public void onPickSpecialSelected(String playerId, int cardId) {
         try {
-            rmiClient.pickSpecial(playerId, cardId);
-        } catch (RemoteException e) {
-            System.err.println("Errore durante createGame: " + e.getMessage());
+            client.pickSpecial(playerId, cardId);
+        } catch (Exception e) {
+            System.err.println("Errore durante pickSpecial: " + e.getMessage());
         }
     }
 }
