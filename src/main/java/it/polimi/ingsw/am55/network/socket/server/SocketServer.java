@@ -41,8 +41,6 @@ public class SocketServer {
             synchronized (clients) {
                 clients.add(handler);
             }
-
-
         }
     }
 }
