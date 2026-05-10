@@ -1,0 +1,19 @@
+package it.polimi.ingsw.am55.network.command;
+
+
+import it.polimi.ingsw.am55.network.ServerApplication;
+import it.polimi.ingsw.am55.virtualview.VirtualView;
+
+import java.io.Serializable;
+
+public class PingCommand implements Serializable,ServerCommand{
+    @Override
+    public boolean requiresLock() {
+        return false;
+    }
+
+    @Override
+    public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
+        serverApplication.ping(sender);
+    }
+}

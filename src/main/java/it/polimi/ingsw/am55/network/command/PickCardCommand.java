@@ -14,6 +14,10 @@ public class PickCardCommand implements ServerCommand {
         this.playerId = playerId;
         this.cardId = cardId;
     }
+    @Override
+    public boolean requiresLock() {
+        return true;
+    }
 
     @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {

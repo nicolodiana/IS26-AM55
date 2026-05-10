@@ -14,7 +14,10 @@ public class PickSpecialCommand implements ServerCommand {
         this.playerId = playerId;
         this.cardId = cardId;
     }
-
+    @Override
+    public boolean requiresLock() {
+        return true;
+    }
     @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
         serverApplication.pickSpecial(playerId, cardId);

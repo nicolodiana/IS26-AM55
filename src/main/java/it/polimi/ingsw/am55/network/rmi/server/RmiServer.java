@@ -7,6 +7,7 @@ import it.polimi.ingsw.am55.network.command.PickCardCommand;
 import it.polimi.ingsw.am55.network.command.PickSpecialCommand;
 import it.polimi.ingsw.am55.network.command.PlaceTotemCommand;
 import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
+import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -83,5 +84,14 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         } catch (Exception e) {
             throw new RemoteException("Errore durante pickSpecial", e);
         }
+    }
+
+    /*
+    Da aggiungere l' implementazione per la gestione del ping
+    periodico inviato verso il server dal client.
+     */
+    @Override
+    public void ping(VirtualView view) throws Exception {
+        //serverApplication.ping(client);
     }
 }

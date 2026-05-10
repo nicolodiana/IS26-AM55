@@ -16,6 +16,11 @@ public class JoinGameCommand implements ServerCommand {
     }
 
     @Override
+    public boolean requiresLock() {
+        return true;
+    }
+
+    @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
         if (sender != null) {
             serverApplication.registerClient(playerId, sender);

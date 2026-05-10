@@ -14,7 +14,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
     private final GameController controller;
     private final Map<String, VirtualView> clients;
-
     /*
      * Lock dedicato alla logica di gioco.
      * Così evitiamo che due thread RMI/socket entrino insieme nel GameController.
@@ -47,7 +46,11 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
          * Tutti i command passano da qui.
          * Il lock garantisce che il GameController venga modificato da un solo thread alla volta.
          */
-        synchronized (gameLock) {
+        if(command.requiresLock()){
+            synchronized (gameLock) {
+                command.execute(this, sender);
+            }
+        }else{
             command.execute(this, sender);
         }
 
@@ -131,6 +134,14 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
         message.deliver(playerId, this);
     }
+
+
+    //TODO Da implementare!
+    @Override
+    public void ping(VirtualView view) throws Exception {
+
+    }
+
 
     @Override
     public void sendTo(String playerId, MessageToClient message) {

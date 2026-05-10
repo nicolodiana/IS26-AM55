@@ -80,4 +80,9 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     public String getPlayerId() {
         return playerId;
     }
+
+    /*In questa classe bisognerà aggiungere un thread
+    che si attiva periodicamente e faccia una richiesta
+    remota la server, chiamando la funzione ping
+    * */
 }

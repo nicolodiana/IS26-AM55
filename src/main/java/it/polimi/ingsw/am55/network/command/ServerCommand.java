@@ -6,6 +6,6 @@ import it.polimi.ingsw.am55.virtualview.VirtualView;
 import java.io.Serializable;
 
 public interface ServerCommand extends Serializable {
-
+    boolean requiresLock();
     void execute(ServerApplication serverApplication, VirtualView sender) throws Exception;
 }
