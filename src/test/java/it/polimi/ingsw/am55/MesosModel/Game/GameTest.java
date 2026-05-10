@@ -360,6 +360,7 @@ class GameTest {
 
         CharacterCard thirdUpperCard = firstUpperCharacterCard();
         g.pickCard(thirdUpperCard.getId(), g.getCurrentPlayer());
+        g.eventResolve();
 
         String expectedFirstPlayerNextRound = g.getSharedBoard().getFirstPlayerFirstPhase().getNickname();
 
@@ -410,6 +411,7 @@ class GameTest {
 
         CharacterCard specialPickCard = firstUpperCharacterCard(); // Only picking from the upper row is allowed.
         g.pickSpecial(specialPickCard.getId(), g.getCurrentPlayer());
+        g.eventResolve();
 
         assertEquals(GameState.PLACETOTEM, g.getGameState());
     }
@@ -539,6 +541,7 @@ class GameTest {
 
         CharacterCard upperCard = firstUpperCharacterCard();
         g.pickCard(upperCard.getId(), g.getCurrentPlayer());
+        g.eventResolve();
 
         assertAll(
                 () -> assertEquals(11, g.getCountRound()),
