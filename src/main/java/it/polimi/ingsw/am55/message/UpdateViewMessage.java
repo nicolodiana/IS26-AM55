@@ -25,6 +25,7 @@ public class UpdateViewMessage implements MessageToClient {
         model.setGameView(gameView);
         model.setStateRequest(message);
         model.setGameStarted(true);
+        model.setLastMessageUpdatedGameView(true);
     }
 
     @Override

@@ -5,8 +5,11 @@ import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.PlayerView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 
+import java.util.Map;
 import java.util.Scanner;
 
 public class CLIView implements ClientModelObserver {
@@ -303,19 +306,16 @@ public class CLIView implements ClientModelObserver {
         }
     }
 
-
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        /*
-         * Questo metodo può essere chiamato dal thread RMI.
-         * Qui NON leggiamo mai input.
-         * Salviamo solo lo stato ricevuto e renderizziamo.
-         */
-
         this.waitingServerResponse = false;
+
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
+        EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
+
+        boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
 
         System.out.println();
 
@@ -328,17 +328,22 @@ public class CLIView implements ClientModelObserver {
         if (currentInfoMessage != null) {
             showMessage(currentInfoMessage);
         }
-
-        /*if (currentGameView != null && this.currentRound != currentGameView.getRound()) {
-            this.currentRound = currentGameView.getRound();
-
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "========== ROUND " + this.currentRound + " =========="
-                    + ConsoleColor.RESET);
-        }*/
-
-        if (currentGameView != null) {
+        //IL GAME VIEW UPDATED E NECESSARIO PERCHE PER I MESSAGGI SOLO INFORMATIVI
+        //QUINDI CHE HANNO GAMEVIEW VECCHIA E GIA STAMPATA, NON SI FA RENDER GAME
+        if (gameViewUpdated && currentGameView != null) {
             renderGame(currentGameView);
+            if (endGameResultView != null) {
+                printEndGameResult(endGameResultView);
+            }
+        }
+        //per gestire eventualmente la pausa nel produrre la risoluzione eventi
+        if ("Inizia la risoluzione degli eventi...".equals(currentInfoMessage)) {
+            try {
+                Thread.sleep(4000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return;
         }
 
         printNextAction();
@@ -536,6 +541,58 @@ public class CLIView implements ClientModelObserver {
                 System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
             }
         //}
+    }
+    private void printEndGameResult(EndGameResultView result) {
+        if (result == null) {
+            return;
+        }
+
+        if (result.getResolvedEvents() != null && !result.getResolvedEvents().isEmpty()) {
+            System.out.println(ConsoleColor.CYAN_BOLD
+                    + "========== EVENTI FINALI RISOLTI =========="
+                    + ConsoleColor.RESET);
+
+            for (ResolveEventView view : result.getResolvedEvents()) {
+                view.showEvent();
+                System.out.println();
+            }
+        }
+
+        if (result.getEndGameEffects() != null && !result.getEndGameEffects().isEmpty()) {
+            System.out.println(ConsoleColor.PURPLE_BOLD
+                    + "========== EFFETTI FINALI =========="
+                    + ConsoleColor.RESET);
+
+            for (EndGameEffectView effect : result.getEndGameEffects()) {
+                String sign = effect.getPointDelta() >= 0 ? "+" : "";
+
+                System.out.println(
+                        effect.getPlayerNickname()
+                                + ": "
+                                + effect.getDescription()
+                                + " ("
+                                + sign
+                                + effect.getPointDelta()
+                                + " PP)"
+                );
+            }
+
+            System.out.println();
+        }
+
+        if (result.getWinners() != null && !result.getWinners().isEmpty()) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "========== VINCITORE/I =========="
+                    + ConsoleColor.RESET);
+
+            for (Map.Entry<String, Integer> winner : result.getWinners().entrySet()) {
+                System.out.println(winner.getKey() + " = " + winner.getValue());
+            }
+
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "================================="
+                    + ConsoleColor.RESET);
+        }
     }
 
     public String getId() {

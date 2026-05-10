@@ -15,6 +15,7 @@ public class WaitingMessage implements MessageToClient {
         model.clearError();
         model.setStateRequest(message);
         model.setGameStarted(false);
+        model.setLastMessageUpdatedGameView(false);
     }
 
     @Override

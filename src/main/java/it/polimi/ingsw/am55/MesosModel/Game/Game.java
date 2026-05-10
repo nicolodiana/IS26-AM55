@@ -11,9 +11,10 @@ import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.PlayerView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
-import it.polimi.ingsw.am55.dto.resolveEvents.ResolveHuntingView;
-import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -287,48 +288,41 @@ public class Game implements GameModelInterface{
         secondPartPick();
     }
 
-    public void eventResolve(){//era private
-        System.out.println("SONO in event resolve");
-        //List<EventCard> eventList = sharedBoard.orderEvents();
-        this.eventList = new ArrayList<>(sharedBoard.orderEvents());
-        System.out.println("EventList: " + eventList);
-        eventList.forEach(card -> {
-            System.out.println("Attivo evento: " + card.getClass().getName());
-            card.activateEvent(players);
-            System.out.println("Dopo attivazione: " + card.toViewResolve());
-        });
-
-        boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
-        countRound++;
-        if (countRound == 11 || !boardRestored){
-            eventResolveEndGame();
-            endGame();
-            return;
+    public List<ResolveEventView> eventResolve() {
+        if (!state.equals(GameState.EVENTRESOLVE)) {
+            throw new IllegalStateException("Cannot resolve events now");
         }
+
+        List<ResolveEventView> resolvedEvents = new ArrayList<>();
+
+        this.eventList = new ArrayList<>(sharedBoard.orderEvents());
+
+        System.out.println("EventList: " + eventList);
+
+        for (EventCard card : eventList) {
+            card.activateEvent(players);
+
+            ResolveEventView resolveView = card.toViewResolve();
+            resolvedEvents.add(resolveView);
+        }
+
+        sharedBoard.restoreForRound(numPlayers);
+        countRound++;
+
         changeState(GameState.PLACETOTEM);
         currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
+
+        return resolvedEvents;
     }
 
-    private void eventResolveEndGame(){
-        List<EventCard> eventList = sharedBoard.orderEventsEndGame();
-        eventList.forEach(card -> {card.activateEvent(players);});
-    }
 
-    private void secondPartPick(){
-        //Resolve event at the end of round
-        //eventResolve();
-
-        changeState(GameState.EVENTRESOLVE); /// se teniamo questo modello possiamo togliere questo metodo e mettere change state dove viene chiamato
-
-        //boolean boardRestored = sharedBoard.restoreForRound(numPlayers);
-        //countRound++;
-        /*if (countRound == 11 || !boardRestored){
-            eventResolveEndGame();
-            endGame();
+    private void secondPartPick() {
+        if (countRound == 4) {
+            changeState(GameState.ENDGAMERESOLVE);
             return;
-        }*/
-//        changeState(GameState.PLACETOTEM);
-//        currentPlayer = sharedBoard.getFirstPlayerFirstPhase();
+        }
+
+        changeState(GameState.EVENTRESOLVE);
     }
     /**
      * Internal logic for moving a card from the shared board to the player's inventory.
@@ -455,76 +449,191 @@ public class Game implements GameModelInterface{
      * of food. Only the players with the highest food among them remain winners.
      * @return map that contains players winner with points
      */
-    public Map<String,Integer> endGame() {
-        for (Player p : players) {
 
-                // Painters' end-of-game effect.
-                //Painters' end-of-game effect. Since the operation is only between int s, the result will also be truncated to the integer part only.
-                //Example: 5:2 = 2, because with 5 artists, the calculation on which to apply 10 points is 2.
-                p.addPP(p.getArtistsList().size() / 2 * 10);
+//questo metodo applica gli effetti di fine partita al singolo player e ne tiene traccia degli effetti applicati nella
+// lista di endgame effect view
+    private List<EndGameEffectView> applyFinalEffectsToPlayer(Player p) {
+        List<EndGameEffectView> effects = new ArrayList<>();
 
-                // Builders end game effect
-                int sumPPbuilders = 0;
-                int multiplier = p.hasBuilding(BuildingType.BUILDING9) ? 2 : 1;
-                for (Builder b : p.getBuildersList()) {
-                    sumPPbuilders += b.getNumPP();
-                }
-                p.addPP(sumPPbuilders * multiplier);
+        // Painters' end-of-game effect:
+        // ogni coppia di artisti dà 10 PP
+        int paintersBonus = (p.getArtistsList().size() / 2) * 10;
+        if (paintersBonus != 0) {
+            p.addPP(paintersBonus);
+            effects.add(new EndGameEffectView(
+                    p.getNickname(),
+                    "Bonus artisti: " + p.getArtistsList().size() + " artisti",
+                    paintersBonus
+            ));
+        }
 
-                // Inventors' end-of-game effect
-                int inventorCount = p.getInventorsList().size();
-                //I create a set on the fly that adds me only if the element is not present (so I take into account the distinct icons) cost O(n)
-                Set<String> distinctIcons = new HashSet<>();
-                for (Inventor inventor : p.getInventorsList()) {
-                    distinctIcons.add(inventor.getIconInvention());
-                }
-                p.addPP(inventorCount * distinctIcons.size());
+        // Builders' end-game effect
+        int sumPPBuilders = 0;
+        for (Builder b : p.getBuildersList()) {
+            sumPPBuilders += b.getNumPP();
+        }
 
-                // Building Effect 11
-                if (p.hasBuilding(BuildingType.BUILDING11)) {
-                    p.addPP(p.minCardSet() * 6);
-                }
+        int building9Multiplier = p.hasBuilding(BuildingType.BUILDING9) ? 2 : 1;
+        int buildersBonus = sumPPBuilders * building9Multiplier;
 
-                //bonus pp edificio 12
-                int bonusPP = 0;
-                for (BuildingCard bc : p.getBuildings()) {
-                    bonusPP += bc.getEndGameBonus(p) * bc.getNumOfPP();
-                }
-                p.addPP(bonusPP);
+        if (buildersBonus != 0) {
+            p.addPP(buildersBonus);
 
-                // Building Effect 14
-                multiplier = p.hasBuilding(BuildingType.BUILDING14) ? 1 : 0;
-                p.addPP(25 * multiplier);
+            String description = p.hasBuilding(BuildingType.BUILDING9)
+                    ? "Bonus costruttori raddoppiato da Edificio 9"
+                    : "Bonus costruttori";
+
+            effects.add(new EndGameEffectView(
+                    p.getNickname(),
+                    description,
+                    buildersBonus
+            ));
+        }
+
+        // Inventors' end-of-game effect
+        int inventorCount = p.getInventorsList().size();
+
+        Set<String> distinctIcons = new HashSet<>();
+        for (Inventor inventor : p.getInventorsList()) {
+            distinctIcons.add(inventor.getIconInvention());
+        }
+
+        int inventorsBonus = inventorCount * distinctIcons.size();
+
+        if (inventorsBonus != 0) {
+            p.addPP(inventorsBonus);
+            effects.add(new EndGameEffectView(
+                    p.getNickname(),
+                    "Bonus inventori: " + inventorCount + " inventori, "
+                            + distinctIcons.size() + " icone distinte",
+                    inventorsBonus
+            ));
+        }
+
+        // Building Effect 11
+        if (p.hasBuilding(BuildingType.BUILDING11)) {
+            int building11Bonus = p.minCardSet() * 6;
+
+            if (building11Bonus != 0) {
+                p.addPP(building11Bonus);
+                effects.add(new EndGameEffectView(
+                        p.getNickname(),
+                        "Bonus Edificio 11",
+                        building11Bonus
+                ));
             }
-            // ─── Winner calculation (outside the forum, after updating all PPs) ───
-            List<Player> winnersList;
-            int max = players.stream()
-                    .mapToInt(Player::getNumPP)
+        }
+
+        // Building Effect 12 / bonus end game buildings
+        int buildingsBonus = 0;
+
+        for (BuildingCard bc : p.getBuildings()) {
+            buildingsBonus += bc.getEndGameBonus(p) * bc.getNumOfPP();
+        }
+
+        if (buildingsBonus != 0) {
+            p.addPP(buildingsBonus);
+            effects.add(new EndGameEffectView(
+                    p.getNickname(),
+                    "Bonus edifici di fine partita",
+                    buildingsBonus
+            ));
+        }
+
+        // Building Effect 14
+        if (p.hasBuilding(BuildingType.BUILDING14)) {
+            int building14Bonus = 25;
+
+            p.addPP(building14Bonus);
+            effects.add(new EndGameEffectView(
+                    p.getNickname(),
+                    "Bonus Edificio 14",
+                    building14Bonus
+            ));
+        }
+
+        return effects;
+    }
+//ritorna una mappa con id e punteggio del/dei vincitori
+    private Map<String, Integer> calculateWinners() {
+        this.winners.clear();
+
+        int maxPP = players.stream()
+                .mapToInt(Player::getNumPP)
+                .max()
+                .orElse(0);
+
+        List<Player> winnersList = players.stream()
+                .filter(player -> player.getNumPP() == maxPP)
+                .collect(Collectors.toList());
+
+        if (winnersList.size() > 1) {
+            int maxFood = winnersList.stream()
+                    .mapToInt(Player::getNumFoods)
                     .max()
                     .orElse(0);
 
-            winnersList = players.stream()
-                    .filter(player -> player.getNumPP() == max)
+            winnersList = winnersList.stream()
+                    .filter(player -> player.getNumFoods() == maxFood)
                     .collect(Collectors.toList());
 
-            if (winnersList.size() > 1) {
-                int max2 = winnersList.stream()
-                        .mapToInt(Player::getNumFoods)
-                        .max()
-                        .orElse(0);
-
-                winnersList = winnersList.stream()
-                        .filter(player -> player.getNumFoods() == max2)
-                        .collect(Collectors.toList());
-                for(Player p : winnersList){
-                    this.winners.put(p.getNickname(),p.getNumFoods());
-                }
-                changeState(GameState.ENDED);
-                return this.winners;
+            for (Player p : winnersList) {
+                this.winners.put(p.getNickname(), p.getNumFoods());
             }
-            this.winners.put(winnersList.getFirst().getNickname(),winnersList.getFirst().getNumPP());
-            changeState(GameState.ENDED);
+
             return this.winners;
+        }
+
+        Player winner = winnersList.getFirst();
+        this.winners.put(winner.getNickname(), winner.getNumPP());
+
+        return this.winners;
+    }
+
+    public EndGameResultView endGame() {
+        if (!state.equals(GameState.ENDGAMERESOLVE)) {
+            throw new IllegalStateException("Cannot resolve end game now");
+        }
+
+        List<ResolveEventView> resolvedEvents = new ArrayList<>();
+        List<EndGameEffectView> endGameEffects = new ArrayList<>();
+
+        /*
+         * 1. Risolvo gli eventi finali.
+         * Nell'end game uso lower row + upper row.
+         */
+        List<EventCard> finalEvents = new ArrayList<>(sharedBoard.orderEventsEndGame());
+
+        for (EventCard card : finalEvents) {
+            card.activateEvent(players);
+
+            ResolveEventView resolveView = card.toViewResolve();
+            resolvedEvents.add(resolveView);
+        }
+
+        /*
+         * 2. Applico gli effetti finali non legati alle EventCard.
+         */
+        for (Player player : players) {
+            List<EndGameEffectView> playerEffects = applyFinalEffectsToPlayer(player);
+            endGameEffects.addAll(playerEffects);
+        }
+
+        /*
+         * 3. Calcolo solo i vincitori.
+         */
+        Map<String, Integer> winners = calculateWinners();
+
+        /*
+         * 4. Cambio stato finale.
+         */
+        changeState(GameState.ENDED);
+
+        return new EndGameResultView(
+                resolvedEvents,
+                endGameEffects,
+                winners
+        );
     }
     /**
      * Transitions the game state to CRASHED.
@@ -534,15 +643,4 @@ public class Game implements GameModelInterface{
         changeState(GameState.CRASHED);
     }
 
-    public List<ResolveEventView> giveResolveEvents() {
-        List<ResolveEventView> list = new ArrayList<>();
-
-        for(EventCard event : eventList) {
-            System.out.println("SONO GIVE RESOLVE EVENTS");
-            System.out.println("VIEW CREATA = " + event);
-            list.add(event.toViewResolve());
-        }
-
-        return list;
-    }
 }

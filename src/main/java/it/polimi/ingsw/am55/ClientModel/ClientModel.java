@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.ClientModel;
 
 import it.polimi.ingsw.am55.dto.CardView;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.view.cli.ClientModelObserver;
 
@@ -9,9 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientModel {
-
+    private boolean lastMessageUpdatedGameView;
     private final Object lock = new Object();
-
+    private EndGameResultView endGameResultView=null;
     private GameView gameView;
     private String stateRequest;
     private String lastError;
@@ -154,6 +155,30 @@ public class ClientModel {
             if (card != null) {
                 this.myHand.add(card);
             }
+        }
+    }
+
+    public void setLastMessageUpdatedGameView(boolean lastMessageUpdatedGameView) {
+        synchronized (lock) {
+            this.lastMessageUpdatedGameView = lastMessageUpdatedGameView;
+        }
+    }
+
+    public boolean isLastMessageUpdatedGameView() {
+        synchronized (lock) {
+            return lastMessageUpdatedGameView;
+        }
+    }
+
+    public EndGameResultView getEndGameResultView() {
+        synchronized (lock) {
+            return endGameResultView;
+        }
+    }
+
+    public void setEndGameResultView(EndGameResultView endGameResultView) {
+        synchronized (lock) {
+            this.endGameResultView = endGameResultView;
         }
     }
 

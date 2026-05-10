@@ -1,25 +1,26 @@
 package it.polimi.ingsw.am55.dto.endgame;
 
-public class EndGameView {
-    private final GameView gameView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
+import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
+public class EndGameResultView implements Serializable {
+
     private final List<ResolveEventView> resolvedEvents;
     private final List<EndGameEffectView> endGameEffects;
-    private final List<PlayerView> ranking;
+    private final Map<String, Integer> winners;
 
-    public EndGameView(
-            GameView gameView,
+    public EndGameResultView(
             List<ResolveEventView> resolvedEvents,
             List<EndGameEffectView> endGameEffects,
-            List<PlayerView> ranking
+            Map<String, Integer> winners
     ) {
-        this.gameView = gameView;
         this.resolvedEvents = resolvedEvents;
         this.endGameEffects = endGameEffects;
-        this.ranking = ranking;
-    }
-
-    public GameView getGameView() {
-        return gameView;
+        this.winners = winners;
     }
 
     public List<ResolveEventView> getResolvedEvents() {
@@ -30,7 +31,7 @@ public class EndGameView {
         return endGameEffects;
     }
 
-    public List<PlayerView> getRanking() {
-        return ranking;
+    public Map<String, Integer> getWinners() {
+        return winners;
     }
 }
