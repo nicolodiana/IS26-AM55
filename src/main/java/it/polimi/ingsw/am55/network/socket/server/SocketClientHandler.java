@@ -41,7 +41,7 @@ public class SocketClientHandler implements VirtualViewSocket{
             try{
                 while((command = (ServerCommand) input.readObject()) != null){
                     try{
-                        command.execute(serverApplication,this);
+                        serverApplication.executeCommand(command,this);
                     }catch(Exception e){
                         System.out.println("[SOCKET_HANDLER] Errore esecuzione del comando "+e.getMessage());
                     }
@@ -51,6 +51,7 @@ public class SocketClientHandler implements VirtualViewSocket{
                 disconnectClient("Client disconnesso");
             }
      });
+     virtualView.start();
     }
 
     //
