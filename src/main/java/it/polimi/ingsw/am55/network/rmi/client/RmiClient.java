@@ -46,7 +46,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.playerId = playerId;
         server.connect(playerId, this);
         server.createGame(playerId, totemColor, numPlayers);
-        startPing();
+        //startPing();
     }
 
     @Override
@@ -93,16 +93,16 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     remota la server, chiamando la funzione ping
     * */
 
-    public void startPing(){
-        VirtualView client= this;
-        timer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                try {
-                    server.ping(client);
-                } catch (Exception e) {
-                    System.out.println("[ERROR] Invio del ping non riuscito");
-                }
-            }
-        }, 0, 5000);
-    }
+//    public void startPing(){
+//        VirtualView client= this;
+//        timer.scheduleAtFixedRate(new TimerTask() {
+//            public void run() {
+//                try {
+//                    server.ping(client);
+//                } catch (Exception e) {
+//                    System.out.println("[ERROR] Invio del ping non riuscito");
+//                }
+//            }
+//        }, 0, 5000);
+//    }
 }
