@@ -199,7 +199,6 @@ public class Game implements GameModelInterface{
         //check if the selected position is taken
         //sharedBoard.getIsTaken(index);
         //setupping in the selected position
-
         //If the bidding ticket has already taken throws BiddingTicketIsTaken => getIsTaken isn't used
         sharedBoard.setPlayer(index, currentPlayer);
 
@@ -213,6 +212,7 @@ public class Game implements GameModelInterface{
 
             System.out.println("Second Phase starting\n" + "Now playing: " + currentPlayer.getNickname());
             changeState(GameState.PICKCARD);
+            sharedBoard.removeAllPlayersFromTurnTicket();
             return;
         }
         currentPlayer = nextPlayer.get();
@@ -432,7 +432,7 @@ public class Game implements GameModelInterface{
                 currentPlayer.addFood(3);
                 sharedBoard.movePlayerToTurnTicket(currentPlayer);
                 Player p = currentPlayer;
-                Optional<Player> nextPlayer = sharedBoard.getNextPlayerFirstPhase(currentPlayer);
+                Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase();
                 currentPlayer = nextPlayer.get();
             }else{
                 throw new IllegalStateException("There aren't 5 players");

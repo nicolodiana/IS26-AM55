@@ -157,6 +157,10 @@ public class Board {
         biddingTrail.setPlayer(index, player);
     }
 
+    public void removeAllPlayersFromTurnTicket(){
+        playerOrder.removePlayerFromTurnTicket();
+    }
+
     public Optional<Player> getNextPlayerFirstPhase(Player player) throws IllegalArgumentException{
         return playerOrder.getNextPlayerFirstPhase(player);
     }//***Changed by using optional

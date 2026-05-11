@@ -66,8 +66,8 @@ public class SocketClientHandler implements VirtualViewSocket{
         if (socket.isClosed()) {
             throw new IOException("Socket chiuso");
         }
-        output.writeObject(message);
         output.reset();
+        output.writeObject(message);
         output.flush();
     }
 

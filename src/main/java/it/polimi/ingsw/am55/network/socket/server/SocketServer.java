@@ -11,14 +11,14 @@ import java.util.List;
 
 public class SocketServer {
 
-    private final List<SocketClientHandler> clients;
+    //private final List<SocketClientHandler> clients;
     private final ServerSocket listen;
     private final ServerApplication serverApplication;
 
     public SocketServer(int port, ServerApplication serverApplication) throws Exception {
         this.listen = new ServerSocket(port);
         this.serverApplication = serverApplication;
-        this.clients = new ArrayList<>();
+        //this.clients = new ArrayList<>();
     }
 
     public void start() throws Exception {
@@ -35,12 +35,11 @@ public class SocketServer {
 
             ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
-            SocketClientHandler handler =
-                    new SocketClientHandler(clientSocket, in, out, serverApplication);
+            SocketClientHandler handler = new SocketClientHandler(clientSocket, in, out, serverApplication);
 
-            synchronized (clients) {
-                clients.add(handler);
-            }
+//            synchronized (clients) {
+//                clients.add(handler);
+//            }
         }
     }
 }

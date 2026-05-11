@@ -130,8 +130,8 @@ public class SocketClient implements ClientCommands {
 
     //Permette di inviare i comandi verso il server
     public void sendCommand(ServerCommand command) throws Exception {
-        output.writeObject(command);
         output.reset();
+        output.writeObject(command);
         output.flush();
     }
 }
