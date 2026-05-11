@@ -21,7 +21,7 @@ public interface VirtualServer {
     void pickCard(String playerId, int cardId) throws Exception;
     void pickSpecial(String playerId, int cardId) throws Exception;
 
-    void ping (VirtualView view) throws Exception;
+    void ping (VirtualView client) throws Exception;
     /*
 
     void endTurn(String playerId) throws Exception;

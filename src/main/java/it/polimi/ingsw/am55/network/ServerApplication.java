@@ -9,11 +9,18 @@ import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 public class ServerApplication implements VirtualServer, MessageDelivery {
 
     private final GameController controller;
     private final Map<String, VirtualView> clients;
+    private final Map<VirtualView,Long> pingClients;
+    private Timer pingTimer;
+    private static final long PING_TIMEOUT_MS = 15_000; // 15 secondi
+    private static final long CHECK_INTERVAL_MS = 5_000;
     /*
      * Lock dedicato alla logica di gioco.
      * Così evitiamo che due thread RMI/socket entrino insieme nel GameController.
@@ -23,7 +30,8 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     public ServerApplication() {
         this.controller = new GameController();
         this.clients = new HashMap<>();
-
+        this.pingClients = new HashMap<>();
+        this.pingTimer = new Timer(true);
         System.out.println("[SERVER_APP] ServerApplication creata.");
     }
 
@@ -33,6 +41,9 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
             System.out.println("[SERVER_APP] Registrato client: " + playerId);
             System.out.println("[SERVER_APP] Client registrati: " + clients.keySet());
+        }
+        synchronized (pingClients) {
+            pingClients.put(client, System.currentTimeMillis());
         }
     }
 
@@ -138,11 +149,44 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
     //TODO Da implementare!
     @Override
-    public void ping(VirtualView view) throws Exception {
-
+    public void ping(VirtualView client) throws Exception {
+        synchronized (pingClients) {
+            pingClients.put(client, System.currentTimeMillis());
+        }
     }
 
+    public void startAliveChecker() {
+        TimerTask ping = new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (pingClients) {
+                    for (Map.Entry<VirtualView, Long> entry : pingClients.entrySet()) {
+                        VirtualView view = entry.getKey();
+                        long lastPing = entry.getValue();
+                        long now = System.currentTimeMillis();
+                        if (now - lastPing > PING_TIMEOUT_MS) {
+                            System.out.println("Client disconnesso rilevato.");
 
+                            pingClients.remove(view);
+
+                            handleClientDisconnection();
+                        }
+                    }
+                }
+            }
+        };
+        pingTimer.scheduleAtFixedRate(ping,5000,15000);
+    }
+    private  void handleClientDisconnection() {
+        synchronized (gameLock) {
+            try{
+                MessageToClient message = controller.handleGameCrashed();
+
+            }catch(Exception e){
+
+            }
+        }
+    }
     @Override
     public void sendTo(String playerId, MessageToClient message) {
         VirtualView client;

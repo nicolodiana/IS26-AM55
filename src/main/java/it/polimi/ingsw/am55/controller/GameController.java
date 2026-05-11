@@ -162,6 +162,15 @@ public class GameController {
             return new ErrorMessage(e.getMessage());
         }
     }
+    public MessageToClient handleGameCrashed(){
+        try{
+           gameModel.handleGameCrashed();
+           return new UpdateViewMessage(gameModel.toView(),"Un giocatore si è disconnesso, il gioco sta per terminare verrai disconnesso...");
+        }catch(Exception e){
+            return new ErrorMessage(e.getMessage());
+        }
+
+    }
 
 
 }

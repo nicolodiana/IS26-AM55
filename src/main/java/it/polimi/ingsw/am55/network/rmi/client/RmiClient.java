@@ -4,9 +4,13 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientCommands;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
+import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Questa classe rappresenta la logica di rete del client implementata con tecnologia RMI.
  *
@@ -22,12 +26,14 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     private final VirtualServerRmi server;
     private final ClientModel model;
     private String playerId;
+    private Timer timer;
 
     public RmiClient(VirtualServerRmi server, ClientModel model) throws RemoteException {
         super();
         this.server = server;
         this.model = model;
         this.playerId = null;
+        this.timer = new Timer(true);
     }
 
     @Override
@@ -40,6 +46,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.playerId = playerId;
         server.connect(playerId, this);
         server.createGame(playerId, totemColor, numPlayers);
+        startPing();
     }
 
     @Override
@@ -85,4 +92,17 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     che si attiva periodicamente e faccia una richiesta
     remota la server, chiamando la funzione ping
     * */
+
+    public void startPing(){
+        VirtualView client= this;
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                try {
+                    server.ping(client);
+                } catch (Exception e) {
+                    System.out.println("[ERROR] Invio del ping non riuscito");
+                }
+            }
+        }, 0, 5000);
+    }
 }

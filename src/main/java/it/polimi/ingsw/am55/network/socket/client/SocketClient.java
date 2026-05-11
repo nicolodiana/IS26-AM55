@@ -20,7 +20,7 @@ public class SocketClient implements ClientCommands {
     private final Socket socket;
     private String playerId;
     private BlockingQueue<MessageToClient> queue;
-    //private Timer timer; //Consente di schedulare un thread in modo da lanciarlo periodicamente
+    private Timer timer; //Consente di schedulare un thread in modo da lanciarlo periodicamente
 
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
     public SocketClient(String host, int port ,ClientModel model) throws IOException {
@@ -29,7 +29,7 @@ public class SocketClient implements ClientCommands {
         this.input = new ObjectInputStream(socket.getInputStream());
         this.output = new ObjectOutputStream(socket.getOutputStream());
         this.queue = new LinkedBlockingQueue<>();
-        //this.timer = new Timer(true);
+        this.timer = new Timer(true);
 
         runVirtualServer();
         runExecutor();
@@ -37,17 +37,17 @@ public class SocketClient implements ClientCommands {
 
     //Gestione del ping delegata ad un esecutore che viene attivato periodicamente
     //5 s (da capire perché 5 secondi)
-//    private void startPing(){
-//        timer.scheduleAtFixedRate(new TimerTask() {
-//            public void run() {
-//                try {
-//                    sendCommand(new PingCommand());
-//                } catch (Exception e) {
-//                    System.out.println("[ERROR] Invio del ping non riuscito");
-//                }
-//            }
-//        }, 0, 5000);
-//    }
+    private void startPing(){
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                try {
+                    sendCommand(new PingCommand());
+                } catch (Exception e) {
+                    System.out.println("[ERROR] Invio del ping non riuscito");
+                }
+            }
+        }, 0, 5000);
+    }
     //Serve per leggere solo le risposte che invia il server
     private void runVirtualServer() throws IOException {
         Thread virtualServer = new Thread(() -> {
@@ -99,13 +99,13 @@ public class SocketClient implements ClientCommands {
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
         this.playerId = playerId;
         sendCommand(new CreateGameCommand(playerId, totemColor, numPlayers));
-
+        //startPing();
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws Exception {
+        this.playerId = playerId;
         sendCommand(new JoinGameCommand(playerId, totemColor));
-        //startPing();
     }
 
     @Override

@@ -91,7 +91,7 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
     periodico inviato verso il server dal client.
      */
     @Override
-    public void ping(VirtualView view) throws Exception {
-        //serverApplication.ping(client);
+    public void ping(VirtualView client) throws Exception {
+        serverApplication.ping(client);
     }
 }
