@@ -2,19 +2,19 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 
-public class PickCardMessage implements MessageToClient {
-    private int cardId;
-    private String message;
+public class GameBroadcastInfo implements MessageToClient {
 
-    public PickCardMessage(String message, int cardId) {
+    private final String message;
+
+    public GameBroadcastInfo(String message) {
         this.message = message;
-        this.cardId = cardId;
     }
 
     @Override
     public void update(ClientModel model) {
-       // model.addCard(this.cardId);
+        model.clearError();
         model.setStateRequest(message);
+        model.setLastMessageUpdatedGameView(false);
     }
 
     @Override

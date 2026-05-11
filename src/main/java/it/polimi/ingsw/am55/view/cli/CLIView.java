@@ -5,8 +5,11 @@ import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.PlayerView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 
+import java.util.Map;
 import java.util.Scanner;
 
 public class CLIView implements ClientModelObserver {
@@ -210,56 +213,56 @@ public class CLIView implements ClientModelObserver {
     }
 
     private void handlePickCardCommand(String command, String[] parts) {
-        if (!command.equals("pickcard")) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Riprova -> Prossima azione da compiere: pickCard <cardId>"
-                    + ConsoleColor.RESET);
-            return;
+            if (!command.equals("pickcard")) {
+                System.out.println(ConsoleColor.YELLOW_BOLD
+                        + "Riprova -> Prossima azione da compiere: pickCard <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            if (parts.length != 2) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Uso corretto: pickCard <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            Integer cardId = parseInt(parts[1]);
+            if (cardId == null) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "L'indice deve essere un numero intero."
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            askPickCard(cardId);
         }
 
-        if (parts.length != 2) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Uso corretto: pickCard <cardId>"
-                    + ConsoleColor.RESET);
-            return;
+        public void handlePickSpecialCommand(String command, String[] parts) {
+            if (!command.equals("pick")) {
+                System.out.println(ConsoleColor.YELLOW_BOLD
+                        + "Try again -> Next action to write: pick <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            if (parts.length != 2) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Uso corretto: pick <cardId>"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            Integer cardId = parseInt(parts[1]);
+            if (cardId == null) {
+                System.out.println(ConsoleColor.RED_BOLD
+                        + "Index has to be an integer"
+                        + ConsoleColor.RESET);
+                return;
+            }
+
+            askPickSpecial(cardId);
         }
-
-        Integer cardId = parseInt(parts[1]);
-        if (cardId == null) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "L'indice deve essere un numero intero."
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        askPickCard(cardId);
-    }
-
-    public void handlePickSpecialCommand(String command, String[] parts) {
-        if (!command.equals("pick")) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Try again -> Next action to write: pick <cardId>"
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        if (parts.length != 2) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Uso corretto: pickCard <cardId>"
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        Integer cardId = parseInt(parts[1]);
-        if (cardId == null) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Index has to be an integer"
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        askPickSpecial(cardId);
-    }
 
     public void askCreateGame(String playerId, String totemColor, int numPlayers) {
         if (actionHandler != null) {
@@ -303,19 +306,16 @@ public class CLIView implements ClientModelObserver {
         }
     }
 
-
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        /*
-         * Questo metodo può essere chiamato dal thread RMI.
-         * Qui NON leggiamo mai input.
-         * Salviamo solo lo stato ricevuto e renderizziamo.
-         */
-
         this.waitingServerResponse = false;
+
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
+        EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
+
+        boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
 
         System.out.println();
 
@@ -328,17 +328,22 @@ public class CLIView implements ClientModelObserver {
         if (currentInfoMessage != null) {
             showMessage(currentInfoMessage);
         }
-
-        /*if (currentGameView != null && this.currentRound != currentGameView.getRound()) {
-            this.currentRound = currentGameView.getRound();
-
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "========== ROUND " + this.currentRound + " =========="
-                    + ConsoleColor.RESET);
-        }*/
-
-        if (currentGameView != null) {
+        //IL GAME VIEW UPDATED E NECESSARIO PERCHE PER I MESSAGGI SOLO INFORMATIVI
+        //QUINDI CHE HANNO GAMEVIEW VECCHIA E GIA STAMPATA, NON SI FA RENDER GAME
+        if (gameViewUpdated && currentGameView != null) {
             renderGame(currentGameView);
+            if (endGameResultView != null) {
+                printEndGameResult(endGameResultView);
+            }
+        }
+        //per gestire eventualmente la pausa nel produrre la risoluzione eventi
+        if ("Inizia la risoluzione degli eventi...".equals(currentInfoMessage)) {
+            try {
+                Thread.sleep(4000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            return;
         }
 
         printNextAction();
@@ -382,17 +387,9 @@ public class CLIView implements ClientModelObserver {
                     + "Prossima azione da compiere: pickCard <card id>"
                     + ConsoleColor.RESET);
             case PICKSPECIAL -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "You have Building 13 please choose another with command: pick <cardId>"
+                    + "You have Building 13 you're be able to choose another card from UPPER ROW with command: pick <cardId>"
                     + ConsoleColor.RESET);
-            case EVENTRESOLVE -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Time to resolve the events on the boards, wait for the results"
-                    + ConsoleColor.RESET);
-            /*
-             * In futuro:
-             *
-             * case PICKCARD -> System.out.println("Prossima azione da compiere: pickCard <cardId>");
-             * case CHOOSECARD -> System.out.println("Prossima azione da compiere: chooseCard <row> <index>");
-             */
+
 
             default -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: attendi aggiornamento."
@@ -433,14 +430,13 @@ public class CLIView implements ClientModelObserver {
         if (GameState.PLACETOTEM.equals(gameView.getState())) {
             System.out.println("placeTotem <index>");
         }
+        if (GameState.PICKCARD.equals(gameView.getState())) {
+            System.out.println("pickCard <cardId>");
+        }
 
-        /*
-         * In futuro:
-         *
-         * if (GameState.PICKCARD.equals(gameView.getState())) {
-         *     System.out.println("pickCard <cardId>");
-         * }
-         */
+        if (GameState.PICKSPECIAL.equals(gameView.getState())) {
+            System.out.println("pick <cardId>");
+        }
 
         System.out.println(ConsoleColor.YELLOW_BOLD + "==================================" + ConsoleColor.RESET);
         printNextAction();
@@ -524,18 +520,70 @@ public class CLIView implements ClientModelObserver {
 
         System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
 
-        // if (gameView.getState().equals(GameState.EVENTRESOLVE)) {
-        if (gameView.getResolveEvents() != null && !gameView.getResolveEvents().isEmpty()) {
-            System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
-            for (ResolveEventView view : gameView.getResolveEvents()) {
+       // if (gameView.getState().equals(GameState.EVENTRESOLVE)) {
+            if (gameView.getResolveEvents() != null && !gameView.getResolveEvents().isEmpty()) {
+                System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
+                for (ResolveEventView view : gameView.getResolveEvents()) {
+                    view.showEvent();
+                    System.out.println();
+                }
+
+                System.out.println(ConsoleColor.CYAN_BOLD + " END RESOLVE EVENTS" + ConsoleColor.RESET);
+                System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
+            }
+        //}
+    }
+    private void printEndGameResult(EndGameResultView result) {
+        if (result == null) {
+            return;
+        }
+
+        if (result.getResolvedEvents() != null && !result.getResolvedEvents().isEmpty()) {
+            System.out.println(ConsoleColor.CYAN_BOLD
+                    + "========== EVENTI FINALI RISOLTI =========="
+                    + ConsoleColor.RESET);
+
+            for (ResolveEventView view : result.getResolvedEvents()) {
                 view.showEvent();
                 System.out.println();
             }
-
-            System.out.println(ConsoleColor.CYAN_BOLD + " END RESOLVE EVENTS" + ConsoleColor.RESET);
-            System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
         }
-        //}
+
+        if (result.getEndGameEffects() != null && !result.getEndGameEffects().isEmpty()) {
+            System.out.println(ConsoleColor.PURPLE_BOLD
+                    + "========== EFFETTI FINALI =========="
+                    + ConsoleColor.RESET);
+
+            for (EndGameEffectView effect : result.getEndGameEffects()) {
+                String sign = effect.getPointDelta() >= 0 ? "+" : "";
+
+                System.out.println(
+                        effect.getPlayerNickname()
+                                + ": "
+                                + effect.getDescription()
+                                + " ("
+                                + sign
+                                + effect.getPointDelta()
+                                + " PP)"
+                );
+            }
+
+            System.out.println();
+        }
+
+        if (result.getWinners() != null && !result.getWinners().isEmpty()) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "========== VINCITORE/I =========="
+                    + ConsoleColor.RESET);
+
+            for (Map.Entry<String, Integer> winner : result.getWinners().entrySet()) {
+                System.out.println(winner.getKey() + " = " + winner.getValue());
+            }
+
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "================================="
+                    + ConsoleColor.RESET);
+        }
     }
 
     public String getId() {

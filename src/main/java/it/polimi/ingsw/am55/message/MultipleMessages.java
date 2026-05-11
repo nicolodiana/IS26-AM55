@@ -22,7 +22,7 @@ public class MultipleMessages implements MessageToClient {
     @Override
     public void deliver(String playerId, MessageDelivery context) {
         for (MessageToClient message : messages) {
-            context.broadcast(this);
+            message.deliver(playerId, context);
         }
     }
 }

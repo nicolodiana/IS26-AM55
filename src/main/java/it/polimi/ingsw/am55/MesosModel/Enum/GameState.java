@@ -6,6 +6,7 @@ public enum GameState {
     PICKCARD,
     PICKSPECIAL,
     EVENTRESOLVE,
+    ENDGAMERESOLVE,
     CRASHED,
     ENDED
 }

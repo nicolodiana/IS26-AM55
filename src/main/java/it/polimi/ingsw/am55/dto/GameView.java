@@ -16,7 +16,9 @@ public class GameView implements Serializable {
     private final int round;
     private final List<PlayerView> players;
     private final BoardView board;
+    //questa lista si popolerà sia a fine round, con eventi risolti sia a fine partita
     private List<ResolveEventView> resolveEvents = new ArrayList<>();
+
 
     public GameView(Game game) {
         this.gameId = game.getIdGame();

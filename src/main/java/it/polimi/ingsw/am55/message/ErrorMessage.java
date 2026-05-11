@@ -14,6 +14,7 @@ public class ErrorMessage implements MessageToClient {
     public void update(ClientModel model) {
         model.setLastError(message);
         model.setStateRequest(message);
+        model.setLastMessageUpdatedGameView(false);
     }
 
     @Override
