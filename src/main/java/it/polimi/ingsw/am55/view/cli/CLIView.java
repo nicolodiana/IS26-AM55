@@ -248,7 +248,7 @@ public class CLIView implements ClientModelObserver {
 
             if (parts.length != 2) {
                 System.out.println(ConsoleColor.RED_BOLD
-                        + "Uso corretto: pickCard <cardId>"
+                        + "Uso corretto: pick <cardId>"
                         + ConsoleColor.RESET);
                 return;
             }
@@ -387,17 +387,9 @@ public class CLIView implements ClientModelObserver {
                     + "Prossima azione da compiere: pickCard <card id>"
                     + ConsoleColor.RESET);
             case PICKSPECIAL -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "You have Building 13 please choose another with command: pick <cardId>"
+                    + "You have Building 13 you're be able to choose another card from UPPER ROW with command: pick <cardId>"
                     + ConsoleColor.RESET);
-            case EVENTRESOLVE -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Time to resolve the events on the boards, wait for the results"
-                    + ConsoleColor.RESET);
-            /*
-             * In futuro:
-             *
-             * case PICKCARD -> System.out.println("Prossima azione da compiere: pickCard <cardId>");
-             * case CHOOSECARD -> System.out.println("Prossima azione da compiere: chooseCard <row> <index>");
-             */
+
 
             default -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: attendi aggiornamento."
@@ -438,14 +430,13 @@ public class CLIView implements ClientModelObserver {
         if (GameState.PLACETOTEM.equals(gameView.getState())) {
             System.out.println("placeTotem <index>");
         }
+        if (GameState.PICKCARD.equals(gameView.getState())) {
+            System.out.println("pickCard <cardId>");
+        }
 
-        /*
-         * In futuro:
-         *
-         * if (GameState.PICKCARD.equals(gameView.getState())) {
-         *     System.out.println("pickCard <cardId>");
-         * }
-         */
+        if (GameState.PICKSPECIAL.equals(gameView.getState())) {
+            System.out.println("pick <cardId>");
+        }
 
         System.out.println(ConsoleColor.YELLOW_BOLD + "==================================" + ConsoleColor.RESET);
         printNextAction();

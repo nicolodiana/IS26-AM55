@@ -15,7 +15,6 @@ import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
-
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.UUID;
@@ -99,6 +98,7 @@ public class Game implements GameModelInterface{
         return new GameView(this);
     }
     public String addPlayer(String nickname, String totem) throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+
         for(Player p:players){
             if(p.getNickname().equals(nickname)){
                 throw new NicknameAlreadyUsed("Nickname already exists");
@@ -107,6 +107,21 @@ public class Game implements GameModelInterface{
             }
         }
         Player newPlayer = new Player(nickname, totem);
+
+// PER DEBUG PICK SPECIAL
+        if ("nico".equalsIgnoreCase(newPlayer.getNickname())) {
+            newPlayer.addTribeCard(new BuildingCard(
+                    999,                            // id debug, basta che non crei conflitti
+                    1,                              // era
+                    0,                              // foodCost
+                    0,                              // numOfPP
+                    BuildingType.BUILDING13,
+                    null ,       // cambia se non hai NEUTRAL
+                    0                               // effectPP
+            ));
+
+            System.out.println("[DEBUG] Aggiunta Building 13 a nico");
+        }
         if(players.size()+1>numPlayers){throw new PlayerNumberOutOfRange("The number of player is out of range");}
         players.add(newPlayer);
         if(players.size()==numPlayers){startGame();}
@@ -251,12 +266,19 @@ public class Game implements GameModelInterface{
             if (nextPlayer.isEmpty()){
                 for(Player p:players){
                     if(p.hasBuilding(BuildingType.BUILDING13)){
+                        /*
+                        per come è il gioco solo un player avrà la building 13
+                        essendo unica quindi appena lo trovo cambio stato e aggiorno lui
+                        come current player in modo che dalla view mi accorgo che devo fare
+                        una pick special ( la risoluz. eventi quindi in questo caso sarà
+                        posticipata e fatta dopo questa pick special )
+                         */
                         changeState(GameState.PICKSPECIAL);
                         currentPlayer = p;
                         return;
                     }
                 }
-                secondPartPick();
+                secondPartPick(); //nel caso in cui non c'è nessuno con pick special passo diretto ad event resolve
             } else {
                 currentPlayer = nextPlayer.get(); //Switching current player
             }
@@ -283,7 +305,7 @@ public class Game implements GameModelInterface{
 
         sharedBoard.findCardUpperRow(id, cardSearchResult);
 
-        obtainCard(cardSearchResult);
+        obtainCard(cardSearchResult,false); //perche non deve sporcare i contatori di lower/upper card selected usati per gestire i ticket
 
         secondPartPick();
     }
@@ -333,25 +355,32 @@ public class Game implements GameModelInterface{
      * @param cardSearchResult the result object containing the card found and its metadata.
      * @throws CannotAffordBuildingException if the player does not have enough food to purchase the building.
      */
-    private void obtainCard(CardSearchResult cardSearchResult){
-        if (cardSearchResult.getCardType() == CardType.CHARACTER){
-            //da verificare e aggiungere l'attivazione degli effetti
-            cardSearchResult.addToPlayer(currentPlayer); //CardResult gives to player the card he picked
+    private void obtainCard(CardSearchResult cardSearchResult) {
+        obtainCard(cardSearchResult, true);
+    }
+
+    private void obtainCard(CardSearchResult cardSearchResult, boolean updateRowCounters) {
+        if (cardSearchResult.getCardType() == CardType.CHARACTER) {
+            cardSearchResult.addToPlayer(currentPlayer);
             sharedBoard.removeCard(cardSearchResult);
         } else {
             BuildingCard buildingCard = sharedBoard.getBuildingCardByIndex(cardSearchResult);
-            //int costWithDiscount = buildingCard.getFoodCost(); //da aggiungere lo sconto in base al numero di costruttori
-            if (currentPlayer.getNumFoods()< buildingCard.getFoodCost()){
+
+            if (currentPlayer.getNumFoods() < buildingCard.getFoodCost()) {
                 throw new CannotAffordBuildingException("You can't afford this Building card");
             }
-            //currentPlayer.payFood(costWithDiscount); //Before add the card to player he must pay
+
             cardSearchResult.addToPlayer(currentPlayer);
             sharedBoard.removeCard(cardSearchResult);
         }
-        if (cardSearchResult.getRowType() == RowType.LOWER){
-            currentPlayer.addLowerRowCardSelected();
+
+        if (!updateRowCounters) {
+            return;
         }
-        else {
+
+        if (cardSearchResult.getRowType() == RowType.LOWER) {
+            currentPlayer.addLowerRowCardSelected();
+        } else {
             currentPlayer.addUpperRowCardSelected();
         }
     }
