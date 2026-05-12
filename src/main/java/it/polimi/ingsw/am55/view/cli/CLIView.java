@@ -1,22 +1,31 @@
 package it.polimi.ingsw.am55.view.cli;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
-import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
+import it.polimi.ingsw.am55.view.ClientAction;
+import it.polimi.ingsw.am55.view.ClientActionResolver;
+import it.polimi.ingsw.am55.view.ClientModelObserver;
 
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class CLIView implements ClientModelObserver {
+
+    private static final String EVENT_RESOLUTION_START_MESSAGE = "Inizia la risoluzione degli eventi...";
 
     private final ClientModel model;
     private final Scanner input;
     private final CLIRenderHelper cliRenderHelper;
+    private final ClientActionResolver actionResolver;
+    private final ScheduledExecutorService scheduler;
 
     private UserActionHandler actionHandler;
 
@@ -24,13 +33,19 @@ public class CLIView implements ClientModelObserver {
     private volatile String currentInfoMessage;
     private volatile String currentErrorMessage;
     private volatile boolean waitingServerResponse;
-    private volatile int currentRound = 0;
-    private String id;
+    private volatile String id;
 
     public CLIView(ClientModel model) {
         this.model = model;
         this.input = new Scanner(System.in);
         this.cliRenderHelper = new CLIRenderHelper();
+        this.actionResolver = new ClientActionResolver();
+        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread thread = new Thread(r);
+            thread.setName("CLI-Scheduler-Thread");
+            thread.setDaemon(true);
+            return thread;
+        });
 
         this.currentGameView = null;
         this.currentInfoMessage = null;
@@ -70,8 +85,8 @@ public class CLIView implements ClientModelObserver {
         String command = parts[0].toLowerCase();
 
         if (command.equals("quit") || command.equals("exit")) {
-            System.out.println("Chiusura client.");
-            System.exit(0);
+            shutdown();
+            return;
         }
 
         if (command.equals("help")) {
@@ -91,12 +106,18 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        GameView gameView = currentGameView;
+        ClientAction action = actionResolver.resolve(currentGameView, id);
 
-        if (gameView == null) {
-            handleLobbyCommand(command, parts);
-        } else {
-            handleGameCommand(command, parts, gameView);
+        switch (action) {
+            case LOBBY -> handleLobbyCommand(command, parts);
+            case PLACE_TOTEM -> handlePlaceTotemCommand(command, parts);
+            case PICK_CARD -> handlePickCardCommand(command, parts);
+            case PICK_SPECIAL -> handlePickSpecialCommand(command, parts);
+            case WAITING_FOR_TURN -> showWaitingForTurnMessage();
+            case RESOLVE_EVENTS -> showMessage("La partita sta risolvendo gli eventi. Attendi il prossimo aggiornamento.");
+            case END_GAME -> showMessage("La partita è terminata. Usa refresh per ristampare il risultato.");
+            case CRASHED -> showError("La partita è in stato CRASHED. Non ci sono comandi disponibili.");
+            case WAITING_FOR_STATE -> showMessage("Nessuna azione disponibile: attendi un aggiornamento dello stato.");
         }
     }
 
@@ -105,9 +126,7 @@ public class CLIView implements ClientModelObserver {
             case "create" -> handleCreateCommand(parts);
             case "join" -> handleJoinCommand(parts);
             default -> {
-                System.out.println(ConsoleColor.RED_BOLD
-                        + "Comando non valido in lobby."
-                        + ConsoleColor.RESET);
+                showError("Comando non valido in lobby.");
                 printLobbyHelp();
             }
         }
@@ -115,9 +134,7 @@ public class CLIView implements ClientModelObserver {
 
     private void handleCreateCommand(String[] parts) {
         if (parts.length != 4) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Uso corretto: create <nickname> <totemColor> <numPlayers>"
-                    + ConsoleColor.RESET);
+            showError("Uso corretto: create <nickname> <totemColor> <numPlayers>");
             return;
         }
 
@@ -126,9 +143,7 @@ public class CLIView implements ClientModelObserver {
 
         Integer numPlayers = parseInt(parts[3]);
         if (numPlayers == null) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Il numero di giocatori deve essere un intero."
-                    + ConsoleColor.RESET);
+            showError("Il numero di giocatori deve essere un intero.");
             return;
         }
 
@@ -137,9 +152,7 @@ public class CLIView implements ClientModelObserver {
 
     private void handleJoinCommand(String[] parts) {
         if (parts.length != 3) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Uso corretto: join <nickname> <totemColor>"
-                    + ConsoleColor.RESET);
+            showError("Uso corretto: join <nickname> <totemColor>");
             return;
         }
 
@@ -149,63 +162,20 @@ public class CLIView implements ClientModelObserver {
         askJoinGame(playerId, totemColor);
     }
 
-    private void handleGameCommand(String command, String[] parts, GameView gameView) {
-        if (!isMyTurn(gameView)) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Non è il tuo turno. Current player: "
-                    + gameView.getCurrentPlayer()
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        GameState state = gameView.getState();
-
-        if (state == null) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Stato di gioco non disponibile."
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        switch (state) {
-            case PLACETOTEM -> handlePlaceTotemCommand(command, parts);
-            case PICKCARD -> handlePickCardCommand(command, parts);
-            case PICKSPECIAL -> handlePickSpecialCommand(command, parts);
-            /*
-             * In futuro aggiungerai qui le prossime fasi.
-             *
-             * case PICKCARD -> handlePickCardCommand(command, parts);
-             * case CHOOSECARD -> handleChooseCardCommand(command, parts);
-             * case ENDTURN -> handleEndTurnCommand(command, parts);
-             */
-
-            default -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Nessuna azione gestita dalla CLI per lo stato: "
-                    + state
-                    + ConsoleColor.RESET);
-        }
-    }
-
     private void handlePlaceTotemCommand(String command, String[] parts) {
         if (!command.equals("placetotem")) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Riprova -> Prossima azione da compiere: placeTotem <index>"
-                    + ConsoleColor.RESET);
+            printExpectedAction();
             return;
         }
 
         if (parts.length != 2) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "Uso corretto: placeTotem <index>"
-                    + ConsoleColor.RESET);
+            showError("Uso corretto: placeTotem <index>");
             return;
         }
 
         Integer index = parseInt(parts[1]);
         if (index == null) {
-            System.out.println(ConsoleColor.RED_BOLD
-                    + "L'indice deve essere un numero intero."
-                    + ConsoleColor.RESET);
+            showError("L'indice deve essere un numero intero.");
             return;
         }
 
@@ -213,99 +183,94 @@ public class CLIView implements ClientModelObserver {
     }
 
     private void handlePickCardCommand(String command, String[] parts) {
-            if (!command.equals("pickcard")) {
-                System.out.println(ConsoleColor.YELLOW_BOLD
-                        + "Riprova -> Prossima azione da compiere: pickCard <cardId>"
-                        + ConsoleColor.RESET);
-                return;
-            }
-
-            if (parts.length != 2) {
-                System.out.println(ConsoleColor.RED_BOLD
-                        + "Uso corretto: pickCard <cardId>"
-                        + ConsoleColor.RESET);
-                return;
-            }
-
-            Integer cardId = parseInt(parts[1]);
-            if (cardId == null) {
-                System.out.println(ConsoleColor.RED_BOLD
-                        + "L'indice deve essere un numero intero."
-                        + ConsoleColor.RESET);
-                return;
-            }
-
-            askPickCard(cardId);
+        if (!command.equals("pickcard")) {
+            printExpectedAction();
+            return;
         }
 
-        public void handlePickSpecialCommand(String command, String[] parts) {
-            if (!command.equals("pick")) {
-                System.out.println(ConsoleColor.YELLOW_BOLD
-                        + "Try again -> Next action to write: pick <cardId>"
-                        + ConsoleColor.RESET);
-                return;
-            }
-
-            if (parts.length != 2) {
-                System.out.println(ConsoleColor.RED_BOLD
-                        + "Uso corretto: pick <cardId>"
-                        + ConsoleColor.RESET);
-                return;
-            }
-
-            Integer cardId = parseInt(parts[1]);
-            if (cardId == null) {
-                System.out.println(ConsoleColor.RED_BOLD
-                        + "Index has to be an integer"
-                        + ConsoleColor.RESET);
-                return;
-            }
-
-            askPickSpecial(cardId);
+        if (parts.length != 2) {
+            showError("Uso corretto: pickCard <cardId>");
+            return;
         }
 
+        Integer cardId = parseInt(parts[1]);
+        if (cardId == null) {
+            showError("Il cardId deve essere un numero intero.");
+            return;
+        }
+
+        askPickCard(cardId);
+    }
+
+    private void handlePickSpecialCommand(String command, String[] parts) {
+        if (!command.equals("pick")) {
+            printExpectedAction();
+            return;
+        }
+
+        if (parts.length != 2) {
+            showError("Uso corretto: pick <cardId>");
+            return;
+        }
+
+        Integer cardId = parseInt(parts[1]);
+        if (cardId == null) {
+            showError("Il cardId deve essere un numero intero.");
+            return;
+        }
+
+        askPickSpecial(cardId);
+    }
+
+    // Equivalenti CLI delle action associate ai bottoni della futura GUI.
     public void askCreateGame(String playerId, String totemColor, int numPlayers) {
-        if (actionHandler != null) {
-            this.id = playerId.trim();
-            this.waitingServerResponse = true;
-
-            actionHandler.onCreateGameSelected(this.id, totemColor, numPlayers);
+        if (!ensureActionHandler()) {
+            return;
         }
+
+        this.id = playerId.trim();
+        this.waitingServerResponse = true;
+        actionHandler.onCreateGameSelected(this.id, totemColor, numPlayers);
     }
 
     public void askJoinGame(String playerId, String totemColor) {
-        if (actionHandler != null) {
-            this.id = playerId.trim();
-            this.waitingServerResponse = true;
-
-            actionHandler.onJoinGameSelected(this.id, totemColor);
+        if (!ensureActionHandler()) {
+            return;
         }
+
+        this.id = playerId.trim();
+        this.waitingServerResponse = true;
+        actionHandler.onJoinGameSelected(this.id, totemColor);
     }
 
     public void askPlaceTotem(int index) {
-        if (actionHandler != null) {
-            this.waitingServerResponse = true;
-
-            actionHandler.onPlaceTotemSelected(index);
+        if (!ensureActionHandler()) {
+            return;
         }
+
+        this.waitingServerResponse = true;
+        actionHandler.onPlaceTotemSelected(index);
     }
 
     public void askPickCard(int cardId) {
-        if (actionHandler != null) {
-            this.waitingServerResponse = true;
-
-            actionHandler.onPickCardSelected(this.id, cardId);
+        if (!ensureActionHandler()) {
+            return;
         }
+
+        this.waitingServerResponse = true;
+        actionHandler.onPickCardSelected(this.id, cardId);
     }
 
     public void askPickSpecial(int cardId) {
-        if (actionHandler != null) {
-            this.waitingServerResponse = true;
-
-            actionHandler.onPickSpecialSelected(this.id, cardId);
+        if (!ensureActionHandler()) {
+            return;
         }
+
+        this.waitingServerResponse = true;
+        actionHandler.onPickSpecialSelected(this.id, cardId);
     }
 
+    // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         this.waitingServerResponse = false;
@@ -313,86 +278,81 @@ public class CLIView implements ClientModelObserver {
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
-        EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
 
         boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
+        EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
 
         System.out.println();
 
         if (currentErrorMessage != null) {
             showError(currentErrorMessage);
-            printNextAction();
+            printExpectedAction();
             return;
         }
 
         if (currentInfoMessage != null) {
             showMessage(currentInfoMessage);
         }
-        //IL GAME VIEW UPDATED E NECESSARIO PERCHE PER I MESSAGGI SOLO INFORMATIVI
-        //QUINDI CHE HANNO GAMEVIEW VECCHIA E GIA STAMPATA, NON SI FA RENDER GAME
+
         if (gameViewUpdated && currentGameView != null) {
             renderGame(currentGameView);
-            if (endGameResultView != null) {
-                printEndGameResult(endGameResultView);
-            }
         }
-        //per gestire eventualmente la pausa nel produrre la risoluzione eventi
-        if ("Inizia la risoluzione degli eventi...".equals(currentInfoMessage)) {
-            try {
-                Thread.sleep(4000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+
+        if (endGameResultView != null) {
+            printEndGameResult(endGameResultView);
+        }
+
+        if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
+            scheduleExpectedActionPrint(4);
             return;
         }
 
-        printNextAction();
+        printExpectedAction();
     }
 
-    private void printNextAction() {
-        GameView gameView = currentGameView;
+    // Equivalente testuale delle schermate/interazioni che la futura GUI mostrerà.
+    private void printExpectedAction() {
+        ClientAction action = actionResolver.resolve(currentGameView, id);
 
         System.out.println();
 
-        if (gameView == null) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
+        switch (action) {
+            case LOBBY -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: create <nickname> <totemColor> <numPlayers>"
                     + " oppure join <nickname> <totemColor>"
                     + ConsoleColor.RESET);
-            return;
-        }
 
-        if (!isMyTurn(gameView)) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
+            case WAITING_FOR_TURN -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: attendi il turno di "
-                    + gameView.getCurrentPlayer()
+                    + safeCurrentPlayer()
                     + ConsoleColor.RESET);
-            return;
-        }
 
-        GameState state = gameView.getState();
-
-        if (state == null) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Prossima azione da compiere: attendi aggiornamento stato."
-                    + ConsoleColor.RESET);
-            return;
-        }
-
-        switch (state) {
-            case PLACETOTEM -> System.out.println(ConsoleColor.YELLOW_BOLD
+            case PLACE_TOTEM -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: placeTotem <index>"
                     + ConsoleColor.RESET);
-            case PICKCARD -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Prossima azione da compiere: pickCard <card id>"
-                    + ConsoleColor.RESET);
-            case PICKSPECIAL -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "You have Building 13 you're be able to choose another card from UPPER ROW with command: pick <cardId>"
+
+            case PICK_CARD -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: pickCard <cardId>"
                     + ConsoleColor.RESET);
 
+            case PICK_SPECIAL -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Hai Building 13: puoi scegliere un'altra carta dalla UPPER ROW con: pick <cardId>"
+                    + ConsoleColor.RESET);
 
-            default -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Prossima azione da compiere: attendi aggiornamento."
+            case RESOLVE_EVENTS -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: attendi la fine della risoluzione eventi."
+                    + ConsoleColor.RESET);
+
+            case END_GAME -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Partita terminata. Usa refresh per ristampare board/risultati."
+                    + ConsoleColor.RESET);
+
+            case CRASHED -> System.out.println(ConsoleColor.RED_BOLD
+                    + "Partita in stato CRASHED."
+                    + ConsoleColor.RESET);
+
+            case WAITING_FOR_STATE -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "Prossima azione da compiere: attendi aggiornamento stato."
                     + ConsoleColor.RESET);
         }
     }
@@ -406,17 +366,13 @@ public class CLIView implements ClientModelObserver {
         System.out.println("help");
         System.out.println("quit");
         System.out.println(ConsoleColor.YELLOW_BOLD + "===================================" + ConsoleColor.RESET);
-        System.out.println();
-        System.out.println(ConsoleColor.YELLOW_BOLD
-                + "Prossima azione da compiere: create <nickname> <totemColor> <numPlayers>"
-                + " oppure join <nickname> <totemColor>"
-                + ConsoleColor.RESET);
+        printExpectedAction();
     }
 
     private void printHelp() {
-        GameView gameView = currentGameView;
+        ClientAction action = actionResolver.resolve(currentGameView, id);
 
-        if (gameView == null) {
+        if (action == ClientAction.LOBBY) {
             printLobbyHelp();
             return;
         }
@@ -427,40 +383,51 @@ public class CLIView implements ClientModelObserver {
         System.out.println("help");
         System.out.println("quit");
 
-        if (GameState.PLACETOTEM.equals(gameView.getState())) {
-            System.out.println("placeTotem <index>");
-        }
-        if (GameState.PICKCARD.equals(gameView.getState())) {
-            System.out.println("pickCard <cardId>");
-        }
-
-        if (GameState.PICKSPECIAL.equals(gameView.getState())) {
-            System.out.println("pick <cardId>");
+        switch (action) {
+            case PLACE_TOTEM -> System.out.println("placeTotem <index>");
+            case PICK_CARD -> System.out.println("pickCard <cardId>");
+            case PICK_SPECIAL -> System.out.println("pick <cardId>");
+            default -> System.out.println("Nessun comando di gioco disponibile in questo momento.");
         }
 
         System.out.println(ConsoleColor.YELLOW_BOLD + "==================================" + ConsoleColor.RESET);
-        printNextAction();
+        printExpectedAction();
     }
 
     private void refresh() {
-        if (currentGameView != null) {
-            renderGame(currentGameView);
-            printNextAction();
-        } else if (model.getGameView() != null) {
-            renderGame(model.getGameView());
-            printNextAction();
+        GameView gameView = currentGameView != null ? currentGameView : model.getGameView();
+
+        if (gameView != null) {
+            renderGame(gameView);
+            EndGameResultView result = model.getEndGameResultView();
+            if (result != null) {
+                printEndGameResult(result);
+            }
         } else {
             showMessage("Nessuna partita da mostrare.");
-            printNextAction();
         }
+
+        printExpectedAction();
     }
 
-    private boolean isMyTurn(GameView gameView) {
-        if (gameView == null || gameView.getCurrentPlayer() == null || id == null) {
-            return false;
+    private void showWaitingForTurnMessage() {
+        System.out.println(ConsoleColor.YELLOW_BOLD
+                + "Non è il tuo turno. Current player: "
+                + safeCurrentPlayer()
+                + ConsoleColor.RESET);
+    }
+
+    private boolean ensureActionHandler() {
+        if (actionHandler != null) {
+            return true;
         }
 
-        return gameView.getCurrentPlayer().trim().equalsIgnoreCase(id.trim());
+        showError("ActionHandler non configurato: impossibile inviare il comando.");
+        return false;
+    }
+
+    private void scheduleExpectedActionPrint(int seconds) {
+        scheduler.schedule(this::printExpectedAction, seconds, TimeUnit.SECONDS);
     }
 
     private Integer parseInt(String value) {
@@ -469,6 +436,12 @@ public class CLIView implements ClientModelObserver {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private String safeCurrentPlayer() {
+        return currentGameView != null && currentGameView.getCurrentPlayer() != null
+                ? currentGameView.getCurrentPlayer()
+                : "unknown";
     }
 
     private void showMessage(String message) {
@@ -520,19 +493,24 @@ public class CLIView implements ClientModelObserver {
 
         System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
 
-       // if (gameView.getState().equals(GameState.EVENTRESOLVE)) {
-            if (gameView.getResolveEvents() != null && !gameView.getResolveEvents().isEmpty()) {
-                System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
-                for (ResolveEventView view : gameView.getResolveEvents()) {
-                    view.showEvent();
-                    System.out.println();
-                }
-
-                System.out.println(ConsoleColor.CYAN_BOLD + " END RESOLVE EVENTS" + ConsoleColor.RESET);
-                System.out.println(ConsoleColor.CYAN_BOLD + "==========================" + ConsoleColor.RESET);
-            }
-        //}
+        printResolveEvents(gameView);
     }
+
+    private void printResolveEvents(GameView gameView) {
+        if (gameView.getResolveEvents() == null || gameView.getResolveEvents().isEmpty()) {
+            return;
+        }
+
+        System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
+        for (ResolveEventView view : gameView.getResolveEvents()) {
+            view.showEvent();
+            System.out.println();
+        }
+
+        System.out.println(ConsoleColor.CYAN_BOLD + "END RESOLVE EVENTS" + ConsoleColor.RESET);
+        System.out.println(ConsoleColor.CYAN_BOLD + "=========================" + ConsoleColor.RESET);
+    }
+
     private void printEndGameResult(EndGameResultView result) {
         if (result == null) {
             return;
@@ -584,6 +562,12 @@ public class CLIView implements ClientModelObserver {
                     + "================================="
                     + ConsoleColor.RESET);
         }
+    }
+
+    private void shutdown() {
+        System.out.println("Chiusura client.");
+        scheduler.shutdownNow();
+        System.exit(0);
     }
 
     public String getId() {

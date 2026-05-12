@@ -89,6 +89,9 @@ public class GameController {
             if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
                 List<MessageToClient> messages = new ArrayList<>();
 
+
+
+
                 messages.add(new UpdateViewMessage(
                         viewAfterPick,
                         "pick done"

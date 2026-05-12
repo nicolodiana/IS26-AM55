@@ -12,7 +12,7 @@ import java.util.*;
  * position in the turn order.
  */
 public class TurnTicket {
-
+    int numplayerticket;
     /**
      * The list representing the current turn order of the players.
      */
@@ -58,8 +58,9 @@ public class TurnTicket {
      */
     public void initTurnTicket(List<Player> players) {
         turnOrder = new ArrayList<>(players);
+        this.numplayerticket=players.size();
         Collections.shuffle(turnOrder);
-        this.effect = switch (players.size()) {
+        this.effect = switch (numplayerticket) {
             case 2 -> new TwoPlayersEffect();
             case 3 -> new ThreePlayersEffect();
             case 4 -> new FourPlayersEffect();
