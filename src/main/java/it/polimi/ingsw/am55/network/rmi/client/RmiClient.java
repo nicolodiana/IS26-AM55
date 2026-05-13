@@ -42,6 +42,11 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     }
 
     @Override
+    public void close() {
+
+    }
+
+    @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
         this.playerId = playerId;
         server.connect(playerId, this);
@@ -84,9 +89,15 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     }
 
     @Override
-    public String getPlayerId() {
-        return playerId;
+    public void quitGame(String playerId) throws Exception {
+
     }
+
+
+//    @Override
+//    public String getPlayerId() {
+//        return playerId;
+//    }
 
     /*In questa classe bisognerà aggiungere un thread
     che si attiva periodicamente e faccia una richiesta

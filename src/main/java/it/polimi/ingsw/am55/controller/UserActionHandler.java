@@ -11,4 +11,7 @@ public interface UserActionHandler {
     void onPickSpecialSelected(String playerId, int cardId);
 
     void onPlaceTotemSelected(int index);
+
+    void onQuitGameSelected(String playerId);
+
 }

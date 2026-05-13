@@ -139,7 +139,9 @@ public class Game implements GameModelInterface{
      * @return the current player in the game
      */
     public String getCurrentPlayer(){
-        return currentPlayer.getNickname();
+        if(currentPlayer !=null){
+            return currentPlayer.getNickname();
+        }else return null;
     }
     /**
      * Returns the current number of players in the game
@@ -668,8 +670,20 @@ public class Game implements GameModelInterface{
      * Transitions the game state to CRASHED.
      * This is used to handle unexpected failures or network disconnections or the players leave the game.
      */
+    @Override
     public void handleGameCrashed(){
         changeState(GameState.CRASHED);
+    }
+
+    @Override
+    public void quitGame() {
+        /*
+        sharedBoard.removeAllPlayers();
+        players.clear();
+        currentPlayer = null;
+        /*
+         */
+        changeState(GameState.ENDED);
     }
 
 }

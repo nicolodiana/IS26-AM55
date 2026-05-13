@@ -94,4 +94,14 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
     public void ping(VirtualView client) throws Exception {
         serverApplication.ping(client);
     }
+
+    @Override
+    public void quitGame(String id) throws Exception {
+
+    }
+
+    @Override
+    public void closeConnection() throws Exception {
+
+    }
 }

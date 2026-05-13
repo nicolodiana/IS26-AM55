@@ -24,6 +24,7 @@ public class CLIView implements ClientModelObserver {
     private volatile String currentInfoMessage;
     private volatile String currentErrorMessage;
     private volatile boolean waitingServerResponse;
+    private volatile boolean inputClosed;
     private volatile int currentRound = 0;
     private String id;
 
@@ -36,6 +37,7 @@ public class CLIView implements ClientModelObserver {
         this.currentInfoMessage = null;
         this.currentErrorMessage = null;
         this.waitingServerResponse = false;
+        this.inputClosed = false;
         this.id = null;
     }
 
@@ -52,7 +54,7 @@ public class CLIView implements ClientModelObserver {
         inputThread.start();
     }
 
-    private void inputLoop() {
+    private void inputLoop()  {
         while (true) {
             System.out.print("> ");
             String line = input.nextLine().trim();
@@ -62,6 +64,11 @@ public class CLIView implements ClientModelObserver {
             }
 
             handleCommand(line);
+//            synchronized (this){
+//                while(waitingServerResponse){
+//                    this.wait();
+//                }
+//            }
         }
     }
 
@@ -70,8 +77,12 @@ public class CLIView implements ClientModelObserver {
         String command = parts[0].toLowerCase();
 
         if (command.equals("quit") || command.equals("exit")) {
-            System.out.println("Chiusura client.");
+            if (currentGameView != null && id != null) {
+                askQuitGame(this.id);
+                return;
+            }
             System.exit(0);
+            return;
         }
 
         if (command.equals("help")) {
@@ -306,10 +317,16 @@ public class CLIView implements ClientModelObserver {
         }
     }
 
+    public void askQuitGame(String playerId) {
+        if (actionHandler != null && playerId != null) {
+            this.waitingServerResponse = true;
+            showMessage("Richiesta di uscita inviata al server...");
+            actionHandler.onQuitGameSelected(playerId.trim());
+        }
+    }
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         this.waitingServerResponse = false;
-
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
@@ -345,8 +362,16 @@ public class CLIView implements ClientModelObserver {
             }
             return;
         }
-
+        if (currentGameView != null && GameState.ENDED.equals(currentGameView.getState())) {
+            showMessage("Partita terminata. Chiusura connessioni in corso...");
+            //this.inputClosed=true;
+            return;
+        }
         printNextAction();
+//        synchronized (this){
+//
+//            this.notifyAll();
+//        }
     }
 
     private void printNextAction() {

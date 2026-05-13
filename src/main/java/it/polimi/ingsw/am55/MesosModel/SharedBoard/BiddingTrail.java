@@ -219,7 +219,9 @@ public class BiddingTrail {
         }
         return null;
     }
-
+    public void removeAllPlayers() {
+        ticketList.clear();
+    }
     public List<BiddingTicket> getTicketList() {
         return ticketList;
     }

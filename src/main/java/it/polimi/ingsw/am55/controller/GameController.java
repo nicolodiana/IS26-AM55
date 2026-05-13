@@ -255,7 +255,23 @@ public class GameController {
         }catch(Exception e){
             return new ErrorMessage(e.getMessage());
         }
+    }
+    public MessageToClient quitGame(String playerId){
+        if (gameModel == null) {
+            return new ErrorMessage("Nessuna partita creata.");
+        }
 
+        try {
+            gameModel.quitGame();
+
+            return new QuitGameMessage(
+                    gameModel.toView(),
+                    "Il giocatore " + playerId + " ha chiesto di uscire. La partita è terminata. Chiusura connessioni in corso..."
+            );
+
+        } catch (Exception e) {
+            return new ErrorMessage(e.getMessage());
+        }
     }
 
 

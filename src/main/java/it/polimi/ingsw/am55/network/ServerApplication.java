@@ -7,10 +7,7 @@ import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class ServerApplication implements VirtualServer, MessageDelivery {
@@ -146,6 +143,36 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         message.deliver(playerId, this);
     }
 
+    @Override
+    public void quitGame(String playerId) throws Exception {
+        System.out.println("[SERVER_APP] quitGame chiamato da: " + playerId);
+
+        MessageToClient message = controller.quitGame(playerId);
+
+        message.deliver(playerId, this);
+
+        System.out.println("[SERVER_APP] Broadcast di quit completato.");
+    }
+
+    @Override
+    public void closeConnection() throws Exception {
+        System.out.println("[SERVER_APP] Tutti i client verranno disconnessi");
+
+        List<Map.Entry<String, VirtualView>> clientsToClose;
+
+        synchronized (clients) {
+            clientsToClose = new ArrayList<>(clients.entrySet());
+            clients.clear();
+        }
+
+        for (Map.Entry<String, VirtualView> entry : clientsToClose) {
+            String playerId = entry.getKey();
+            VirtualView client = entry.getValue();
+
+            System.out.println("[SERVER_APP] Il giocatore " + playerId + " è stato disconnesso");
+            client.close();
+        }
+    }
 
     //TODO Da implementare!
     @Override

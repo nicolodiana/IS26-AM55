@@ -19,12 +19,8 @@ public class SocketClientHandler implements VirtualViewSocket{
     private final ServerApplication serverApplication;
 
 
-    public SocketClientHandler(
-            Socket socket,
-            ObjectInputStream input,
-            ObjectOutputStream output,
-            ServerApplication serverApplication
-    ) {
+    public SocketClientHandler(Socket socket, ObjectInputStream input, ObjectOutputStream output,
+                               ServerApplication serverApplication) {
         this.socket = socket;
         this.input = input;
         this.output = output;
@@ -47,17 +43,10 @@ public class SocketClientHandler implements VirtualViewSocket{
                     }
                 }
             } catch (IOException | ClassNotFoundException e) {
-                System.out.println("[SOCKET_HANDLER] Errore nel socket: " + e.getMessage());
-                disconnectClient("Client disconnesso");
+                System.out.println("[SOCKET_HANDLER] Il client tcp si è disconesso " + e.getMessage());
             }
      });
      virtualView.start();
-    }
-
-    //
-    private void disconnectClient(String reason) {
-        //serverApplication.handleClientDisconnection(this, reason);
-        close();
     }
 
     //Invia i messaggi di risposta verso il client che gestisce
@@ -73,7 +62,8 @@ public class SocketClientHandler implements VirtualViewSocket{
 
 
     //Permette la chiusura del socket(dovrebbe essere invocato in serverapplication)
-    private void close() {
+    @Override
+    public void close() {
         try {
             input.close();
         } catch (IOException ignored) {

@@ -11,24 +11,21 @@ import java.util.List;
 
 public class SocketServer {
 
-    //private final List<SocketClientHandler> clients;
     private final ServerSocket listen;
     private final ServerApplication serverApplication;
 
     public SocketServer(int port, ServerApplication serverApplication) throws Exception {
         this.listen = new ServerSocket(port);
         this.serverApplication = serverApplication;
-        //this.clients = new ArrayList<>();
     }
 
     public void start() throws Exception {
-        System.out.println("[SOCKET_SERVER] Server listening on port: " + listen.getLocalPort());
+        System.out.println("[SOCKET_SERVER] Server in ascolto sulla porta: " + listen.getLocalPort());
 
         while (true) {
             Socket clientSocket = listen.accept();
 
-            System.out.println("[SOCKET_SERVER] New client connected: "
-                    + clientSocket.getInetAddress());
+            System.out.println("[SOCKET_SERVER] Nuovo client si è connesso: " + clientSocket.getInetAddress());
 
             ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
             out.flush();
@@ -36,10 +33,6 @@ public class SocketServer {
             ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
             SocketClientHandler handler = new SocketClientHandler(clientSocket, in, out, serverApplication);
-
-//            synchronized (clients) {
-//                clients.add(handler);
-//            }
         }
     }
 }
