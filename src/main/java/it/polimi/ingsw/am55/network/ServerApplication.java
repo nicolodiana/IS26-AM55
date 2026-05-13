@@ -3,6 +3,8 @@ package it.polimi.ingsw.am55.network;
 import it.polimi.ingsw.am55.controller.GameController;
 import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.message.QuitGameMessage;
+import it.polimi.ingsw.am55.message.SoloQuitMessage;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
@@ -146,6 +148,14 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     @Override
     public void quitGame(String playerId) throws Exception {
         System.out.println("[SERVER_APP] quitGame chiamato da: " + playerId);
+        if (!controller.isInGame(playerId)){
+
+            MessageToClient message = new SoloQuitMessage();
+            message.deliver(playerId, this);
+            clients.get(playerId).close();
+            clients.remove(playerId);
+            return;
+        }
 
         MessageToClient message = controller.quitGame(playerId);
 
@@ -155,7 +165,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     }
 
     @Override
-    public void closeConnection() throws Exception {
+    public void closeConnection(VirtualView sender) throws Exception {
         System.out.println("[SERVER_APP] Tutti i client verranno disconnessi");
 
         List<Map.Entry<String, VirtualView>> clientsToClose;

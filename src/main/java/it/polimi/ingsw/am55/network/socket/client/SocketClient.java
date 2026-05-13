@@ -19,6 +19,7 @@ public class SocketClient implements ClientCommands {
     private String playerId;
     private Timer timer;//Consente di schedulare un thread in modo da lanciarlo periodicamente
     private volatile boolean running = true;
+    private Thread virtualServerThread;
 
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
     public SocketClient(String host, int port ,ClientModel model) throws IOException {
@@ -47,7 +48,7 @@ public class SocketClient implements ClientCommands {
     }
     //Serve per leggere solo le risposte che invia il server e per applicare le modifiche sul model del client
     private void runVirtualServer(){
-        Thread virtualServer = new Thread(() -> {
+        virtualServerThread = new Thread(() -> {
             while (running) {
                 try {
                     MessageToClient response = (MessageToClient) input.readObject();
@@ -78,15 +79,29 @@ public class SocketClient implements ClientCommands {
             }
         });
 
-        virtualServer.setName("virtual-server-reader");
-        virtualServer.start();
+        virtualServerThread.setName("virtual-server-reader");
+        virtualServerThread.start();
     }
 
     public void close() throws IOException {
-        input.close();
-        output.close();
-        socket.close();
+//        try {
+//            virtualServerThread.interrupt();
+//        } catch (Exception ignored) {}
+        try {
+            timer.cancel();
+        } catch (Exception ignored) {}
+        try {
+            input.close();
+        } catch (Exception ignored) {}
+        try {
+            output.close();
+        } catch (Exception ignored) {}
+        try {
+            socket.close();
+        } catch (Exception ignored) {}
+        System.out.println("[SOCKET_CLIENT] socket closed.");
     }
+
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
         this.playerId = playerId;
@@ -119,7 +134,6 @@ public class SocketClient implements ClientCommands {
     public void quitGame(String playerId) throws Exception {
         sendCommand(new QuitGameCommand(playerId));
     }
-
 
     //Permette di inviare i comandi verso il server
     public void sendCommand(ServerCommand command) throws Exception {

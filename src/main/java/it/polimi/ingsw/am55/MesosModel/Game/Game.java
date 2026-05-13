@@ -686,4 +686,12 @@ public class Game implements GameModelInterface{
         changeState(GameState.ENDED);
     }
 
+    public boolean isInGame(String idPlayer){
+        for (Player p : players){
+            if (p.getNickname().equals(idPlayer))
+                return true;
+        }
+        return false;
+    }
+
 }

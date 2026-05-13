@@ -25,7 +25,7 @@ public interface VirtualServer {
 
     void quitGame(String id) throws Exception;
 
-    void closeConnection() throws Exception;
+    void closeConnection(VirtualView sender) throws Exception;
     /*
 
     void endTurn(String playerId) throws Exception;

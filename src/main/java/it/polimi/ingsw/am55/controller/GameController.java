@@ -274,6 +274,13 @@ public class GameController {
         }
     }
 
+    public boolean isInGame(String playerId){
+        if (gameModel.isInGame(playerId)) {
+            return true;
+        }
+        return false;
+    }
+
 
 }
 
