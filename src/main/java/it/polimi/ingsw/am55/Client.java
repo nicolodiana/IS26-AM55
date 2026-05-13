@@ -6,6 +6,7 @@ import it.polimi.ingsw.am55.network.ClientCommands;
 import it.polimi.ingsw.am55.network.rmi.client.RmiClient;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
 import it.polimi.ingsw.am55.view.cli.CLIView;
+import it.polimi.ingsw.am55.view.gui.JavaFXGui;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -24,22 +25,32 @@ public class Client {
 
             String host = askHost(scanner, args);
             ConnectionTechnology technology = askTechnology(scanner);
+            ViewMode viewMode = askViewMode(scanner);
 
             ClientModel model = new ClientModel();
-            CLIView view = new CLIView(model);
-            model.addObserver(view);
-
             ClientCommands client = createClient(technology, host, model);
-
             ClientController controller = new ClientController(client);
-            view.setActionHandler(controller);
 
-            view.start();
-
+            switch (viewMode) {
+                case CLI -> startCli(model, controller);
+                case GUI -> startGui(model, controller);
+                default -> throw new IllegalArgumentException("View mode non supportata: " + viewMode);
+            }
         } catch (Exception e) {
             System.err.println("Errore durante l'avvio del client: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private static void startCli(ClientModel model, ClientController controller) {
+        CLIView view = new CLIView(model);
+        model.addObserver(view);
+        view.setActionHandler(controller);
+        view.start();
+    }
+
+    private static void startGui(ClientModel model, ClientController controller) {
+        JavaFXGui.launchGui(model, controller);
     }
 
     private static String askHost(Scanner scanner, String[] args) {
@@ -76,21 +87,35 @@ public class Client {
         }
     }
 
+    private static ViewMode askViewMode(Scanner scanner) {
+        while (true) {
+            System.out.print("Scegli interfaccia [cli/gui]: ");
+            String input = scanner.nextLine().trim().toLowerCase();
+
+            switch (input) {
+                case "cli":
+                case "tui":
+                    return ViewMode.CLI;
+
+                case "gui":
+                case "javafx":
+                    return ViewMode.GUI;
+
+                default:
+                    System.out.println("Interfaccia non valida. Scrivi 'cli' oppure 'gui'.");
+            }
+        }
+    }
+
     private static ClientCommands createClient(
             ConnectionTechnology technology,
             String host,
             ClientModel model
     ) throws Exception {
-        switch (technology) {
-            case RMI:
-                return createRmiClient(host, model);
-
-            case SOCKET:
-                return createSocketClient(host, model);
-
-            default:
-                throw new IllegalArgumentException("Tecnologia non supportata: " + technology);
-        }
+        return switch (technology) {
+            case RMI -> createRmiClient(host, model);
+            case SOCKET -> createSocketClient(host, model);
+        };
     }
 
     private static ClientCommands createRmiClient(String host, ClientModel model) throws Exception {
@@ -102,16 +127,21 @@ public class Client {
 
     private static ClientCommands createSocketClient(String host, ClientModel model) throws Exception {
         /*
-         * Quando avrai implementato SocketClient:
-         *
+         * Quando implementerai SocketClient:
          * return new SocketClient(host, SOCKET_PORT, model);
          */
-
-        throw new UnsupportedOperationException("Socket non ancora implementato.");
+        throw new UnsupportedOperationException(
+                "Socket non ancora implementato. Host=" + host + ", porta prevista=" + SOCKET_PORT
+        );
     }
 
     private enum ConnectionTechnology {
         RMI,
         SOCKET
+    }
+
+    private enum ViewMode {
+        CLI,
+        GUI
     }
 }

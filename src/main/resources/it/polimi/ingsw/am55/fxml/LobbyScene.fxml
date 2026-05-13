@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="it.polimi.ingsw.am55.view.gui.scene.LobbySceneController"
+            stylesheets="@../css/gui.css"
+            styleClass="root-pane">
+    <top>
+        <VBox spacing="8" styleClass="header-pane">
+            <padding>
+                <Insets top="22" right="28" bottom="18" left="28" />
+            </padding>
+            <Label text="AM55 - Mesos" styleClass="main-title" />
+            <Label text="Crea una partita o unisciti alla lobby già aperta sul server." styleClass="subtitle" />
+        </VBox>
+    </top>
+
+    <center>
+        <HBox alignment="CENTER" spacing="36">
+            <VBox spacing="18" styleClass="card-panel" maxWidth="520">
+                <Label text="Dati giocatore" styleClass="section-title" />
+
+                <VBox spacing="6">
+                    <Label text="Nickname" />
+                    <TextField fx:id="nicknameField" promptText="es. nico" />
+                </VBox>
+
+                <VBox spacing="6">
+                    <Label text="Colore totem" />
+                    <ComboBox fx:id="totemComboBox" maxWidth="Infinity" />
+                </VBox>
+
+                <HBox fx:id="totemPreviewBox" alignment="CENTER_LEFT" spacing="12" minHeight="82" />
+
+                <Separator />
+
+                <VBox spacing="6">
+                    <Label text="Numero giocatori per creare una nuova partita" />
+                    <Spinner fx:id="numPlayersSpinner" editable="true" />
+                </VBox>
+
+                <HBox spacing="12">
+                    <Button fx:id="createButton" text="Crea partita" onAction="#onCreateButtonClick" styleClass="primary-button" />
+                    <Button fx:id="joinButton" text="Unisciti" onAction="#onJoinButtonClick" styleClass="secondary-button" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="refreshButton" text="Refresh" onAction="#onRefreshButtonClick" />
+                </HBox>
+
+                <Label fx:id="statusLabel" wrapText="true" styleClass="info-text" />
+            </VBox>
+        </HBox>
+    </center>
+</BorderPane>

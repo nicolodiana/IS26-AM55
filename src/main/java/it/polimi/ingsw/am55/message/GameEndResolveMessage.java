@@ -5,13 +5,13 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 
-public class GameEndedMessage implements MessageToClient {
+public class GameEndResolveMessage implements MessageToClient {
 
     private final GameView gameView;
     private final EndGameResultView endGameResultView;
     private final String message;
 
-    public GameEndedMessage(GameView gameView, EndGameResultView endGameResultView, String message) {
+    public GameEndResolveMessage(GameView gameView, EndGameResultView endGameResultView, String message) {
         this.gameView = gameView;
         this.endGameResultView = endGameResultView;
         this.message = message;

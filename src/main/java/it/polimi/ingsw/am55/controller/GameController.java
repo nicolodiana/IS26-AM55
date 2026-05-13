@@ -135,7 +135,7 @@ public class GameController {
 
                 GameView finalGameView = gameModel.toView();
 
-                return new GameEndedMessage(
+                return new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
                         "Partita terminata."
@@ -234,7 +234,7 @@ public class GameController {
 
                 GameView finalGameView = gameModel.toView();
 
-                return new GameEndedMessage(
+                return new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
                         "Partita terminata."

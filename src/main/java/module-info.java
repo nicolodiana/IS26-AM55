@@ -4,6 +4,7 @@ module it.polimi.ingsw.am55 {
     requires javafx.fxml;
     requires org.controlsfx.controls;
 
+    exports it.polimi.ingsw.am55;
 
     exports it.polimi.ingsw.am55.network.rmi.server;
     exports it.polimi.ingsw.am55.network.rmi.client;
@@ -25,5 +26,8 @@ module it.polimi.ingsw.am55 {
     opens it.polimi.ingsw.am55.dto.ClientCards to java.rmi;
     opens it.polimi.ingsw.am55.ClientModel to java.rmi;
 
+    exports it.polimi.ingsw.am55.view.gui;
 
+    opens it.polimi.ingsw.am55.view.gui to javafx.graphics;
+    opens it.polimi.ingsw.am55.view.gui.scene to javafx.fxml;
 }
