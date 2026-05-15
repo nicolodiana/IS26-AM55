@@ -76,5 +76,14 @@ public class GameView implements Serializable {
         return resolveEvents;
     }
 
+    public PlayerView getPlayer(String playerId) {
+        for (PlayerView player : players) {
+            if (playerId.equals(player.getNickname())) {
+                return player;
+            }
+        }
+
+        return null;
+    }
     //public void addCardToPlayer(String nickname, )
 }

@@ -127,14 +127,20 @@ public class GuiView implements ClientModelObserver {
     }
 
     private void showLobbyFromModel() {
-        SceneManager.showLobbyScene();
+        SceneManager.showLobbySceneIfNeeded(); // se abbiamo gia una lobby scene e abbiamo inviato i dati non ci serve ricaricare la scene la teniamo bloccata con i nostri valori inseriti
         LobbySceneController controller = (LobbySceneController) SceneManager.getActiveController();
         if (currentInfoMessage != null) {
             controller.showMessage(currentInfoMessage);
         }
         if (currentErrorMessage != null) {
             controller.showError(currentErrorMessage);
+            return; // necessario perche altrimenti mi blocca la scene se faccio un errore senza potermi inserire piu i dati
         }
+
+        controller.lock(
+                currentInfoMessage != null && !currentInfoMessage.isBlank()
+                        ? currentInfoMessage : "Waiting for other players..."
+        );
     }
 
     private void showEndGame(EndGameResultView result) {

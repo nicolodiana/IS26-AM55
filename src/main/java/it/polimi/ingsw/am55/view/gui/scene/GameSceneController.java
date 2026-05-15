@@ -9,20 +9,23 @@ import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import it.polimi.ingsw.am55.view.ClientAction;
 import it.polimi.ingsw.am55.view.gui.GuiInteractionMode;
 import it.polimi.ingsw.am55.view.gui.GuiView;
+import it.polimi.ingsw.am55.view.gui.assets.CardAssetResolver;
 import it.polimi.ingsw.am55.view.gui.assets.CardFormatter;
 import it.polimi.ingsw.am55.view.gui.assets.ImageResources;
+import javafx.animation.PauseTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.Tooltip;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +44,7 @@ public class GameSceneController implements GenericSceneController {
     @FXML private HBox biddingTrailBox;
     @FXML private HBox upperRowBox;
     @FXML private HBox lowerRowBox;
+    @FXML private HBox myHand;
     @FXML private VBox eventsBox;
     @FXML private ScrollPane eventsScrollPane;
 
@@ -70,6 +74,7 @@ public class GameSceneController implements GenericSceneController {
         renderBiddingTrail(gameView.getBoard(), myPlayerId);
         renderRows(gameView.getBoard(), myPlayerId);
         renderEvents(gameView.getResolveEvents());
+        renderMyHand(gameView.getPlayer(myPlayerId).getMyHand());
         updateInstruction(action, gameView, myPlayerId, locked);
     }
 
@@ -150,7 +155,48 @@ public class GameSceneController implements GenericSceneController {
 
             row.getChildren().add(label);
             playersBox.getChildren().add(row);
+            // to be able to click the player to see his hand
+            row.setOnMouseClicked((event -> showPlayerCardPopUp(player)));
+            row.getStyleClass().add("clickable-player");
         }
+
+    }
+
+    private void showPlayerCardPopUp(PlayerView player) {
+        Stage stage = new Stage();
+        stage.setTitle("Cards of " + player.getNickname());
+        stage.setResizable(true);
+
+        HBox cardsBox = new HBox(12); // 12 pixel between one element and another
+        cardsBox.setAlignment(Pos.CENTER);
+
+        List<CardView> cards = player.getMyHand();
+        ScrollPane scrollPane = new ScrollPane(cardsBox);
+
+        if (cards == null || cards.isEmpty()) {
+            cardsBox.getChildren().add(new Label("No card visible"));
+        }
+        else {
+            for (CardView card : cards) {
+                cardsBox.getChildren().add(createResizableCardBox(card, scrollPane));
+            }
+        }
+
+        /*scrollPane.setFitToHeight(true);
+        scrollPane.setFitToWidth(false);
+        scrollPane.setPrefViewportHeight(260);
+        scrollPane.setPrefViewportWidth(700);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);*/
+
+        /*dialog.getDialogPane().setContent(scrollPane);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+        dialog.getDialogPane().setPrefSize(760, 340);
+
+        dialog.show();*/
+        Scene scene = new Scene(scrollPane, 760, 340);
+        stage.setScene(scene);
+        stage.show();
     }
 
     private void renderTurnTicket(BoardView board) {
@@ -382,6 +428,58 @@ public class GameSceneController implements GenericSceneController {
         return pane;
     }
 
+    private StackPane createHandCardPane(CardView card) {
+        StackPane pane = new StackPane();
+        pane.getStyleClass().add("card-pane");
+        pane.setPrefSize(132, 190);
+
+        Image image = card == null ? null : imageResources.loadCard(card.getId());
+        if (image != null) {
+            ImageView view = new ImageView(image);
+            view.setFitWidth(122);
+            view.setPreserveRatio(true);
+            pane.getChildren().add(view);
+        } else {
+            Label fallback = new Label(CardFormatter.shortLabel(card));
+            fallback.setWrapText(true);
+            fallback.getStyleClass().add("card-fallback");
+            pane.getChildren().add(fallback);
+        }
+
+        Label idLabel = new Label(card == null ? "" : "#" + card.getId());
+        idLabel.getStyleClass().add("card-id-pill");
+        StackPane.setAlignment(idLabel, Pos.TOP_RIGHT);
+        pane.getChildren().add(idLabel);
+
+        if (card != null) {
+            Tooltip.install(pane, new Tooltip(CardFormatter.tooltip(card)));
+        }
+
+        /*pane.setTranslateY(70);
+
+        // serve per far zoomare la carta dopo due secondi che sono sopra con il mouse
+        PauseTransition hoverDelay = new PauseTransition(Duration.seconds(2));
+
+        pane.setOnMouseEntered(event -> {
+            hoverDelay.setOnFinished(e -> {
+                pane.setTranslateY(0);
+                pane.setScaleX(1.35);
+                pane.setScaleY(1.35);
+                pane.toFront();
+            });
+            hoverDelay.playFromStart();
+        });
+
+        pane.setOnMouseExited(event -> {
+            hoverDelay.stop();
+            pane.setTranslateY(70);
+            pane.setScaleX(1.0);
+            pane.setScaleY(1.0);
+        });*/
+
+        return pane;
+    }
+
     private void renderEvents(List<ResolveEventView> events) {
         eventsBox.getChildren().clear();
 
@@ -405,6 +503,18 @@ public class GameSceneController implements GenericSceneController {
             VBox.setVgrow(detail, Priority.ALWAYS);
             eventBox.getChildren().addAll(title, detail);
             eventsBox.getChildren().add(eventBox);
+        }
+    }
+
+    private void renderMyHand(List<CardView> cards) {
+        myHand.getChildren().clear();
+
+        if (cards == null || cards.isEmpty()) {
+            return;
+        }
+
+        for (CardView card : cards) {
+            myHand.getChildren().add(createHandCardPane(card));
         }
     }
 
@@ -449,5 +559,34 @@ public class GameSceneController implements GenericSceneController {
     private enum RowName {
         UPPER,
         LOWER
+    }
+
+
+    private VBox createResizableCardBox(CardView card, ScrollPane pane) {
+        VBox box = new VBox(4);
+        box.setAlignment(Pos.CENTER);
+        box.getStyleClass().add("card-pane");
+
+        Image image = card == null ? null : imageResources.loadCard(card.getId());
+
+        if (image != null) {
+            ImageView view = new ImageView(image);
+
+            view.fitHeightProperty().bind(pane.heightProperty().multiply(0.75)); // height of the card is 75% of the panel height
+            view.setPreserveRatio(true);
+
+            box.getChildren().add(view);
+        } else {
+            Label fallback = new Label(CardFormatter.shortLabel(card));
+            fallback.setWrapText(true);
+            fallback.getStyleClass().add("card-fallback");
+            box.getChildren().add(fallback);
+        }
+
+        if (card != null) {
+            Tooltip.install(pane, new Tooltip(CardFormatter.tooltip(card)));
+        }
+
+        return box;
     }
 }

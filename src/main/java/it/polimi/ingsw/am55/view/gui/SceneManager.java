@@ -57,6 +57,12 @@ public final class SceneManager {
         }
     }
 
+    public static void showLobbySceneIfNeeded() {
+        if (!"/it/polimi/ingsw/am55/fxml/LobbyScene.fxml".equals(currentFxml)) {
+            showLobbyScene();
+        }
+    }
+
     public static void showEndGameScene() {
         changeRoot("/it/polimi/ingsw/am55/fxml/EndGameScene.fxml");
     }

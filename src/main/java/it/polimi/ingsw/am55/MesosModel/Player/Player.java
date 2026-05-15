@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.MesosModel.Player;
 
 import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
+import it.polimi.ingsw.am55.MesosModel.Cards.Card;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
@@ -300,6 +301,19 @@ public class Player {
 
     public String getId() {
         return id;
+    }
+
+    public List<CardView> giveMyHand() {
+        List<CardView> list = new ArrayList<>();
+
+        for (Shaman card : this.shamanList) { list.add(card.toView()); }
+        for (Artist card : this.artistList) { list.add(card.toView()); }
+        for (Builder card : this.builderList) { list.add(card.toView()); }
+        for (Inventor card : this.inventorList) { list.add(card.toView()); }
+        for (Hunter card : this.hunterList) { list.add(card.toView()); }
+        for (Collector card : this.collectorList) { list.add(card.toView()); }
+
+        return list;
     }
 }
 

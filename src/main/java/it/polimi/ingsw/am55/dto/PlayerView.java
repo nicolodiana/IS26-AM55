@@ -12,14 +12,14 @@ public class PlayerView implements Serializable {
     private final String totemColor;
     private final int food;
     private final int points;
-    private final List<CardView> myHand = new ArrayList<>();
+    private List<CardView> myHand = new ArrayList<>();
 
     public PlayerView(Player player) {
         this.nickname = player.getNickname();
         this.totemColor = player.getTotem();
         this.food = player.getNumFoods();
         this.points = player.getNumPP();
-        //this.myHand = player.giveMyHand();
+        this.myHand = player.giveMyHand();
     }
 
     public String getNickname() {
@@ -36,5 +36,9 @@ public class PlayerView implements Serializable {
 
     public int getPoints() {
         return points;
+    }
+
+    public List<CardView> getMyHand() {
+        return myHand;
     }
 }
