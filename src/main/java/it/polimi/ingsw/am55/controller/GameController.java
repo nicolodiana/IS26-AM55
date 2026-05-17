@@ -251,7 +251,7 @@ public class GameController {
     public MessageToClient handleGameCrashed(){
         try{
            gameModel.handleGameCrashed();
-           return new UpdateViewMessage(gameModel.toView(),"Un giocatore si è disconnesso, il gioco sta per terminare verrai disconnesso...");
+           return new GameBroadcastEndGame("Un giocatore si è disconnesso, il gioco sta per terminare", gameModel.getGameState());
         }catch(Exception e){
             return new ErrorMessage(e.getMessage());
         }
@@ -264,9 +264,9 @@ public class GameController {
         try {
             gameModel.quitGame();
 
-            return new QuitGameMessage(
-                    gameModel.toView(),
-                    "Il giocatore " + playerId + " ha chiesto di uscire. La partita è terminata. Chiusura connessioni in corso..."
+            return new GameBroadcastEndGame(
+                    "Il giocatore " + playerId + " ha chiesto di uscire. La partita è terminata. Chiusura connessioni in corso...",
+                    gameModel.getGameState()
             );
 
         } catch (Exception e) {

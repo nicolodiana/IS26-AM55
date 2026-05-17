@@ -10,4 +10,6 @@ public interface VirtualViewRmi extends Remote, VirtualView {
 
     @Override
     void onMessage(MessageToClient message) throws RemoteException;
+
+    void close() throws RemoteException;
 }

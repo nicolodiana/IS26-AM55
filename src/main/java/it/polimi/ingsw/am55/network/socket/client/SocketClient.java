@@ -14,11 +14,12 @@ public class SocketClient implements ClientCommands {
 
     private final ClientModel model;
     private ObjectInputStream input;
-    private ObjectOutputStream output;
+    private final ObjectOutputStream output;
     private final Socket socket;
     private String playerId;
     private Timer timer;//Consente di schedulare un thread in modo da lanciarlo periodicamente
     private volatile boolean running = true;
+    private volatile boolean pingStarted = false;
 
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
     public SocketClient(String host, int port ,ClientModel model) throws IOException {
@@ -29,21 +30,30 @@ public class SocketClient implements ClientCommands {
         this.timer = new Timer(true);
 
         runVirtualServer();
-        //runExecutor();
     }
 
     //Gestione del ping delegata ad un esecutore che viene attivato periodicamente
     //5 s (da capire perché 5 secondi)
     private void startPing(){
+        if (pingStarted) {
+            return;
+        }
+        pingStarted = true;
+
         timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
             public void run() {
                 try {
                     sendCommand(new PingCommand());
                 } catch (Exception e) {
-                    System.out.println("[ERROR] Invio del ping non riuscito");
+                    System.out.println("[SOCKET_CLIENT] Invio ping fallito. Chiudo il client.");
+                    stopPing();
                 }
             }
-        }, 0, 5000);
+        }, 0, 1500);
+    }
+    private void stopPing(){
+        timer.cancel();
     }
     //Serve per leggere solo le risposte che invia il server e per applicare le modifiche sul model del client
     private void runVirtualServer(){
@@ -55,13 +65,15 @@ public class SocketClient implements ClientCommands {
                     if(response != null){
                         synchronized (model) {
                             model.update(response);
+                            if(model.isGameEnded() || model.isGameCrashed()){
+                                stopPing();
+                                sendCommand(new CloseConnectionCommand());
+                            }
                         }
                     }
                     //Serve perché voglio che il socket client invii verso il server una richiesta
                     //di disconnessione solo se il game è terminato
-                    if(model.isGameEnded()){
-                        sendCommand(new CloseConnectionCommand());
-                    }
+
 
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("[SOCKET_CLIENT] Connessione con il server interrotta.");
@@ -91,13 +103,14 @@ public class SocketClient implements ClientCommands {
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
         this.playerId = playerId;
         sendCommand(new CreateGameCommand(playerId, totemColor, numPlayers));
-        //startPing();
+        startPing();
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws Exception {
         this.playerId = playerId;
         sendCommand(new JoinGameCommand(playerId, totemColor));
+        startPing();
     }
 
     @Override
@@ -122,7 +135,7 @@ public class SocketClient implements ClientCommands {
 
 
     //Permette di inviare i comandi verso il server
-    public void sendCommand(ServerCommand command) throws Exception {
+    public synchronized void sendCommand(ServerCommand command) throws Exception {
         output.reset();
         output.writeObject(command);
         output.flush();

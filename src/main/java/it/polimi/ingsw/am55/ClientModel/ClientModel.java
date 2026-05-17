@@ -18,6 +18,7 @@ public class ClientModel {
     private String lastError;
     private boolean gameStarted;
     private boolean gameEnded;
+    private boolean gameCrashed;
     private boolean commandDone = false;
 
     private final List<ClientModelObserver> observers;
@@ -31,6 +32,7 @@ public class ClientModel {
         this.observers = new ArrayList<>();
         this.myHand = new ArrayList<>();
         this.gameEnded = false;
+        this.gameCrashed = false;
     }
 
     public void update(MessageToClient message) {
@@ -53,7 +55,14 @@ public class ClientModel {
             }
         }
     }
-
+    public void setGameCrashed(boolean gameCrashed) {
+        this.gameCrashed = gameCrashed;
+    }
+    public boolean isGameCrashed() {
+        synchronized (lock) {
+            return gameCrashed;
+        }
+    }
     public void removeObserver(ClientModelObserver observer) {
         synchronized (lock) {
             observers.remove(observer);

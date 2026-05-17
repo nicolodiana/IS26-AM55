@@ -10,5 +10,5 @@ public interface VirtualView {
      */
     void onMessage(MessageToClient message) throws Exception;
 
-    void close();
+    void close()throws Exception;
 }

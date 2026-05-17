@@ -3,21 +3,25 @@ package it.polimi.ingsw.am55.network;
 import it.polimi.ingsw.am55.controller.GameController;
 import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.network.command.PingCommand;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class ServerApplication implements VirtualServer, MessageDelivery {
 
     private final GameController controller;
     private final Map<String, VirtualView> clients;
-    //private final Map<VirtualView,Long> pingClients;
+    private final Map<VirtualView,Long> lastPingByClient;
     private Timer pingTimer;
-    private static final long PING_TIMEOUT_MS = 15_000; // 15 secondi
-    private static final long CHECK_INTERVAL_MS = 5_000;
+    private static final long PING_TIMEOUT_MS = 6_000;
+    private boolean aliveCheckerStarted=false;
+    private final ScheduledExecutorService aliveChecker = Executors.newSingleThreadScheduledExecutor();
     /*
      * Lock dedicato alla logica di gioco.
      * Così evitiamo che due thread RMI/socket entrino insieme nel GameController.
@@ -27,7 +31,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     public ServerApplication() {
         this.controller = new GameController();
         this.clients = new HashMap<>();
-        //this.pingClients = new HashMap<>();
+        this.lastPingByClient = new HashMap<>();
         this.pingTimer = new Timer(true);
         System.out.println("[SERVER_APP] ServerApplication creata.");
     }
@@ -39,9 +43,11 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             System.out.println("[SERVER_APP] Registrato client: " + playerId);
             System.out.println("[SERVER_APP] Client registrati: " + clients.keySet());
         }
-//        synchronized (pingClients) {
-//            pingClients.put(client, System.currentTimeMillis());
-//        }
+        synchronized (lastPingByClient) {
+            lastPingByClient.put(client, System.currentTimeMillis());
+        }
+        startAliveChecker();
+
     }
 
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
@@ -157,12 +163,17 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     @Override
     public void closeConnection() throws Exception {
         System.out.println("[SERVER_APP] Tutti i client verranno disconnessi");
-
+        if(pingTimer!=null){
+            pingTimer.cancel();
+        }
         List<Map.Entry<String, VirtualView>> clientsToClose;
 
         synchronized (clients) {
             clientsToClose = new ArrayList<>(clients.entrySet());
             clients.clear();
+        }
+        synchronized (lastPingByClient) {
+            lastPingByClient.clear();
         }
 
         for (Map.Entry<String, VirtualView> entry : clientsToClose) {
@@ -174,46 +185,79 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         }
     }
 
-    //TODO Da implementare!
+
     @Override
     public void ping(VirtualView client) throws Exception {
-//        synchronized (pingClients) {
-//            pingClients.put(client, System.currentTimeMillis());
-//        }
+        synchronized (lastPingByClient) {
+            lastPingByClient.put(client, System.currentTimeMillis());
+        }
+    }
+    private synchronized void startAliveChecker() {
+        if (aliveCheckerStarted) { //Deve avviarsi una sola volta il checker
+            return;
+        }
+        aliveCheckerStarted = true;
+
+        pingTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                checkPingTimeouts();
+            }
+        }, 0, 1000);
+
+        System.out.println("[PING] Alive checker AVVIATO");
+    }
+    private void checkPingTimeouts() {
+        List<VirtualView> disconnectedClients = new ArrayList<>();
+        long now = System.currentTimeMillis();
+
+        synchronized (lastPingByClient) {
+            for (Map.Entry<VirtualView, Long> entry : lastPingByClient.entrySet()) {
+                VirtualView client = entry.getKey();
+                long lastPing = entry.getValue();
+
+                long elapsed = now - lastPing;
+
+                if (elapsed > PING_TIMEOUT_MS) {
+                    disconnectedClients.add(client);
+                    pingTimer.cancel();
+                }
+            }
+        }
+
+        for (VirtualView disconnectedClient : disconnectedClients) {
+            handleClientDisconnection(disconnectedClient);
+        }
+    }
+    private  void handleClientDisconnection(VirtualView disconnectedClient) {
+        String disconnectedPlayer = null;
+        synchronized (clients){
+            for (Map.Entry<String, VirtualView> entry : clients.entrySet()) {
+                if (entry.getValue().equals(disconnectedClient)) {
+                    disconnectedPlayer = entry.getKey();
+                    break;
+                }
+            }
+        }
+        if(disconnectedPlayer == null){
+            return;
+        }
+        System.out.println("[SERVER_APP] Un client si è disconnesso: "+ disconnectedPlayer);
+        synchronized (lastPingByClient) {
+            lastPingByClient.remove(disconnectedClient);
+        }
+        //notifyAllClients("Il player si è disconnesso: "+disconnectedPlayer+ " la partita termina.");
+        //Quando il client si disconnette: si dichiara il game in stato crashed
+        MessageToClient message= null;
+        synchronized (gameLock) {
+            message = controller.handleGameCrashed();
+        }
+        if(message!=null){
+            message.deliver(disconnectedPlayer, this);
+            //closeAllClients();
+        }
     }
 
-//    public void startAliveChecker() {
-//        TimerTask ping = new TimerTask() {
-//            @Override
-//            public void run() {
-//                synchronized (pingClients) {
-//                    for (Map.Entry<VirtualView, Long> entry : pingClients.entrySet()) {
-//                        VirtualView view = entry.getKey();
-//                        long lastPing = entry.getValue();
-//                        long now = System.currentTimeMillis();
-//                        if (now - lastPing > PING_TIMEOUT_MS) {
-//                            System.out.println("Client disconnesso rilevato.");
-//
-//                            pingClients.remove(view);
-//
-//                            handleClientDisconnection();
-//                        }
-//                    }
-//                }
-//            }
-//        };
-//        pingTimer.scheduleAtFixedRate(ping,5000,15000);
-//    }
-//    private  void handleClientDisconnection() {
-//        synchronized (gameLock) {
-//            try{
-//                MessageToClient message = controller.handleGameCrashed();
-//
-//            }catch(Exception e){
-//
-//            }
-//        }
-//    }
     @Override
     public void sendTo(String playerId, MessageToClient message) {
         VirtualView client;
@@ -228,7 +272,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
                 + playerId);
 
         if (client == null) {
-            System.out.println("[SERVER_APP] ERRORE: client non trovato: " + playerId);
+            System.out.println("[SERVER_APP] Client non trovato: " + playerId);
             return;
         }
 
@@ -238,12 +282,24 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             System.out.println("[SERVER_APP] sendTo completato verso: " + playerId);
 
         } catch (Exception e) {
-            System.out.println("[SERVER_APP] ERRORE sendTo verso "
-                    + playerId
-                    + ": "
+            System.out.println("[SERVER_APP] Client " + playerId
+                    + " non raggiungibile in sendTo: "
                     + e.getMessage());
 
-            e.printStackTrace();
+            synchronized (clients) {
+                if (clients.get(playerId) == client) {
+                    clients.remove(playerId);
+                }
+            }
+
+            synchronized (lastPingByClient) {
+                lastPingByClient.remove(client);
+            }
+
+            try {
+                client.close();
+            } catch (Exception ignored) {
+            }
         }
     }
 
@@ -260,11 +316,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
                 + " verso client: "
                 + copy.keySet());
 
-        if (copy.isEmpty()) {
-            System.out.println("[SERVER_APP] ATTENZIONE: broadcast senza client registrati.");
-            return;
-        }
-
         for (Map.Entry<String, VirtualView> entry : copy.entrySet()) {
             String playerId = entry.getKey();
             VirtualView client = entry.getValue();
@@ -277,12 +328,25 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
                 System.out.println("[SERVER_APP] Broadcast completato verso: " + playerId);
 
             } catch (Exception e) {
-                System.out.println("[SERVER_APP] ERRORE broadcast verso "
-                        + playerId
-                        + ": "
+                System.out.println("[SERVER_APP] Client " + playerId
+                        + " non raggiungibile durante broadcast: "
                         + e.getMessage());
 
-                e.printStackTrace();
+                synchronized (clients) {
+                    if (clients.get(playerId) == client) {
+                        clients.remove(playerId);
+                    }
+                }
+
+                synchronized (lastPingByClient) {
+                    lastPingByClient.remove(client);
+                }
+                //Il client non è raggiungibile perché già stato chiuso
+                //Il metodo solleva l' eccezione ma è ignorata perché già chiuso
+                try {
+                    client.close();
+                } catch (Exception ignored) {
+                }
             }
         }
     }

@@ -367,6 +367,10 @@ public class CLIView implements ClientModelObserver {
             //this.inputClosed=true;
             return;
         }
+        if (updatedModel.isGameCrashed()) {
+            showMessage("Partita terminata per crash di un client. Connessione in chiusura...");
+            return;
+        }
         printNextAction();
 //        synchronized (this){
 //

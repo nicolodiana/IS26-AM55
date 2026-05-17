@@ -6,7 +6,7 @@ import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.io.Serializable;
 
-public class PingCommand implements Serializable,ServerCommand{
+public class PingCommand implements ServerCommand{
     @Override
     public boolean requiresLock() {
         return false;
