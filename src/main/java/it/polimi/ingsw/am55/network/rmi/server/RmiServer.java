@@ -101,7 +101,7 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
     }
 
     @Override
-    public void closeConnection() throws Exception {
+    public void closeConnection(VirtualView sender) throws Exception {
 
     }
 }

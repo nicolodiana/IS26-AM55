@@ -12,6 +12,6 @@ public class CloseConnectionCommand implements ServerCommand {
 
     @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
-        serverApplication.closeConnection();
+        serverApplication.closeConnection(sender);
     }
 }

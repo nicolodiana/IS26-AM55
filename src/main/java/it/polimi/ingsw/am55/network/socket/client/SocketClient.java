@@ -20,6 +20,7 @@ public class SocketClient implements ClientCommands {
     private Timer timer;//Consente di schedulare un thread in modo da lanciarlo periodicamente
     private volatile boolean running = true;
     private volatile boolean pingStarted = false;
+    private Thread virtualServerThread;
 
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
     public SocketClient(String host, int port ,ClientModel model) throws IOException {
@@ -30,18 +31,13 @@ public class SocketClient implements ClientCommands {
         this.timer = new Timer(true);
 
         runVirtualServer();
+        //runExecutor();
     }
 
     //Gestione del ping delegata ad un esecutore che viene attivato periodicamente
     //5 s (da capire perché 5 secondi)
     private void startPing(){
-        if (pingStarted) {
-            return;
-        }
-        pingStarted = true;
-
         timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
             public void run() {
                 try {
                     sendCommand(new PingCommand());
@@ -57,7 +53,7 @@ public class SocketClient implements ClientCommands {
     }
     //Serve per leggere solo le risposte che invia il server e per applicare le modifiche sul model del client
     private void runVirtualServer(){
-        Thread virtualServer = new Thread(() -> {
+        virtualServerThread = new Thread(() -> {
             while (running) {
                 try {
                     MessageToClient response = (MessageToClient) input.readObject();
@@ -90,14 +86,27 @@ public class SocketClient implements ClientCommands {
             }
         });
 
-        virtualServer.setName("virtual-server-reader");
-        virtualServer.start();
+        virtualServerThread.setName("virtual-server-reader");
+        virtualServerThread.start();
     }
 
     public void close() throws IOException {
-        input.close();
-        output.close();
-        socket.close();
+//        try {
+//            virtualServerThread.interrupt();
+//        } catch (Exception ignored) {}
+        try {
+            timer.cancel();
+        } catch (Exception ignored) {}
+        try {
+            input.close();
+        } catch (Exception ignored) {}
+        try {
+            output.close();
+        } catch (Exception ignored) {}
+        try {
+            socket.close();
+        } catch (Exception ignored) {}
+        System.out.println("[SOCKET_CLIENT] socket closed.");
     }
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
@@ -133,9 +142,8 @@ public class SocketClient implements ClientCommands {
         sendCommand(new QuitGameCommand(playerId));
     }
 
-
     //Permette di inviare i comandi verso il server
-    public synchronized void sendCommand(ServerCommand command) throws Exception {
+    public void sendCommand(ServerCommand command) throws Exception {
         output.reset();
         output.writeObject(command);
         output.flush();

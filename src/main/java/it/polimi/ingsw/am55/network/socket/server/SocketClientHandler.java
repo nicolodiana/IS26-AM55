@@ -17,6 +17,7 @@ public class SocketClientHandler implements VirtualViewSocket{
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     private final ServerApplication serverApplication;
+    private Thread virtualViewThread;
 
 
     public SocketClientHandler(Socket socket, ObjectInputStream input, ObjectOutputStream output,
@@ -32,7 +33,7 @@ public class SocketClientHandler implements VirtualViewSocket{
     //"Orecchio" del socketclient handler verso i client, permette di passare il comando
     //da eseguire a serverapplication
     public void runVirtualView() {
-     Thread virtualView = new  Thread(() -> {
+        virtualViewThread = new  Thread(() -> {
             ServerCommand command;
             try{
                 while((command = (ServerCommand) input.readObject()) != null){
@@ -42,11 +43,15 @@ public class SocketClientHandler implements VirtualViewSocket{
                         System.out.println("[SOCKET_HANDLER] Errore esecuzione del comando "+e.getMessage());
                     }
                 }
-            } catch (IOException | ClassNotFoundException e) {
+//            } catch (EOFException e){
+//                System.out.println("[SOCKET_HANDLER] EOF"+e.getMessage());
+//                close();
+            } catch (IOException | ClassNotFoundException e){
                 System.out.println("[SOCKET_HANDLER] Il client tcp si è disconesso " + e.getMessage());
+                close();
             }
      });
-     virtualView.start();
+     virtualViewThread.start();
     }
 
     //Invia i messaggi di risposta verso il client che gestisce
@@ -65,6 +70,9 @@ public class SocketClientHandler implements VirtualViewSocket{
     @Override
     public void close() {
         try {
+            virtualViewThread.interrupt();
+        } catch (Exception ignored) {}
+        try {
             input.close();
         } catch (IOException ignored) {
         }
@@ -76,5 +84,6 @@ public class SocketClientHandler implements VirtualViewSocket{
             socket.close();
         } catch (IOException ignored) {
         }
+        System.out.println("[SOCKET_HANDLER] Socket closed");
     }
 }
