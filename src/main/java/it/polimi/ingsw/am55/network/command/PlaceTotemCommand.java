@@ -10,6 +10,10 @@ public class PlaceTotemCommand implements ServerCommand {
     private final String playerId;
     private final int index;
 
+    @Override
+    public boolean requiresLock() {
+        return true;
+    }
     public PlaceTotemCommand(String playerId, int index) {
         this.playerId = playerId;
         this.index = index;

@@ -13,4 +13,5 @@ public interface UserActionHandler {
     void onPlaceTotemSelected(int index);
 
     void onQuitGameSelected(String playerId);
+
 }

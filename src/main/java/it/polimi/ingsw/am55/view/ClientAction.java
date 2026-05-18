@@ -15,6 +15,7 @@ public enum ClientAction {
     PICK_SPECIAL,
     RESOLVE_EVENTS,
     END_GAME,
+    END_GAME_RESOLVE,
     CRASHED,
     WAITING_FOR_STATE
 }

@@ -7,6 +7,9 @@ import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.Timer;
+import java.util.TimerTask;
+
 /**
  * Questa classe rappresenta la logica di rete del client implementata con tecnologia RMI.
  *
@@ -22,12 +25,14 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     private final VirtualServerRmi server;
     private final ClientModel model;
     private String playerId;
+    private Timer timer;
 
     public RmiClient(VirtualServerRmi server, ClientModel model) throws RemoteException {
         super();
         this.server = server;
         this.model = model;
         this.playerId = null;
+        this.timer = new Timer(true);
     }
 
     @Override
@@ -36,10 +41,20 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     }
 
     @Override
+    public void close() throws RemoteException {
+        timer.cancel();
+        try {
+            UnicastRemoteObject.unexportObject(server, true);
+        } catch (Exception ignored) {}
+    }
+
+
+    @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
         this.playerId = playerId;
         server.connect(playerId, this);
         server.createGame(playerId, totemColor, numPlayers);
+        startPing();
     }
 
     @Override
@@ -47,6 +62,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.playerId = playerId;
         server.connect(playerId, this);
         server.joinGame(playerId, totemColor);
+        startPing();
     }
 
     @Override
@@ -77,7 +93,33 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     }
 
     @Override
-    public String getPlayerId() {
-        return playerId;
+    public void quitGame(String playerId) throws Exception {
+        server.quitGame(playerId);
+        server.closeConnections(this);
+    }
+
+
+    /*In questa classe bisognerà aggiungere un thread
+    che si attiva periodicamente e faccia una richiesta
+    remota la server, chiamando la funzione ping
+    * */
+    private void startPing(){
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                try {
+                    pingToServer();
+                } catch (Exception e) {
+                    System.out.println("[SOCKET_CLIENT] Invio ping fallito. Chiudo il client.");
+                    try {
+                        close();
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        }, 0, 1500);
+    }
+    private void pingToServer() throws Exception {
+        server.ping(this);
     }
 }

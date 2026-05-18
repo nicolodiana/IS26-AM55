@@ -17,6 +17,8 @@ public class ClientModel {
     private String stateRequest;
     private String lastError;
     private boolean gameStarted;
+    private boolean gameEnded;
+    private boolean gameCrashed;
     private boolean commandDone = false;
 
     private final List<ClientModelObserver> observers;
@@ -29,6 +31,8 @@ public class ClientModel {
         this.gameStarted = false;
         this.observers = new ArrayList<>();
         this.myHand = new ArrayList<>();
+        this.gameEnded = false;
+        this.gameCrashed = false;
     }
 
     public void update(MessageToClient message) {
@@ -41,7 +45,9 @@ public class ClientModel {
         message.update(this);
         notifyObservers();
     }
-
+    public void setGameEnded(boolean gameEnded) {
+        this.gameEnded = gameEnded;
+    }
     public void addObserver(ClientModelObserver observer) {
         synchronized (lock) {
             if (observer != null && !observers.contains(observer)) {
@@ -49,14 +55,21 @@ public class ClientModel {
             }
         }
     }
-
+    public void setGameCrashed(boolean gameCrashed) {
+        this.gameCrashed = gameCrashed;
+    }
+    public boolean isGameCrashed() {
+        synchronized (lock) {
+            return gameCrashed;
+        }
+    }
     public void removeObserver(ClientModelObserver observer) {
         synchronized (lock) {
             observers.remove(observer);
         }
     }
 
-    private void notifyObservers() {
+    public void notifyObservers() {
         List<ClientModelObserver> observersCopy;
 
         synchronized (lock) {
@@ -67,7 +80,11 @@ public class ClientModel {
             observer.onModelChanged(this);
         }
     }
-
+    public boolean isGameEnded() {
+        synchronized (lock) {
+            return gameEnded;
+        }
+    }
     public GameView getGameView() {
         synchronized (lock) {
             return gameView;

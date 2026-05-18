@@ -41,8 +41,14 @@ i metodi di socket o di RMI
 
     @Override
     public void onQuitGameSelected(String playerId) {
-
+        try{
+            client.quitGame(playerId);
+        }catch(Exception e){
+            System.err.println("Errore durante quitGame: " + e.getMessage());
+        }
     }
+
+
 
     @Override
     public void onPickCardSelected(String playerId, int cardId) {

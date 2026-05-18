@@ -154,7 +154,6 @@ public class TurnTicket {
         for (int i = 0; i < turnOrder.size(); i++) {
             if (turnOrder.get(i) != null) {
                 turnOrder.set(i, null);
-                return;
             }
         }
     }

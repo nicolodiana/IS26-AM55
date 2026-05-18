@@ -1,12 +1,9 @@
 package it.polimi.ingsw.am55.network.rmi.server;
 
 import it.polimi.ingsw.am55.network.ServerApplication;
-import it.polimi.ingsw.am55.network.command.CreateGameCommand;
-import it.polimi.ingsw.am55.network.command.JoinGameCommand;
-import it.polimi.ingsw.am55.network.command.PickCardCommand;
-import it.polimi.ingsw.am55.network.command.PickSpecialCommand;
-import it.polimi.ingsw.am55.network.command.PlaceTotemCommand;
+import it.polimi.ingsw.am55.network.command.*;
 import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
+import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -73,5 +70,36 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
 
     public void shutdown() {
         rmiExecutor.shutdown();
+    }
+
+    /*
+    Da aggiungere l' implementazione per la gestione del ping
+    periodico inviato verso il server dal client.
+     */
+    @Override
+    public void ping(VirtualView client) throws Exception {
+        try {
+            serverApplication.executeCommand(new PingCommand(),client);
+        } catch (Exception e) {
+            throw new RemoteException("Errore durante pickSpecial", e);
+        }
+    }
+
+    @Override
+    public void quitGame(String id) throws RemoteException {
+        try {
+            serverApplication.executeCommand(new QuitGameCommand(id), null);
+        } catch (Exception e) {
+            throw new RemoteException("Errore durante pickSpecial", e);
+        }
+    }
+
+    @Override
+    public void closeConnections(VirtualView sender) throws RemoteException {
+        try {
+            serverApplication.executeCommand(new CloseConnectionsCommand(), sender);
+        } catch (Exception e) {
+            throw new RemoteException("Errore durante pickSpecial", e);
+        }
     }
 }

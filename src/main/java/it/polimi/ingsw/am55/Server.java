@@ -2,11 +2,13 @@ package it.polimi.ingsw.am55;
 
 import it.polimi.ingsw.am55.network.ServerApplication;
 import it.polimi.ingsw.am55.network.rmi.server.RmiServer;
+import it.polimi.ingsw.am55.network.socket.server.SocketServer;
 
 import java.net.InetAddress;
+import java.rmi.server.ExportException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.ExportException;
+import java.util.Scanner;
 
 public class Server {
 
@@ -16,22 +18,31 @@ public class Server {
 
     public static void main(String[] args) {
         try {
-            int rmiPort = parsePortArg(args, 0, DEFAULT_RMI_PORT);
-            int socketPort = parsePortArg(args, 1, DEFAULT_SOCKET_PORT);
+            Scanner scanner = new Scanner(System.in);
+
+            System.out.print("Scegli tecnologia server [rmi/socket]: ");
+            String choice = scanner.nextLine().trim().toLowerCase();
 
             String hostIp = InetAddress.getLocalHost().getHostAddress();
-
             System.setProperty("java.rmi.server.hostname", hostIp);
 
             System.out.println("Server IP: " + hostIp);
 
             ServerApplication serverApplication = new ServerApplication();
 
-            startRmiServer(serverApplication, rmiPort);
+            switch (choice) {
+                case "rmi" -> {
+                    startRmiServer(serverApplication, DEFAULT_RMI_PORT);
+                    System.out.println("Server RMI avviato sulla porta " + DEFAULT_RMI_PORT);
+                }
 
-            System.out.println("Server avviato correttamente.");
-            System.out.println("RMI attivo su " + hostIp + ":" + rmiPort);
-            System.out.println("Socket non ancora attivo. Porta prevista: " + socketPort);
+                case "socket" -> {
+                    startSocketServer(serverApplication, DEFAULT_SOCKET_PORT);
+                    System.out.println("Server Socket avviato sulla porta " + DEFAULT_SOCKET_PORT);
+                }
+
+                default -> System.out.println("Scelta non valida. Usa 'rmi' oppure 'socket'.");
+            }
 
         } catch (Exception e) {
             System.err.println("Errore durante l'avvio del server: " + e.getMessage());
@@ -41,6 +52,7 @@ public class Server {
 
     private static void startRmiServer(ServerApplication serverApplication, int rmiPort) throws Exception {
         RmiServer rmiServer = new RmiServer(serverApplication);
+
         Registry registry;
 
         try {
@@ -52,16 +64,8 @@ public class Server {
         registry.rebind(RMI_SERVER_NAME, rmiServer);
     }
 
-    private static int parsePortArg(String[] args, int index, int defaultValue) {
-        if (args == null || args.length <= index || args[index] == null || args[index].isBlank()) {
-            return defaultValue;
-        }
-
-        try {
-            return Integer.parseInt(args[index]);
-        } catch (NumberFormatException e) {
-            System.out.println("Porta non valida: " + args[index] + ". Uso default: " + defaultValue);
-            return defaultValue;
-        }
+    private static void startSocketServer(ServerApplication serverApplication, int socketPort) throws Exception {
+        SocketServer socketServer = new SocketServer(socketPort, serverApplication);
+        socketServer.start();
     }
 }

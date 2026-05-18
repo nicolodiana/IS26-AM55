@@ -12,6 +12,6 @@ public interface ClientCommands {
 
     void pickSpecial(String playerId, int cardId) throws Exception;
 
-    String getPlayerId();
+    void quitGame(String playerId) throws Exception;
 
 }

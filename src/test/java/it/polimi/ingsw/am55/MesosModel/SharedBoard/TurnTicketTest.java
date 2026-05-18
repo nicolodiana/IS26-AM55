@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -162,14 +163,11 @@ class TurnTicketTest {
     @Test
     void testAddAndRemovePlayer() {
         turnTicket.initTurnTicket(List.of(p1, p2));
-        Player first = turnTicket.getTurnPlayer(0);
-        Player second = turnTicket.getTurnPlayer(1);
+
 
         turnTicket.removePlayerFromTurnTicket();
-        assertNull(turnTicket.getTurnOrder().get(0));
 
-        turnTicket.addPlayer(first);
-        assertSame(first, turnTicket.getTurnOrder().get(0));
-        assertSame(second, turnTicket.getTurnOrder().get(1));
+
+        assertTrue(turnTicket.getTurnOrder().stream().allMatch(Objects::isNull));
     }
 }

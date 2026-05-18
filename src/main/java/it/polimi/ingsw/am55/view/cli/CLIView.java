@@ -80,13 +80,19 @@ public class CLIView implements ClientModelObserver {
             handleCommand(line);
         }
     }
-//in handle command ci sono i messaggi sempre disponibili in qualsiasi stato di gioco (quit,help,refresh)
+
     private void handleCommand(String line) {
         String[] parts = line.split("\\s+");
         String command = parts[0].toLowerCase();
 
         if (command.equals("quit") || command.equals("exit")) {
-            shutdown();
+            if (id != null) {
+                askQuitGame(this.id);
+                return;
+            }
+
+            model.removeObserver(this);
+            //System.exit(0);
             return;
         }
 
@@ -283,18 +289,23 @@ public class CLIView implements ClientModelObserver {
         actionHandler.onPickSpecialSelected(this.id, cardId);
     }
 
+    public void askQuitGame(String playerId) {
+        if (actionHandler != null && playerId != null) {
+            this.waitingServerResponse = true;
+            showMessage("Richiesta di uscita inviata al server...");
+            actionHandler.onQuitGameSelected(playerId.trim());
+        }
+    }
     // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         this.waitingServerResponse = false;
-
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
-
-        boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
         EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
-
+        boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
+        ClientAction action = actionResolver.resolve(currentGameView, id);
         System.out.println();
 
         if (currentErrorMessage != null) {
@@ -319,7 +330,16 @@ public class CLIView implements ClientModelObserver {
             scheduleExpectedActionPrint(4);
             return;
         }
-
+        if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
+            showMessage("Partita terminata. Chiusura connessioni in corso...");
+            model.removeObserver(this);
+            return;
+        }
+        if (updatedModel.isGameCrashed()) {
+            showMessage("Partita terminata per crash di un client. Connessione in chiusura...");
+            model.removeObserver(this);
+            return;
+        }
         printExpectedAction();
     }
 

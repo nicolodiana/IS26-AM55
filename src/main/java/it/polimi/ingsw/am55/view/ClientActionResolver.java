@@ -24,12 +24,16 @@ public class ClientActionResolver {
             return ClientAction.WAITING_TO_START;
         }
 
+        if (state == GameState.ENDED){
+            return ClientAction.END_GAME;
+        }
+
         if (state == GameState.EVENTRESOLVE) {
             return ClientAction.RESOLVE_EVENTS;
         }
 
         if (state == GameState.ENDGAMERESOLVE || state == GameState.ENDED) {
-            return ClientAction.END_GAME;
+            return ClientAction.END_GAME_RESOLVE;
         }
 
         if (state == GameState.CRASHED) {

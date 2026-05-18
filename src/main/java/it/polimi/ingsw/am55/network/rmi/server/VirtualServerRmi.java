@@ -4,6 +4,7 @@ package it.polimi.ingsw.am55.network.rmi.server;
 
 import it.polimi.ingsw.am55.network.rmi.client.VirtualViewRmi;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
+import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -22,20 +23,21 @@ public interface VirtualServerRmi extends Remote, VirtualServer {
      */
     void connect(String playerId, VirtualViewRmi client) throws RemoteException;
 
-
-    @Override
     void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException;
 
-    @Override
     void joinGame(String playerId, String totemColor) throws RemoteException;
 
-    @Override
     void placeTotem(String playerId, int index) throws RemoteException;
-
 
     void pickCard(String playerId, int cardId) throws RemoteException;
 
     void pickSpecial(String playerId, int cardId) throws RemoteException;
+
+    void ping(VirtualView client) throws Exception;
+
+    void quitGame(String id) throws RemoteException;
+
+    void closeConnections(VirtualView sender) throws RemoteException;
 
     /*
     altri metodi da aggiungere: dovranno poi anche aggiungersi dentro RMIServer che

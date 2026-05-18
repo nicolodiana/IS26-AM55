@@ -28,7 +28,6 @@ import java.util.UUID;
  * the current round, and the set of winners (if any).
  */
 public class Game implements GameModelInterface{
-
     private List<EventCard> eventList = new ArrayList<>();
     /**
      * The unique identifier for this specific game or match.
@@ -91,7 +90,6 @@ public class Game implements GameModelInterface{
         if(numPlayers<2 || numPlayers>5) throw new PlayerNumberOutOfRange("Invalid numbers of player");
         this.numPlayers=numPlayers;
         this.state=GameState.CREATED;
-
     }
     /**
      * A modifier method that allows a new player to join the game.
@@ -122,6 +120,8 @@ public class Game implements GameModelInterface{
         for (Player p : players) {
             if (p.getNickname().equalsIgnoreCase(normalizedNickname)) {
                 throw new NicknameAlreadyUsed("Nickname already exists");
+            }else if(p.getTotem().equals(totem)){
+                throw new TotemAlreadyUsed("Totem is already exists");
             }
 
             if (p.getTotem().equalsIgnoreCase(normalizedColor)) {
@@ -202,7 +202,6 @@ public class Game implements GameModelInterface{
      * Return the available color for totems in this game
      * @return available color for totems in this game
      * **/
-
     public Set<String> getTotemColorsValid(){
         if(!players.isEmpty()){
             Set<String> totemColors= Set.of("white","blue","red","yellow","black");
@@ -247,6 +246,7 @@ public class Game implements GameModelInterface{
 
             System.out.println("Second Phase starting\n" + "Now playing: " + currentPlayer.getNickname());
             changeState(GameState.PICKCARD);
+            sharedBoard.removeAllPlayersFromTurnTicket();
             return;
         }
         currentPlayer = nextPlayer.get();
@@ -466,7 +466,7 @@ public class Game implements GameModelInterface{
                 currentPlayer.addFood(3);
                 sharedBoard.movePlayerToTurnTicket(currentPlayer);
                 Player p = currentPlayer;
-                Optional<Player> nextPlayer = sharedBoard.getNextPlayerFirstPhase(currentPlayer);
+                Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase();
                 currentPlayer = nextPlayer.get();
             }else{
                 throw new IllegalStateException("There aren't 5 players");
@@ -698,15 +698,32 @@ public class Game implements GameModelInterface{
                 winners
         );
     }
-
+    /**
+     * Transitions the game state to CRASHED.
+     * This is used to handle unexpected failures or network disconnections or the players leave the game.
+     */
     @Override
     public void handleGameCrashed(){
         changeState(GameState.CRASHED);
     }
 
+    @Override
+    public void quitGame() {
+        /*
+        sharedBoard.removeAllPlayers();
+        players.clear();
+        currentPlayer = null;
+        /*
+         */
+        changeState(GameState.ENDED);
+    }
+
+    public boolean isInGame(String idPlayer){
+        for (Player p : players){
+            if (p.getNickname().equals(idPlayer))
+                return true;
+        }
+        return false;
+    }
 
 }
-
-
-
-

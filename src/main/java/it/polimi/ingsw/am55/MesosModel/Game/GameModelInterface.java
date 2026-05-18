@@ -112,5 +112,7 @@ public interface GameModelInterface {
 
     void pickSpecial(int id,String idPlayer);
 
+    void quitGame();
 
+    boolean isInGame(String idPlayer);
 }

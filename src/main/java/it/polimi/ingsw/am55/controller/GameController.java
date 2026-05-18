@@ -237,6 +237,36 @@ public class GameController {
             return new ErrorMessage(e.getMessage());
         }
     }
+    public MessageToClient handleGameCrashed(){
+        try{
+           gameModel.handleGameCrashed();
+           return new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        }catch(Exception e){
+            return new ErrorMessage(e.getMessage());
+        }
+    }
+    public MessageToClient quitGame(String playerId){
+        if (gameModel == null) {
+            return new ErrorMessage("Nessuna partita creata.");
+        }
+
+        try {
+            gameModel.quitGame();
+
+            return new QuitGameMessage(gameModel.toView(),
+                    "Il giocatore " + playerId + " ha chiesto di uscire. La partita è terminata. Chiusura connessioni in corso...");
+
+        } catch (Exception e) {
+            return new ErrorMessage(e.getMessage());
+        }
+    }
+
+    public boolean isInGame(String playerId){
+        if (gameModel.isInGame(playerId)) {
+            return true;
+        }
+        return false;
+    }
 
 
 

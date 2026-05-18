@@ -1,25 +1,25 @@
 package it.polimi.ingsw.am55.network.command;
 
+import it.polimi.ingsw.am55.Server;
 import it.polimi.ingsw.am55.network.ServerApplication;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
 
-public class PickSpecialCommand implements ServerCommand {
+import java.io.Serializable;
 
-    private static final long serialVersionUID = 1L;
+public class QuitGameCommand implements ServerCommand {
 
-    private final String playerId;
-    private final int cardId;
+    private String playerId;
 
-    public PickSpecialCommand(String playerId, int cardId) {
+    public QuitGameCommand(String playerId) {
         this.playerId = playerId;
-        this.cardId = cardId;
     }
     @Override
     public boolean requiresLock() {
         return true;
     }
+
     @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
-        serverApplication.pickSpecial(playerId, cardId);
+        serverApplication.quitGame(playerId);
     }
 }

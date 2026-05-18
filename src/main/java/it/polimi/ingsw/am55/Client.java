@@ -5,8 +5,9 @@ import it.polimi.ingsw.am55.controller.ClientController;
 import it.polimi.ingsw.am55.network.ClientCommands;
 import it.polimi.ingsw.am55.network.rmi.client.RmiClient;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
+import it.polimi.ingsw.am55.network.socket.client.SocketClient;
 import it.polimi.ingsw.am55.view.cli.CLIView;
-import it.polimi.ingsw.am55.view.gui.JavaFXGui;
+import it.polimi.ingsw.am55.view.gui.*;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -126,13 +127,9 @@ public class Client {
     }
 
     private static ClientCommands createSocketClient(String host, ClientModel model) throws Exception {
-        /*
-         * Quando implementerai SocketClient:
-         * return new SocketClient(host, SOCKET_PORT, model);
-         */
-        throw new UnsupportedOperationException(
-                "Socket non ancora implementato. Host=" + host + ", porta prevista=" + SOCKET_PORT
-        );
+
+        return new SocketClient(host, SOCKET_PORT, model);
+
     }
 
     private enum ConnectionTechnology {
