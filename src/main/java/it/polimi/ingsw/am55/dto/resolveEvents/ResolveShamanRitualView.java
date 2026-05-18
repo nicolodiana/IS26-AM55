@@ -21,11 +21,21 @@ public class ResolveShamanRitualView extends ResolveEventView implements Seriali
                 '}';
     }
 
-    public void showEvent() {
-        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+//    public void showEvent() {
+//        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+//
+//        for (String id : effectToPlayer.keySet()) {
+//            System.out.println("PP gained/lost by " + id + ": " + effectToPlayer.get(id));
+//        }
+//    }
+
+    public StringBuilder showEvent() {
+        StringBuilder result = new StringBuilder();
 
         for (String id : effectToPlayer.keySet()) {
-            System.out.println("PP gained by " + id + ": " + effectToPlayer.get(id));
+            result.append("PP gained/lost by " + id + ": " + effectToPlayer.get(id) + "\n");
         }
+
+        return result;
     }
 }

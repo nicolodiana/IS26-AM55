@@ -312,6 +312,7 @@ public class Player {
         for (Inventor card : this.inventorList) { list.add(card.toView()); }
         for (Hunter card : this.hunterList) { list.add(card.toView()); }
         for (Collector card : this.collectorList) { list.add(card.toView()); }
+        for (BuildingCard card : this.buildings) { list.add(card.toView()); }
 
         return list;
     }

@@ -21,10 +21,15 @@ public final class CardFormatter {
         if (card == null) {
             return "Carta non disponibile";
         }
-        return "Id: " + card.getId()
-                + "\nEra: " + card.getEra()
-                + "\nTipo view: " + card.getClass().getSimpleName()
-                + "\n" + card;
+//        return "Id: " + card.getId()
+//                + "\nEra: " + card.getEra()
+//                + "\nTipo view: " + card.getClass().getSimpleName()
+//                + "\n" + card;
+        return card +
+                "\nId: " + card.getId() +
+                "\nEra: " + card.getEra();
+                //+ "\nTipo view: " + card.getClass().getSimpleName()
+                //+ "\n" + card;
     }
 
     public static boolean isEvent(CardView card) {

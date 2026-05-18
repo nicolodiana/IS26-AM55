@@ -26,12 +26,23 @@ public class ResolveSustenanceView extends ResolveEventView implements Serializa
                 '}';
     }
 
-    public void showEvent() {
-        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+//    public void showEvent() {
+//        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+//
+//        for (String id : effectToPP.keySet()) {
+//            System.out.println("Food gained/lost by " + id + ": " + effectToPP.get(id));
+//            System.out.println("PP gained/lost by " + id + ": " + effectToPlayer.get(id));
+//        }
+//    }
+
+    public StringBuilder showEvent() {
+        StringBuilder result = new StringBuilder();
 
         for (String id : effectToPP.keySet()) {
-            System.out.println("Food lost by " + id + ": " + effectToPP.get(id));
-            System.out.println("PP lost by " + id + ": " + effectToPlayer.get(id));
+            result.append("Food gained/lost by " + id + ": " + effectToPP.get(id) +
+                    "\nPP gained/lost by " + id + ": " + effectToPlayer.get(id) + "\n");
         }
+
+        return result;
     }
 }

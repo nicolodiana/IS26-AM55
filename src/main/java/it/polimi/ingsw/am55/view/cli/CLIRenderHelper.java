@@ -6,6 +6,7 @@ import it.polimi.ingsw.am55.dto.CardView;
 import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.ClientCards.*;
 
+import java.security.cert.CertPathValidatorException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -433,11 +434,29 @@ public class CLIRenderHelper {
     }
 
     private void appendDetail(List<String> lines, String borderColor, String label, String value) {
-        String text = label + ": " + safe(value);
+        /*String text = label + ": " + safe(value);
         List<String> wrapped = wrap(text, CARD_WIDTH - 2);
 
         for (String line : wrapped) {
             lines.add(borderColor + "│" + ConsoleColor.RESET + " " + padRight(line, CARD_WIDTH - 1) + borderColor + "│" + ConsoleColor.RESET);
+        }*/
+        value = safe(value);
+
+        String separator = label.equals("Info") ? " - " : ": ";
+        String indent = repeat(" ", label.length() + separator.length());
+        String[] parts = value.split("\\R");
+
+        for(int i = 0; i < parts.length; i++) {
+            String prefix = (i == 0) ? label + separator : "       ";
+            String text = prefix + parts[i];
+
+            List<String> wrapped = wrap(text, CARD_WIDTH - 2);
+
+            for (String line : wrapped) {
+                lines.add(borderColor + "│" + ConsoleColor.RESET +
+                        " " + padRight(line, CARD_WIDTH - 1) +
+                        borderColor + "│" + ConsoleColor.RESET);
+            }
         }
     }
 
@@ -505,8 +524,14 @@ public class CLIRenderHelper {
         String remaining = text;
 
         while (remaining.length() > width) {
-            result.add(remaining.substring(0, width));
-            remaining = remaining.substring(width);
+            int breakingPoint = remaining.lastIndexOf(" ", width);
+
+            if (breakingPoint <= 0) {
+                breakingPoint = width;
+            }
+
+            result.add(remaining.substring(0, breakingPoint).trim());
+            remaining = remaining.substring(breakingPoint).trim();
         }
 
         result.add(remaining);

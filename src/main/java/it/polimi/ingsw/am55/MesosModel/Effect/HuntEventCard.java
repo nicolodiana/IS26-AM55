@@ -33,9 +33,6 @@ public class HuntEventCard extends EventCard {
             effectToPP.put(p.getNickname(), numHunters * numPP + bonusPerBuilding8);
             effectToFood.put(p.getNickname(), numHunters + bonusPerBuilding8);
         }
-
-        System.out.println("DOPO PUT PP: " + effectToPP);
-        System.out.println("DOPO PUT PP: " + effectToFood);
     }
 
     public int getOrder(){
@@ -45,7 +42,6 @@ public class HuntEventCard extends EventCard {
     public HuntEventView toView() { return new HuntEventView(getId(), this.era, this.numPP); }
 
     public ResolveHuntingView toViewResolve() {
-        System.out.println("SONO TO VIEW REOSLVE DI HUNTING");
         return new ResolveHuntingView(effectToFood, effectToPP, "HUNTING"); }
 
 }

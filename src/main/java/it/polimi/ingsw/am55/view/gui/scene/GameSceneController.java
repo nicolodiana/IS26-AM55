@@ -498,7 +498,7 @@ public class GameSceneController implements GenericSceneController {
             String name = event == null ? "Evento" : event.getNameEvent();
             Label title = new Label(name == null ? "Evento" : name);
             title.getStyleClass().add("event-title");
-            Label detail = new Label(event == null ? "" : event.toString());
+            Label detail = new Label(event == null ? "" : event.showEvent().toString());
             detail.setWrapText(true);
             VBox.setVgrow(detail, Priority.ALWAYS);
             eventBox.getChildren().addAll(title, detail);
