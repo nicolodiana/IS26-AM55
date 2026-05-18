@@ -10,6 +10,7 @@ public class QuitGameMessage implements MessageToClient{
 
     private GameView gameView;
     private String message;
+
     public QuitGameMessage(GameView gameView,String message){
         this.gameView=gameView;
         this.message=message;

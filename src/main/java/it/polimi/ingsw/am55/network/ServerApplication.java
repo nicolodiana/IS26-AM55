@@ -23,7 +23,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     private Timer pingTimer;
     private static final long PING_TIMEOUT_MS = 6_000;
     private boolean aliveCheckerStarted=false;
-    private final ScheduledExecutorService aliveChecker = Executors.newSingleThreadScheduledExecutor();
+    //private final ScheduledExecutorService aliveChecker = Executors.newSingleThreadScheduledExecutor();
     /*
      * Lock dedicato alla logica di gioco.
      * Così evitiamo che due thread RMI/socket entrino insieme nel GameController.
@@ -45,6 +45,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             System.out.println("[SERVER_APP] Registrato client: " + playerId);
             System.out.println("[SERVER_APP] Client registrati: " + clients.keySet());
         }
+        //Perché devo registrare l'istante in cui il client si collega al server per la prima volta, per ragioni di ping
         synchronized (lastPingByClient) {
             lastPingByClient.put(client, System.currentTimeMillis());
         }
@@ -66,7 +67,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             synchronized (gameLock) {
                 command.execute(this, sender);
             }
-        }else{
+        }else{//Esecuzione del comando di ping
             command.execute(this, sender);
         }
 
@@ -155,11 +156,15 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     public void quitGame(String playerId) throws Exception {
         System.out.println("[SERVER_APP] quitGame chiamato da: " + playerId);
         if (!controller.isInGame(playerId)){
-
-            MessageToClient message = new SoloQuitMessage();
-            message.deliver(playerId, this);
-            clients.get(playerId).close();
-            clients.remove(playerId);
+            VirtualView client;
+            synchronized (clients){
+                client = clients.get(playerId);
+                clients.get(playerId).close();
+                clients.remove(playerId);
+            }
+            synchronized (lastPingByClient){
+                lastPingByClient.remove(client);
+            }
             return;
         }
 
@@ -170,8 +175,10 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] Broadcast di quit completato.");
     }
 
+    //Chiusura di tutte le connessioni a seguito di fine partita oppure di crash di un client oppure perché un client
+    //richiede di disconnettersi
     @Override
-    public void closeConnection(VirtualView sender) throws Exception {
+    public void closeConnections(VirtualView sender) throws Exception {
         System.out.println("[SERVER_APP] Tutti i client verranno disconnessi");
         if(pingTimer!=null){
             pingTimer.cancel();
@@ -264,7 +271,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         }
         if(message!=null){
             message.deliver(disconnectedPlayer, this);
-            //closeAllClients();
         }
     }
 
@@ -319,6 +325,9 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
         synchronized (clients) {
             copy = new HashMap<>(clients);
+        }
+        synchronized (controller){
+            copy.entrySet().removeIf(entry -> !controller.isInGame(entry.getKey()));
         }
 
         System.out.println("[SERVER_APP] broadcast "

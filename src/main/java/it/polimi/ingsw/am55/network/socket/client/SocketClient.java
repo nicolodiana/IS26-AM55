@@ -19,7 +19,6 @@ public class SocketClient implements ClientCommands {
     private String playerId;
     private Timer timer;//Consente di schedulare un thread in modo da lanciarlo periodicamente
     private volatile boolean running = true;
-    private volatile boolean pingStarted = false;
     private Thread virtualServerThread;
 
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
@@ -31,11 +30,10 @@ public class SocketClient implements ClientCommands {
         this.timer = new Timer(true);
 
         runVirtualServer();
-        //runExecutor();
     }
 
     //Gestione del ping delegata ad un esecutore che viene attivato periodicamente
-    //5 s (da capire perché 5 secondi)
+    //1.5 s
     private void startPing(){
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
@@ -43,13 +41,10 @@ public class SocketClient implements ClientCommands {
                     sendCommand(new PingCommand());
                 } catch (Exception e) {
                     System.out.println("[SOCKET_CLIENT] Invio ping fallito. Chiudo il client.");
-                    stopPing();
+                    timer.cancel(); //Chiudo il ping verso il server
                 }
             }
         }, 0, 1500);
-    }
-    private void stopPing(){
-        timer.cancel();
     }
     //Serve per leggere solo le risposte che invia il server e per applicare le modifiche sul model del client
     private void runVirtualServer(){
@@ -62,14 +57,12 @@ public class SocketClient implements ClientCommands {
                         synchronized (model) {
                             model.update(response);
                             if(model.isGameEnded() || model.isGameCrashed()){
-                                stopPing();
-                                sendCommand(new CloseConnectionCommand());
+                                sendCommand(new CloseConnectionsCommand());
                             }
                         }
                     }
                     //Serve perché voglio che il socket client invii verso il server una richiesta
-                    //di disconnessione solo se il game è terminato
-
+                    //di disconnessione solo se il game è terminat.
 
                 } catch (IOException | ClassNotFoundException e) {
                     System.out.println("[SOCKET_CLIENT] Connessione con il server interrotta.");
@@ -77,11 +70,11 @@ public class SocketClient implements ClientCommands {
                     try {
                         close();
                     } catch (Exception ex) {
-                        System.err.println("[SOCKET_CLIENT] Errore durante la chiusura del socket.");
+                        System.err.println("[SOCKET_CLIENT] Errore durante la chiusura del socket."+ex.getMessage());
                     }
                     break;
                 } catch (Exception e) {
-                    System.out.println("[SOCKET_CLIENT] Richiesta disconnessione non andata a buon fine");
+                    System.out.println("[SOCKET_CLIENT] Richiesta disconnessione non andata a buon fine "+ e.getMessage());
                 }
             }
         });
@@ -91,11 +84,8 @@ public class SocketClient implements ClientCommands {
     }
 
     public void close() throws IOException {
-//        try {
-//            virtualServerThread.interrupt();
-//        } catch (Exception ignored) {}
         try {
-            timer.cancel();
+            timer.cancel(); //Viene interrotto il ping
         } catch (Exception ignored) {}
         try {
             input.close();
@@ -106,7 +96,7 @@ public class SocketClient implements ClientCommands {
         try {
             socket.close();
         } catch (Exception ignored) {}
-        System.out.println("[SOCKET_CLIENT] socket closed.");
+        System.out.println("[SOCKET_CLIENT] Il socket è stato chiuso.");
     }
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
@@ -139,13 +129,16 @@ public class SocketClient implements ClientCommands {
 
     @Override
     public void quitGame(String playerId) throws Exception {
+        timer.cancel(); //Se il client chiede la disconnessione => smetto di pingare verso il server
         sendCommand(new QuitGameCommand(playerId));
     }
 
     //Permette di inviare i comandi verso il server
     public void sendCommand(ServerCommand command) throws Exception {
-        output.reset();
-        output.writeObject(command);
-        output.flush();
+        synchronized (output){
+            output.writeObject(command);
+            output.flush();
+            output.reset();
+        }
     }
 }

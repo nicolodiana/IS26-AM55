@@ -77,11 +77,13 @@ public class CLIView implements ClientModelObserver {
         String command = parts[0].toLowerCase();
 
         if (command.equals("quit") || command.equals("exit")) {
-            if (currentGameView != null && id != null) {
+            if (id != null) {
                 askQuitGame(this.id);
                 return;
             }
-            System.exit(0);
+
+            model.removeObserver(this);
+            //System.exit(0);
             return;
         }
 
@@ -364,18 +366,15 @@ public class CLIView implements ClientModelObserver {
         }
         if (currentGameView != null && GameState.ENDED.equals(currentGameView.getState())) {
             showMessage("Partita terminata. Chiusura connessioni in corso...");
-            //this.inputClosed=true;
+            model.removeObserver(this);
             return;
         }
         if (updatedModel.isGameCrashed()) {
             showMessage("Partita terminata per crash di un client. Connessione in chiusura...");
+            model.removeObserver(this);
             return;
         }
         printNextAction();
-//        synchronized (this){
-//
-//            this.notifyAll();
-//        }
     }
 
     private void printNextAction() {

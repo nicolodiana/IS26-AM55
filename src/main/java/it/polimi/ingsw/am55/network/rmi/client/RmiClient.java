@@ -4,7 +4,6 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientCommands;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
-import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -42,16 +41,20 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     }
 
     @Override
-    public void close() {
-
+    public void close() throws RemoteException {
+        timer.cancel();
+        try {
+            UnicastRemoteObject.unexportObject(server, true);
+        } catch (Exception ignored) {}
     }
+
 
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
         this.playerId = playerId;
         server.connect(playerId, this);
         server.createGame(playerId, totemColor, numPlayers);
-        //startPing();
+        startPing();
     }
 
     @Override
@@ -59,6 +62,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.playerId = playerId;
         server.connect(playerId, this);
         server.joinGame(playerId, totemColor);
+        startPing();
     }
 
     @Override
@@ -90,30 +94,32 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
 
     @Override
     public void quitGame(String playerId) throws Exception {
-
+        server.quitGame(playerId);
+        server.closeConnections(this);
     }
 
-
-//    @Override
-//    public String getPlayerId() {
-//        return playerId;
-//    }
 
     /*In questa classe bisognerà aggiungere un thread
     che si attiva periodicamente e faccia una richiesta
     remota la server, chiamando la funzione ping
     * */
-
-//    public void startPing(){
-//        VirtualView client= this;
-//        timer.scheduleAtFixedRate(new TimerTask() {
-//            public void run() {
-//                try {
-//                    server.ping(client);
-//                } catch (Exception e) {
-//                    System.out.println("[ERROR] Invio del ping non riuscito");
-//                }
-//            }
-//        }, 0, 5000);
-//    }
+    private void startPing(){
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                try {
+                    pingToServer();
+                } catch (Exception e) {
+                    System.out.println("[SOCKET_CLIENT] Invio ping fallito. Chiudo il client.");
+                    try {
+                        close();
+                    } catch (RemoteException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        }, 0, 1500);
+    }
+    private void pingToServer() throws Exception {
+        server.ping(this);
+    }
 }

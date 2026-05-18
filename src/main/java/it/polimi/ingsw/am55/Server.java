@@ -17,10 +17,10 @@ public class Server {
         try {
             ServerApplication serverApplication = new ServerApplication();
 
-            //startRmiServer(serverApplication);
+            startRmiServer(serverApplication);
 
             // Quando implementerete socket:
-             startSocketServer(serverApplication);
+             //startSocketServer(serverApplication);
 
             System.out.println("Server avviato correttamente.");
 //            System.out.println("RMI attivo sulla porta " + RMI_PORT);

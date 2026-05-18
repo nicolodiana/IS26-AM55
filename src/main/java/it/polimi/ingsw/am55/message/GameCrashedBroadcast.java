@@ -3,13 +3,11 @@ package it.polimi.ingsw.am55.message;
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 
-public class GameBroadcastEndGame implements MessageToClient{
+public class GameCrashedBroadcast implements MessageToClient{
     private final String message;
-    private final GameState gameState;
 
-    public GameBroadcastEndGame(String message, GameState gameState) {
+    public GameCrashedBroadcast(String message) {
         this.message = message;
-        this.gameState = gameState;
     }
     @Override
     public void update(ClientModel model) {

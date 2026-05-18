@@ -28,10 +28,12 @@ public class SocketServer {
             System.out.println("[SOCKET_SERVER] Nuovo client si è connesso: " + clientSocket.getInetAddress());
 
             ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
-            out.flush();
 
             ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
+
+            //Viene creato l' handler che si occuperà di gestire il singolo client, perché
+            //il metodo readObject è bloccante quindi andrebbe a bloccare il processo principale
             SocketClientHandler handler = new SocketClientHandler(clientSocket, in, out, serverApplication);
         }
     }

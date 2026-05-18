@@ -43,9 +43,6 @@ public class SocketClientHandler implements VirtualViewSocket{
                         System.out.println("[SOCKET_HANDLER] Errore esecuzione del comando "+e.getMessage());
                     }
                 }
-//            } catch (EOFException e){
-//                System.out.println("[SOCKET_HANDLER] EOF"+e.getMessage());
-//                close();
             } catch (IOException | ClassNotFoundException e){
                 System.out.println("[SOCKET_HANDLER] Il client tcp si è disconesso " + e.getMessage());
                 close();
@@ -55,23 +52,23 @@ public class SocketClientHandler implements VirtualViewSocket{
     }
 
     //Invia i messaggi di risposta verso il client che gestisce
+    //Il lock è preso sull' oggetto chiamante, in modo da evitare accesso concorrente allo stream di uscita da
+    //parte di più thread come ad esempio thread handler e thread di ping
     @Override
     public synchronized void onMessage(MessageToClient message) throws Exception {
         if (socket.isClosed()) {
             throw new IOException("Socket chiuso");
         }
-        output.reset();
         output.writeObject(message);
         output.flush();
+        output.reset();
     }
 
 
     //Permette la chiusura del socket(dovrebbe essere invocato in serverapplication)
     @Override
     public void close() {
-        try {
-            virtualViewThread.interrupt();
-        } catch (Exception ignored) {}
+        if(socket.isClosed()) return; //Ad esempio server application ha già chiuso il socket per il client
         try {
             input.close();
         } catch (IOException ignored) {
@@ -84,6 +81,6 @@ public class SocketClientHandler implements VirtualViewSocket{
             socket.close();
         } catch (IOException ignored) {
         }
-        System.out.println("[SOCKET_HANDLER] Socket closed");
+        System.out.println("[SOCKET_HANDLER] Socket è stato chiuso");
     }
 }
