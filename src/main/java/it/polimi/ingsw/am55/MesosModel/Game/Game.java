@@ -373,7 +373,7 @@ public class Game implements GameModelInterface{
 
 
     private void secondPartPick() {
-        if (countRound == 4) {
+        if (countRound == 1){
             changeState(GameState.ENDGAMERESOLVE);
             return;
         }

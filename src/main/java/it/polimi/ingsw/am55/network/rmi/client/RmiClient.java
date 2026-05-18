@@ -3,7 +3,6 @@ package it.polimi.ingsw.am55.network.rmi.client;
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientCommands;
-import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
 
 import java.rmi.RemoteException;

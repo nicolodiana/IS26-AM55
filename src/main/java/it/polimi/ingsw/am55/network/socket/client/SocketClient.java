@@ -4,7 +4,6 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.command.QuitGameCommand;
 import it.polimi.ingsw.am55.network.ClientCommands;
-import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.*;
 import java.io.*;
 import java.net.Socket;

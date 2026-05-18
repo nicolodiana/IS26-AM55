@@ -8,6 +8,7 @@ public class CloseConnectionCommand implements ServerCommand {
     public CloseConnectionCommand(String playerId) {
         this.playerId = playerId;
     }
+
     @Override
     public boolean requiresLock() {
         return false;

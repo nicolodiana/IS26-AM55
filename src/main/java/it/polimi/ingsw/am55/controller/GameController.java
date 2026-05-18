@@ -87,16 +87,12 @@ public class GameController {
 
                 List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
                 GameView viewAfterResolve = gameModel.toView();
-                //accodo 2 messaggio di inizio risoluzione eventi
-                messages.add(new GameBroadcastInfo(
-                        "Inizia la risoluzione degli eventi..."
-                ));
-                //ACCODO 3 MESSAGGIO DISTINGUENDO SE HA EVENTI RISOLTI O MENO PERCHE CAMBIA IL MESSAGGIO ASSOCIATO
+                //ACCODO 2 MESSAGGIO DISTINGUENDO SE HA EVENTI RISOLTI O MENO PERCHE CAMBIA IL MESSAGGIO ASSOCIATO
                 //se non ho eventi da risolvere devo comunque mandare la board aggiornata perche si e fatto swap delle row
                 if (resolvedEvents == null || resolvedEvents.isEmpty()) {
                     messages.add(new UpdateViewMessage(
                             viewAfterResolve,
-                            "Nessun evento da risolvere."
+                            "[no event to resolve]"
                     ));
 
                     return new MultipleMessages(messages);
@@ -106,7 +102,7 @@ public class GameController {
                 viewAfterResolve.setResolveEvents(resolvedEvents);
                 messages.add(new UpdateViewMessage(
                         viewAfterResolve,
-                        "Risoluzione eventi completata."
+                        "event resolved"
                 ));
 
                 return new MultipleMessages(messages);
@@ -183,18 +179,13 @@ public class GameController {
                         "pick special done"
                 ));
 
-                messages.add(new GameBroadcastInfo(
-                        "Inizia la risoluzione degli eventi..."
-                ));
-
                 List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
-
                 GameView viewAfterResolve = gameModel.toView();
 
                 if (resolvedEvents == null || resolvedEvents.isEmpty()) {
                     messages.add(new UpdateViewMessage(
                             viewAfterResolve,
-                            "Nessun evento da risolvere."
+                            "no event to resolve"
                     ));
 
                     return new MultipleMessages(messages);
@@ -204,7 +195,7 @@ public class GameController {
 
                 messages.add(new UpdateViewMessage(
                         viewAfterResolve,
-                        "Risoluzione eventi completata."
+                        "event resolved"
                 ));
 
                 return new MultipleMessages(messages);

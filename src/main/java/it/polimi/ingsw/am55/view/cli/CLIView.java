@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 public class CLIView implements ClientModelObserver {
 
-    private static final String EVENT_RESOLUTION_START_MESSAGE = "Inizia la risoluzione degli eventi...";
 
     private final ClientModel model;
     private final Scanner input;
@@ -295,9 +294,11 @@ public class CLIView implements ClientModelObserver {
         }
     }
     // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
+    private volatile boolean pendingEventResolutionDelay = false;
+
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        this.waitingServerResponse=false;
+        this.waitingServerResponse = false;
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
@@ -312,24 +313,55 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        if (currentInfoMessage != null) {
-            showMessage(currentInfoMessage);
+        // Messaggio 1 del MultipleMessage: stato già EVENTRESOLVE
+        // La board non è ancora aggiornata con gli eventi, non la stampiamo
+        if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
+            showMessage("Inizia la risoluzione degli eventi...");
+            pendingEventResolutionDelay = true; //ci serve un po come trigger per ritardare 2 messaggio
+            return; // non renderizzi nulla ora ma nel prossimo msg ricevuto con board senza eventi
         }
-//PER LO WAITING MESSAGE IL LAST GAME BOARD UPDATED E FALSE QUINDI NON FA IL RENDER E NON RISTAMPA LA BOARD
+        if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
+            showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita ");
+            pendingEventResolutionDelay = true; //ci serve un po come trigger per ritardare 2 messaggio
+            return; // non renderizzi nulla ora ma nel prossimo msg ricevuto con board senza eventi
+        }
+
+        if (currentInfoMessage != null) {
+            if (!pendingEventResolutionDelay) {
+                showMessage(currentInfoMessage); //se non e da ritardare lo stampa subito (senno l'unico caso da ritardare e quando stampo eventi quindi lo mando insieme al render quando lo ritardo
+
+            }
+
+        }
+
         if (gameViewUpdated && currentGameView != null) {
+            // Messaggio 2: board aggiornata post-eventi, mostrala con ritardo
+            if (pendingEventResolutionDelay) {
+                pendingEventResolutionDelay = false;
+                final GameView snapshot = currentGameView;
+                scheduler.schedule(() -> {
+                    showMessage(currentInfoMessage);
+                    renderGame(snapshot);
+                    printExpectedAction();
+                }, 4, TimeUnit.SECONDS);
+                return;
+            }
+            //altrimenti ritorna falso e la stampa subito la board
+
             renderGame(currentGameView);
         }
-
+//il render finale è sempre ritardato perche ha sempre eventi risolti
         if (endGameResultView != null) {
-            printEndGameResult(endGameResultView);
+            scheduler.schedule(() -> {
+                showMessage(currentInfoMessage);
+                printEndGameResult(endGameResultView);
+            }, 4, TimeUnit.SECONDS);
+            return;
         }
 
-//        if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
-//            scheduleExpectedActionPrint(4);
-//            return;
-//        }
         if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
-            showMessage("Partita terminata. Chiusura connessioni in corso...");
+            showMessage("Chiusura connessioni in corso...");
+
             model.removeObserver(this);
             return;
         }
@@ -552,8 +584,7 @@ public class CLIView implements ClientModelObserver {
 
         System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
         for (ResolveEventView view : gameView.getResolveEvents()) {
-            System.out.println(ConsoleColor.RED_BOLD + view.getNameEvent() + ConsoleColor.RESET);
-            System.out.println(view.showEvent());
+            view.showEvent();
             System.out.println();
         }
 

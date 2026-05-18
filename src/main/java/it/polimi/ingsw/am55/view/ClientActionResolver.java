@@ -32,7 +32,7 @@ public class ClientActionResolver {
             return ClientAction.RESOLVE_EVENTS;
         }
 
-        if (state == GameState.ENDGAMERESOLVE || state == GameState.ENDED) {
+        if (state == GameState.ENDGAMERESOLVE ) {
             return ClientAction.END_GAME_RESOLVE;
         }
 
