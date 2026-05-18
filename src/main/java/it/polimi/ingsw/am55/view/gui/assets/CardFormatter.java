@@ -32,10 +32,7 @@ public final class CardFormatter {
             return false;
         }
         String className = card.getClass().getSimpleName().toLowerCase();
-        return className.contains("event")
-                || className.contains("hunt")
-                || className.contains("sustenance")
-                || className.contains("paintings")
-                || className.contains("ritual");
+        return className.contains("event");
+
     }
 }

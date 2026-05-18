@@ -18,31 +18,20 @@ public class Server {
 
     public static void main(String[] args) {
         try {
-            Scanner scanner = new Scanner(System.in);
-
-            System.out.print("Scegli tecnologia server [rmi/socket]: ");
-            String choice = scanner.nextLine().trim().toLowerCase();
-
+            //Restituisce l' indirizzo ip del server, che verrà usato dai client per poter connettersi
             String hostIp = InetAddress.getLocalHost().getHostAddress();
             System.setProperty("java.rmi.server.hostname", hostIp);
 
             System.out.println("Server IP: " + hostIp);
 
+
             ServerApplication serverApplication = new ServerApplication();
+            startRmiServer(serverApplication, DEFAULT_RMI_PORT);
+            System.out.println("[SERVER] RMI avviato sulla porta " + DEFAULT_RMI_PORT);
 
-            switch (choice) {
-                case "rmi" -> {
-                    startRmiServer(serverApplication, DEFAULT_RMI_PORT);
-                    System.out.println("Server RMI avviato sulla porta " + DEFAULT_RMI_PORT);
-                }
 
-                case "socket" -> {
-                    startSocketServer(serverApplication, DEFAULT_SOCKET_PORT);
-                    System.out.println("Server Socket avviato sulla porta " + DEFAULT_SOCKET_PORT);
-                }
-
-                default -> System.out.println("Scelta non valida. Usa 'rmi' oppure 'socket'.");
-            }
+            startSocketServer(serverApplication, DEFAULT_SOCKET_PORT);
+            System.out.println("[SERVER] Socket avviato sulla porta " + DEFAULT_SOCKET_PORT);
 
         } catch (Exception e) {
             System.err.println("Errore durante l'avvio del server: " + e.getMessage());

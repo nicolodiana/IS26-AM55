@@ -2,9 +2,8 @@ package it.polimi.ingsw.am55.MesosModel.Effect;
 import it.polimi.ingsw.am55.MesosModel.Cards.EventCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
-import it.polimi.ingsw.am55.dto.ClientCards.ShamanRitualView;
+import it.polimi.ingsw.am55.dto.ClientCards.ShamanRitualEventView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveShamanRitualView;
-import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 
 import java.util.HashMap;
 import java.util.List;
@@ -73,7 +72,7 @@ public class ShamanRitualEventCard extends EventCard {
         return 2;
     }
 
-    public ShamanRitualView toView() { return new ShamanRitualView(getId(), this.era, this.maxPP, this.minPP); }
+    public ShamanRitualEventView toView() { return new ShamanRitualEventView(getId(), this.era, this.maxPP, this.minPP); }
 
     public ResolveShamanRitualView toViewResolve() {
         System.out.println("SONO TO VIEW RESOLVE DI SHAMAN RITUAL");

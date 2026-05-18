@@ -264,7 +264,7 @@ public class CLIRenderHelper {
             return;
         }
 
-        if (card instanceof ShamanRitualView ritual) {
+        if (card instanceof ShamanRitualEventView ritual) {
             appendDetail(lines, borderColor, "Type", "Shaman Ritual");
             appendDetail(lines, borderColor, "Info", ritual.toString());
             return;
@@ -400,7 +400,7 @@ public class CLIRenderHelper {
 
         if (card instanceof HuntEventView
                 || card instanceof PaintingsEventView
-                || card instanceof ShamanRitualView
+                || card instanceof ShamanRitualEventView
                 || card instanceof SustenanceEventView) {
             return "EVENT";
         }
@@ -424,7 +424,7 @@ public class CLIRenderHelper {
 
         if (card instanceof HuntEventView
                 || card instanceof PaintingsEventView
-                || card instanceof ShamanRitualView
+                || card instanceof ShamanRitualEventView
                 || card instanceof SustenanceEventView) {
             return ConsoleColor.RED_BOLD;
         }
