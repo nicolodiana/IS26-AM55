@@ -77,29 +77,36 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
     periodico inviato verso il server dal client.
      */
     @Override
-    public void ping(VirtualView client) throws Exception {
-        try {
-            serverApplication.executeCommand(new PingCommand(),client);
-        } catch (Exception e) {
-            throw new RemoteException("Errore durante pickSpecial", e);
-        }
+    public void ping(VirtualView client) throws RemoteException {
+        rmiExecutor.submit(()->{
+            try {
+                serverApplication.executeCommand(new PingCommand(),client);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        });
     }
 
     @Override
     public void quitGame(String id) throws RemoteException {
-        try {
-            serverApplication.executeCommand(new QuitGameCommand(id), null);
-        } catch (Exception e) {
-            throw new RemoteException("Errore durante pickSpecial", e);
-        }
+        rmiExecutor.submit(() -> {
+            try {
+                serverApplication.executeCommand(new QuitGameCommand(id), null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override
     public void closeConnections(VirtualView sender) throws RemoteException {
-        try {
-            serverApplication.executeCommand(new CloseConnectionsCommand(), sender);
-        } catch (Exception e) {
-            throw new RemoteException("Errore durante pickSpecial", e);
-        }
+        rmiExecutor.submit(() -> {
+            try {
+                serverApplication.executeCommand(new CloseConnectionsCommand(), sender);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

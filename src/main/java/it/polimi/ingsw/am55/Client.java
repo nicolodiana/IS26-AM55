@@ -38,8 +38,7 @@ public class Client {
                 default -> throw new IllegalArgumentException("View mode non supportata: " + viewMode);
             }
         } catch (Exception e) {
-            System.err.println("Errore durante l'avvio del client: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[CLIENT] Errore durante l'avvio del client: " + e.getMessage());
         }
     }
 

@@ -38,14 +38,18 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     @Override
     public void onMessage(MessageToClient message) throws RemoteException {
         model.update(message);
+        if(model.isGameCrashed() || model.isGameEnded()){//Se rilevo la fine della paritita oppure game crashato =>chiudo tutte le connessioni
+            server.closeConnections(this);
+        }
     }
 
     @Override
     public void close() throws RemoteException {
         timer.cancel();
         try {
-            UnicastRemoteObject.unexportObject(server, true);
+            UnicastRemoteObject.unexportObject(this, true);
         } catch (Exception ignored) {}
+        System.out.println("[RMI CLIENT] Chiusura avvenuta.");
     }
 
 
@@ -95,9 +99,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     @Override
     public void quitGame(String playerId) throws Exception {
         server.quitGame(playerId);
-        server.closeConnections(this);
     }
-
 
     /*In questa classe bisognerà aggiungere un thread
     che si attiva periodicamente e faccia una richiesta

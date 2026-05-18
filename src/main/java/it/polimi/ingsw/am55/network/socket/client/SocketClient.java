@@ -114,21 +114,33 @@ public class SocketClient implements ClientCommands {
 
     @Override
     public void placeTotem(int index) throws Exception {
+        if(playerId==null){
+            throw new Exception("[SOCKET_CLIENT] Il playerId non trovat0.");
+        }
         sendCommand(new PlaceTotemCommand(this.playerId, index));
     }
 
     @Override
     public void pickCard(String playerId, int cardId) throws Exception {
+        if(playerId==null){
+            throw new Exception("[SOCKET_CLIENT] Il playerId non trovat0.");
+        }
         sendCommand(new PickCardCommand(playerId, cardId));
     }
 
     @Override
     public void pickSpecial(String playerId, int cardId) throws Exception {
+        if(playerId==null){
+            throw new Exception("[SOCKET_CLIENT] Il playerId non trovat0.");
+        }
         sendCommand(new  PickSpecialCommand(playerId, cardId));
     }
 
     @Override
     public void quitGame(String playerId) throws Exception {
+        if(playerId==null){
+            throw new Exception("[SOCKET_CLIENT] Il playerId non trovat0.");
+        }
         timer.cancel(); //Se il client chiede la disconnessione => smetto di pingare verso il server
         sendCommand(new QuitGameCommand(playerId));
     }

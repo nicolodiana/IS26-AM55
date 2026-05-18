@@ -28,7 +28,6 @@ public class CLIView implements ClientModelObserver {
     private final ScheduledExecutorService scheduler;
 
     private UserActionHandler actionHandler;
-
     private volatile GameView currentGameView;
     private volatile String currentInfoMessage;
     private volatile String currentErrorMessage;
@@ -299,7 +298,6 @@ public class CLIView implements ClientModelObserver {
     // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        this.waitingServerResponse = false;
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
