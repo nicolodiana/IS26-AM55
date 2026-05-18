@@ -29,7 +29,7 @@ public class LobbySceneController implements GenericSceneController {
 
     @FXML
     private void initialize() {
-        totemComboBox.getItems().setAll("white", "blue", "red", "yellow", "black");
+        totemComboBox.getItems().setAll("white", "blue", "orange", "yellow", "purple");
         totemComboBox.getSelectionModel().select("white");
 
         numPlayersSpinner.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(2, 5, 2));

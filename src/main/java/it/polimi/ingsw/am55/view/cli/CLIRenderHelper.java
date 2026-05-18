@@ -27,6 +27,30 @@ public class CLIRenderHelper {
         cliBoard(boardView);
         System.out.println(boardData);
     }
+    public void printPersonalDeck(List<CardView> cards) {
+        System.out.println();
+
+        if (cards == null || cards.isEmpty()) {
+            System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "La tua mano è vuota."
+                    + ConsoleColor.RESET);
+            return;
+        }
+
+        System.out.println(ConsoleColor.GREEN_BOLD
+                + "========== MY HAND =========="
+                + ConsoleColor.RESET);
+
+        System.out.println(renderCardRow(
+                "PERSONAL DECK",
+                cards,
+                ConsoleColor.GREEN_BOLD
+        ));
+
+        System.out.println(ConsoleColor.GREEN_BOLD
+                + "============================="
+                + ConsoleColor.RESET);
+    }
 
     private void cliBoard(BoardView boardView) {
         if (boardView == null) {

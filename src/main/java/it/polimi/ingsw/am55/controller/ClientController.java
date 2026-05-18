@@ -40,6 +40,11 @@ i metodi di socket o di RMI
     }
 
     @Override
+    public void onQuitGameSelected(String playerId) {
+
+    }
+
+    @Override
     public void onPickCardSelected(String playerId, int cardId) {
         try {
             client.pickCard(playerId, cardId);
@@ -56,4 +61,7 @@ i metodi di socket o di RMI
             System.err.println("Errore durante pickSpecial: " + e.getMessage());
         }
     }
+
+
+
 }

@@ -16,12 +16,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * View JavaFX principale.
- *
- * Ruolo: osserva il ClientModel, risolve l'azione attesa tramite ClientActionResolver
- * e dice ai controller FXML cosa mostrare/abilitare.
- */
 public class GuiView implements ClientModelObserver {
 
     private static final String EVENT_RESOLUTION_START_MESSAGE = "Inizia la risoluzione degli eventi...";
@@ -77,48 +71,65 @@ public class GuiView implements ClientModelObserver {
             currentInfoMessage = updatedModel.getStateRequest();
             currentGameView = updatedModel.getGameView();
 
-            if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
-                showError(currentErrorMessage);
-            }
-
-            if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
-                showInfo(currentInfoMessage);
-            }
-
-            EndGameResultView result = updatedModel.getEndGameResultView();
-            if (result != null) {
-                showEndGame(result);
-                return;
-            }
-
-            if (currentGameView == null) {
-                showLobbyFromModel();
-                return;
-            }
-
-            renderGameFromModel(currentGameView);
+            renderCurrentState();
+            showPendingMessages();
         });
     }
 
-    private void renderGameFromModel(GameView gameView) {
-        ClientAction action = actionResolver.resolve(gameView, playerId);
+    private void renderCurrentState() {
+        EndGameResultView result = model.getEndGameResultView();
 
-        if (action == ClientAction.END_GAME) {
-            EndGameResultView result = model.getEndGameResultView();
-            if (result != null) {
-                showEndGame(result);
-            } else {
-                showGame(gameView, action);
-            }
+        if (result != null) {
+            showEndGame(result);
             return;
         }
 
-        showGame(gameView, action);
+        ClientAction action = actionResolver.resolve(currentGameView, playerId);
+
+        switch (action) {
+            case LOBBY -> showLobby(false);
+
+            case WAITING_TO_START -> showLobby(true);
+
+            case END_GAME -> {
+                EndGameResultView endGameResult = model.getEndGameResultView();
+                if (endGameResult != null) {
+                    showEndGame(endGameResult);
+                } else {
+                    showGame(currentGameView, action);
+                }
+            }
+
+            default -> showGame(currentGameView, action);
+        }
+    }
+
+    private void showLobby(boolean locked) {
+        SceneManager.showLobbySceneIfNeeded();
+
+        LobbySceneController controller =
+                (LobbySceneController) SceneManager.getActiveController();
+
+        if (locked) {
+            controller.lock(
+                    currentInfoMessage != null && !currentInfoMessage.isBlank()
+                            ? currentInfoMessage
+                            : "Partita creata. In attesa degli altri giocatori..."
+            );
+        }
     }
 
     private void showGame(GameView gameView, ClientAction action) {
+        if (gameView == null) {
+            showLobby(false);
+            return;
+        }
+
         SceneManager.showGameSceneIfNeeded();
-        GameSceneController controller = (GameSceneController) SceneManager.getActiveController();
+
+        GameSceneController controller =
+                (GameSceneController) SceneManager.getActiveController();
+
         controller.render(gameView, action, playerId, waitingServerResponse);
 
         if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
@@ -126,27 +137,24 @@ public class GuiView implements ClientModelObserver {
         }
     }
 
-    private void showLobbyFromModel() {
-        SceneManager.showLobbySceneIfNeeded(); // se abbiamo gia una lobby scene e abbiamo inviato i dati non ci serve ricaricare la scene la teniamo bloccata con i nostri valori inseriti
-        LobbySceneController controller = (LobbySceneController) SceneManager.getActiveController();
-        if (currentInfoMessage != null) {
-            controller.showMessage(currentInfoMessage);
-        }
-        if (currentErrorMessage != null) {
-            controller.showError(currentErrorMessage);
-            return; // necessario perche altrimenti mi blocca la scene se faccio un errore senza potermi inserire piu i dati
-        }
-
-        controller.lock(
-                currentInfoMessage != null && !currentInfoMessage.isBlank()
-                        ? currentInfoMessage : "Waiting for other players..."
-        );
-    }
-
     private void showEndGame(EndGameResultView result) {
         SceneManager.showEndGameScene();
-        EndGameSceneController controller = (EndGameSceneController) SceneManager.getActiveController();
+
+        EndGameSceneController controller =
+                (EndGameSceneController) SceneManager.getActiveController();
+
         controller.render(result, currentGameView);
+    }
+
+    private void showPendingMessages() {
+        if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
+            showError(currentErrorMessage);
+            return;
+        }
+
+        if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
+            showInfo(currentInfoMessage);
+        }
     }
 
     private void showInfo(String message) {
@@ -173,6 +181,7 @@ public class GuiView implements ClientModelObserver {
         if (!ensureActionHandler()) {
             return;
         }
+
         this.playerId = playerId.trim();
         submitCommand(() -> actionHandler.onCreateGameSelected(this.playerId, totemColor, numPlayers));
     }
@@ -181,6 +190,7 @@ public class GuiView implements ClientModelObserver {
         if (!ensureActionHandler()) {
             return;
         }
+
         this.playerId = playerId.trim();
         submitCommand(() -> actionHandler.onJoinGameSelected(this.playerId, totemColor));
     }
@@ -189,6 +199,7 @@ public class GuiView implements ClientModelObserver {
         if (!ensureActionHandler()) {
             return;
         }
+
         submitCommand(() -> actionHandler.onPlaceTotemSelected(ticketIndex));
     }
 
@@ -196,6 +207,7 @@ public class GuiView implements ClientModelObserver {
         if (!ensureActionHandler() || playerId == null) {
             return;
         }
+
         submitCommand(() -> actionHandler.onPickCardSelected(playerId, cardId));
     }
 
@@ -203,19 +215,20 @@ public class GuiView implements ClientModelObserver {
         if (!ensureActionHandler() || playerId == null) {
             return;
         }
+
         submitCommand(() -> actionHandler.onPickSpecialSelected(playerId, cardId));
     }
 
     public void refreshCurrentScene() {
-        if (currentGameView != null) {
-            renderGameFromModel(currentGameView);
-        } else {
-            showLobbyFromModel();
-        }
+        Platform.runLater(() -> {
+            renderCurrentState();
+            showPendingMessages();
+        });
     }
 
     private void submitCommand(Runnable command) {
         waitingServerResponse = true;
+
         if (SceneManager.getActiveController() instanceof GameSceneController game) {
             game.lockInteractions("Comando inviato. In attesa del server...");
         } else if (SceneManager.getActiveController() instanceof LobbySceneController lobby) {
@@ -238,6 +251,7 @@ public class GuiView implements ClientModelObserver {
         if (actionHandler != null) {
             return true;
         }
+
         showError("ActionHandler non configurato: impossibile inviare il comando.");
         return false;
     }

@@ -15,9 +15,13 @@ public class ClientActionResolver {
             return ClientAction.LOBBY;
         }
 
+
         GameState state = gameView.getState();
         if (state == null) {
             return ClientAction.WAITING_FOR_STATE;
+        }
+        if (state == GameState.CREATED){
+            return ClientAction.WAITING_TO_START;
         }
 
         if (state == GameState.EVENTRESOLVE) {

@@ -28,6 +28,7 @@ import java.util.UUID;
  * the current round, and the set of winners (if any).
  */
 public class Game implements GameModelInterface{
+
     private List<EventCard> eventList = new ArrayList<>();
     /**
      * The unique identifier for this specific game or match.
@@ -69,6 +70,13 @@ public class Game implements GameModelInterface{
      * The current state or phase of the game (e.g., lobby, ongoing, finished).
      */
     private GameState state;
+    private static final Set<String> VALID_TOTEM_COLORS = Set.of(
+            "BLUE",
+            "ORANGE",
+            "PURPLE",
+            "YELLOW",
+            "WHITE"
+    );
 
     /**
      * Generates a new game identifier, creates the player list,
@@ -83,6 +91,7 @@ public class Game implements GameModelInterface{
         if(numPlayers<2 || numPlayers>5) throw new PlayerNumberOutOfRange("Invalid numbers of player");
         this.numPlayers=numPlayers;
         this.state=GameState.CREATED;
+
     }
     /**
      * A modifier method that allows a new player to join the game.
@@ -97,36 +106,60 @@ public class Game implements GameModelInterface{
     public GameView toView() {
         return new GameView(this);
     }
-    public String addPlayer(String nickname, String totem) throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+    public String addPlayer(String nickname, String totem)
+            throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed, WrongTotemColor {
 
-        for(Player p:players){
-            if(p.getNickname().equals(nickname)){
+        String normalizedNickname = nickname.trim();
+        String normalizedColor = totem.trim().toUpperCase();
+
+        if (!VALID_TOTEM_COLORS.contains(normalizedColor)) {
+            throw new WrongTotemColor(
+                    "Wrong totem color. Please try again with this color: "
+                            + String.join(", ", VALID_TOTEM_COLORS)
+            );
+        }
+
+        for (Player p : players) {
+            if (p.getNickname().equalsIgnoreCase(normalizedNickname)) {
                 throw new NicknameAlreadyUsed("Nickname already exists");
-            }else if(p.getTotem().equals(totem)){
-                throw new TotemAlreadyUsed("Totem is already exists");
+            }
+
+            if (p.getTotem().equalsIgnoreCase(normalizedColor)) {
+                throw new TotemAlreadyUsed("Totem already exists");
             }
         }
-        Player newPlayer = new Player(nickname, totem);
 
-// PER DEBUG PICK SPECIAL
+        Player newPlayer = new Player(
+                normalizedNickname,
+                normalizedColor.toLowerCase()
+        );
+
+        // PER DEBUG PICK SPECIAL
         if ("nico".equalsIgnoreCase(newPlayer.getNickname())) {
             newPlayer.addTribeCard(new BuildingCard(
-                    999,                            // id debug, basta che non crei conflitti
-                    1,                              // era
-                    0,                              // foodCost
-                    0,                              // numOfPP
+                    999,
+                    1,
+                    0,
+                    0,
                     BuildingType.BUILDING13,
-                    null ,       // cambia se non hai NEUTRAL
-                    0                               // effectPP
+                    null,
+                    0
             ));
 
             System.out.println("[DEBUG] Aggiunta Building 13 a nico");
         }
-        if(players.size()+1>numPlayers){throw new PlayerNumberOutOfRange("The number of player is out of range");}
-        players.add(newPlayer);
-        if(players.size()==numPlayers){startGame();}
-        return newPlayer.getNickname();
 
+        if (players.size() + 1 > numPlayers) {
+            throw new PlayerNumberOutOfRange("The number of player is out of range");
+        }
+
+        players.add(newPlayer);
+
+        if (players.size() == numPlayers) {
+            startGame();
+        }
+
+        return newPlayer.getNickname();
     }
     /**
      * Returns the game's id
@@ -138,8 +171,8 @@ public class Game implements GameModelInterface{
      * Returns the player whose turn it is.
      * @return the current player in the game
      */
-    public String getCurrentPlayer(){
-        return currentPlayer.getNickname();
+    public String getCurrentPlayer() {
+        return currentPlayer == null ? null : currentPlayer.getNickname();
     }
     /**
      * Returns the current number of players in the game
@@ -169,6 +202,7 @@ public class Game implements GameModelInterface{
      * Return the available color for totems in this game
      * @return available color for totems in this game
      * **/
+
     public Set<String> getTotemColorsValid(){
         if(!players.isEmpty()){
             Set<String> totemColors= Set.of("white","blue","red","yellow","black");
@@ -664,12 +698,15 @@ public class Game implements GameModelInterface{
                 winners
         );
     }
-    /**
-     * Transitions the game state to CRASHED.
-     * This is used to handle unexpected failures or network disconnections or the players leave the game.
-     */
+
+    @Override
     public void handleGameCrashed(){
         changeState(GameState.CRASHED);
     }
 
+
 }
+
+
+
+

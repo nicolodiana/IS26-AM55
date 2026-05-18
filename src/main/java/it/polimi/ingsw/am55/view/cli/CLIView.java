@@ -57,7 +57,8 @@ public class CLIView implements ClientModelObserver {
     public void setActionHandler(UserActionHandler actionHandler) {
         this.actionHandler = actionHandler;
     }
-
+//inizializzazione cli, avrà un thread separato costantemente attivo a ricevere input
+    //la scelta di metterlo separato è stata fatta per evitare di tenere occupato il thread principale che sarebbe quello degli aggiornamenti
     public void start() {
         System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
         printLobbyHelp();
@@ -75,11 +76,11 @@ public class CLIView implements ClientModelObserver {
             if (line.isEmpty()) {
                 continue;
             }
-
+//ogni comando dell'utente passa su handleCommand
             handleCommand(line);
         }
     }
-
+//in handle command ci sono i messaggi sempre disponibili in qualsiasi stato di gioco (quit,help,refresh)
     private void handleCommand(String line) {
         String[] parts = line.split("\\s+");
         String command = parts[0].toLowerCase();
@@ -99,17 +100,29 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
+        ClientAction action = actionResolver.resolve(currentGameView, id);
+
+        if (command.equals("myhand") || command.equals("hand")) {
+            printMyHand(action);
+            printExpectedAction(); //per riprendere con l'azione da intraprendere per continuare il gioco
+            return;
+        }
+
         if (waitingServerResponse) {
             System.out.println(ConsoleColor.YELLOW_BOLD
                     + "In attesa della risposta del server..."
                     + ConsoleColor.RESET);
             return;
         }
-
-        ClientAction action = actionResolver.resolve(currentGameView, id);
+        /* LA CLIVIEW NON CONTROLLA DIRETTAMENTE LO STATO DELLA PARTITA MA DELEGA
+        LA DECISIONE AL CLIENT ACTION RESOLVER , IN BASE AL CURRENTGAMEVIEW E L'ID DEL GIOCATORE
+        IL RESOLVER RESTITUISCE UN ETICHETTA CLIENTACTION A CUI CORRISPONDERA POI IL COMANDO ADEGUATO
+        DA FAR FARE AL CLIENT
+         */
 
         switch (action) {
             case LOBBY -> handleLobbyCommand(command, parts);
+            case WAITING_TO_START -> showMessage("sono thread input: fermo in attesa di inizio partita");
             case PLACE_TOTEM -> handlePlaceTotemCommand(command, parts);
             case PICK_CARD -> handlePickCardCommand(command, parts);
             case PICK_SPECIAL -> handlePickSpecialCommand(command, parts);
@@ -293,7 +306,7 @@ public class CLIView implements ClientModelObserver {
         if (currentInfoMessage != null) {
             showMessage(currentInfoMessage);
         }
-
+//PER LO WAITING MESSAGE IL LAST GAME BOARD UPDATED E FALSE QUINDI NON FA IL RENDER E NON RISTAMPA LA BOARD
         if (gameViewUpdated && currentGameView != null) {
             renderGame(currentGameView);
         }
@@ -321,6 +334,10 @@ public class CLIView implements ClientModelObserver {
                     + "Prossima azione da compiere: create <nickname> <totemColor> <numPlayers>"
                     + " oppure join <nickname> <totemColor>"
                     + ConsoleColor.RESET);
+            case WAITING_TO_START -> System.out.println(ConsoleColor.YELLOW_BOLD
+                    + "PRINT EXPECTED ACTION: IN ATTESA DI INIZIO PARTITA "
+
+                    + ConsoleColor.RESET);
 
             case WAITING_FOR_TURN -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "Prossima azione da compiere: attendi il turno di "
@@ -332,7 +349,7 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
 
             case PICK_CARD -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Prossima azione da compiere: pickCard <cardId>"
+                    + "Prossima azione da compiere: pickCard <cardId> (command: myhand  to see personal deck) "
                     + ConsoleColor.RESET);
 
             case PICK_SPECIAL -> System.out.println(ConsoleColor.YELLOW_BOLD
@@ -356,12 +373,26 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
         }
     }
-
+//menu proposto proprio all'avvio della cli
     private void printLobbyHelp() {
         System.out.println();
         System.out.println(ConsoleColor.YELLOW_BOLD + "========== COMANDI LOBBY ==========" + ConsoleColor.RESET);
-        System.out.println("create <nickname> <totemColor> <numPlayers>");
-        System.out.println("join <nickname> <totemColor>");
+        System.out.println(
+                "create <nickname> <totemColor> "
+                        + "(RIGHT TOTEM COLOR: "
+                        + ConsoleColor.GREEN_BOLD
+                        + "BLUE, ORANGE, PURPLE, YELLOW, WHITE"
+                        + ConsoleColor.RESET
+                        + ")"
+        );
+        System.out.println(
+                "join <nickname> <totemColor> "
+                        + "(RIGHT TOTEM COLOR: "
+                        + ConsoleColor.GREEN_BOLD
+                        + "BLUE, ORANGE, PURPLE, YELLOW, WHITE"
+                        + ConsoleColor.RESET
+                        + ")"
+        );
         System.out.println("refresh");
         System.out.println("help");
         System.out.println("quit");
@@ -562,6 +593,31 @@ public class CLIView implements ClientModelObserver {
                     + "================================="
                     + ConsoleColor.RESET);
         }
+    }
+    private void printMyHand(ClientAction currentstate) {
+        if (currentGameView == null || id == null) {
+            showError("Nessuna partita o giocatore associato.");
+            return;
+        }
+
+        if (currentstate == ClientAction.LOBBY || currentstate == ClientAction.WAITING_TO_START) {
+            showError("Non puoi visualizzare la mano prima dell'inizio della partita.");
+            return;
+        }
+
+        PlayerView me = currentGameView.getPlayer(id);
+
+        if (me == null) {
+            showError("Giocatore non trovato.");
+            return;
+        }
+
+        if (me.getMyHand() == null || me.getMyHand().isEmpty()) {
+            showMessage("La tua mano è vuota.");
+            return;
+        }
+
+        cliRenderHelper.printPersonalDeck(me.getMyHand());
     }
 
     private void shutdown() {

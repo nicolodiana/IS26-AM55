@@ -8,6 +8,7 @@ package it.polimi.ingsw.am55.view;
  */
 public enum ClientAction {
     LOBBY,
+    WAITING_TO_START,
     WAITING_FOR_TURN,
     PLACE_TOTEM,
     PICK_CARD,

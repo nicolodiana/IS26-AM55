@@ -12,7 +12,8 @@ public class ConsoleColor {
     public static final String PURPLE = "\033[0;35m";
     public static final String CYAN = "\033[0;36m";
     public static final String WHITE = "\033[0;37m";
-
+    public static final String ORANGE = "\033[38;5;208m";
+    public static final String ORANGE_BOLD = "\033[1;38;5;208m";
     public static final String BLACK_BOLD = "\033[1;30m";
     public static final String RED_BOLD = "\033[1;31m";
     public static final String GREEN_BOLD = "\033[1;32m";
@@ -39,15 +40,12 @@ public class ConsoleColor {
             return WHITE_BRIGHT;
         }
 
-        return switch (color.toLowerCase()) {
-            case "red" -> RED_BOLD;
+        return switch (color.trim().toLowerCase()) {
             case "blue" -> BLUE_BOLD;
-            case "green" -> GREEN_BOLD;
-            case "yellow" -> YELLOW_BOLD;
+            case "orange" -> ORANGE_BOLD;
             case "purple" -> PURPLE_BOLD;
-            case "cyan" -> CYAN_BOLD;
+            case "yellow" -> YELLOW_BOLD;
             case "white" -> WHITE_BOLD;
-            case "black" -> BLACK_BOLD;
             default -> WHITE_BOLD;
         };
     }

@@ -45,16 +45,12 @@ public class ImageResources {
 
         String color = rawColor.trim().toLowerCase(Locale.ROOT);
         return switch (color) {
-            case "blue", "blu" -> "bluetotem.png";
-            case "white", "bianco" -> "whitetotem.png";
-            case "yellow", "giallo" -> "yellowtotem.png";
-            case "orange", "arancione" -> "orangetotem.png";
-            case "pink", "rosa" -> "pinktotem.png";
+            case "blue"-> "bluetotem.png";
+            case "white"-> "whitetotem.png";
+            case "yellow"-> "yellowtotem.png";
+            case "orange"-> "orangetotem.png";
+            case "pink"-> "purpletotem.png";
 
-            // Il model attuale accetta red/black, ma le risorse ricevute sono pink/orange.
-            // Questi fallback evitano immagini mancanti senza cambiare la logica server.
-            case "red", "rosso" -> "pinktotem.png";
-            case "black", "nero" -> "orangetotem.png";
             default -> color + "totem.png";
         };
     }

@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameController {
-
+//Le eccezioni lanciate dal model vengono catturate dal Controller in un ERROR MESSAGE
     private GameModelInterface gameModel;
     private int numPlayers;
 
@@ -30,16 +30,8 @@ public class GameController {
             gameModel = new Game(numPlayers);
             gameModel.addPlayer(playerId, totemColor);
             this.numPlayers = numPlayers;
-
-            if (gameModel.getNumPlayers() == this.numPlayers) {
-                return new UpdateViewMessage(
-                        gameModel.toView(),
-                        "La partita è iniziata!"
-                );
-            }
-
             return new WaitingMessage(
-                    "Partita creata correttamente con id " + gameModel.getIdGame() + ", in attesa di altri player."
+                    "Partita creata correttamente  "+" in attesa di altri player..", gameModel.toView()
             );
 
         } catch (Exception e) {
@@ -56,7 +48,6 @@ public class GameController {
 
         try {
             gameModel.addPlayer(playerId, totemColor);
-
             if (gameModel.getNumPlayers() == this.numPlayers) {
                 return new UpdateViewMessage(
                         gameModel.toView(),
@@ -64,7 +55,9 @@ public class GameController {
                 );
             }
 
-            return new WaitingMessage("Ti sei unito alla partita. In attesa di altri player.");
+            return new WaitingMessage(
+                    "Aggiunto correttamente in partita "+" in attesa di altri player..", gameModel.toView()
+            );
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
@@ -78,9 +71,7 @@ public class GameController {
 
         try {
             gameModel.pickCard(cardId, playerId);
-
             GameView viewAfterPick = gameModel.toView();
-
             /*
              * CASO 1:
              * Fine round normale: devo risolvere gli eventi della lower row(spetta a me se non ho pickspecial da fare)
@@ -88,24 +79,20 @@ public class GameController {
              */
             if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
                 List<MessageToClient> messages = new ArrayList<>();
-
-
-
-
+                //accodo primo messaggio della board post pick
                 messages.add(new UpdateViewMessage(
                         viewAfterPick,
                         "pick done"
                 ));
 
                 List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
-
                 GameView viewAfterResolve = gameModel.toView();
-
+                //accodo 2 messaggio di inizio risoluzione eventi
                 messages.add(new GameBroadcastInfo(
                         "Inizia la risoluzione degli eventi..."
                 ));
+                //ACCODO 3 MESSAGGIO DISTINGUENDO SE HA EVENTI RISOLTI O MENO PERCHE CAMBIA IL MESSAGGIO ASSOCIATO
                 //se non ho eventi da risolvere devo comunque mandare la board aggiornata perche si e fatto swap delle row
-
                 if (resolvedEvents == null || resolvedEvents.isEmpty()) {
                     messages.add(new UpdateViewMessage(
                             viewAfterResolve,
@@ -115,9 +102,8 @@ public class GameController {
                     return new MultipleMessages(messages);
                 }
 
-
+//se invece ci sono eventi da risolvere li copio nella Gameview nella lista dedicada, e poi ritorno la view aggiornata
                 viewAfterResolve.setResolveEvents(resolvedEvents);
-
                 messages.add(new UpdateViewMessage(
                         viewAfterResolve,
                         "Risoluzione eventi completata."
@@ -251,6 +237,9 @@ public class GameController {
             return new ErrorMessage(e.getMessage());
         }
     }
+
+
+
 
 
 }

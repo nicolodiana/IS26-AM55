@@ -13,4 +13,5 @@ public interface ClientCommands {
     void pickSpecial(String playerId, int cardId) throws Exception;
 
     String getPlayerId();
+
 }
