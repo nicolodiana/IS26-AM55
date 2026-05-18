@@ -26,12 +26,23 @@ public class ResolvePaintingsView extends ResolveEventView implements Serializab
                 '}';
     }
 
-    public void showEvent() {
-        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+//    public void showEvent() {
+//        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
+//
+//        for (String id : effectToPP.keySet()) {
+//            System.out.println("Food gained/lost by " + id + ": " + effectToPP.get(id));
+//            System.out.println("\nPP gained/lost by " + id + ": " + effectToPlayer.get(id));
+//        }
+//    }
+
+    public StringBuilder showEvent() {
+        StringBuilder result = new StringBuilder();
 
         for (String id : effectToPP.keySet()) {
-            System.out.println("Food gained by " + id + ": " + effectToPP.get(id));
-            System.out.println("PP gained by " + id + ": " + effectToPlayer.get(id));
+            result.append("Food gained/lost by " + id + ": " + effectToPP.get(id) +
+                            "PP gained/lost by " + id + ": " + effectToPlayer.get(id) + "\n");
         }
+
+        return result;
     }
 }

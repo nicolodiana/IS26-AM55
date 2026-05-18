@@ -81,8 +81,6 @@ public class SustenanceEventCard extends EventCard {
             p.payPP(unfedCharacters * numPP);
             effectToPP.put(p.getNickname(), unfedCharacters * numPP);
         }
-        System.out.println("DOPO PUT PP: " + effectToPP);
-        System.out.println("DOPO PUT food: " + effectToFood);
     }
 
     public int getOrder(){
@@ -91,6 +89,5 @@ public class SustenanceEventCard extends EventCard {
 
     public SustenanceEventView toView() { return new SustenanceEventView(getId(), this.era, this.numPP); }
     public ResolveSustenanceView toViewResolve() {
-        System.out.println("SONO TO VIEW REOSLVE DI SUSTENANCE");
         return new ResolveSustenanceView(effectToFood, effectToPP, "SUSTENANCE"); }
 }

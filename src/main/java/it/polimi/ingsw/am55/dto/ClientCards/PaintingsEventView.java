@@ -19,11 +19,10 @@ public class PaintingsEventView extends CardView {
 
     @Override
     public String toString() {
-        return "| PaintingsEventView{" +
-                "upperPP=" + upperPP +
-                ", lowerPP=" + lowerPP +
-                ", upperNumberOfArtist=" + upperNumberOfArtist +
-                ", lowerNumberOfArtist=" + lowerNumberOfArtist +
-                "} |";
+        return "Cave Paintings Event" +
+                "\nUpper PP: " + upperPP +
+                "\nLower PP: " + lowerPP +
+                "\nUpperNumberOfArtist: " + upperNumberOfArtist +
+                "\nLowerNumberOfArtist: " + lowerNumberOfArtist;
     }
 }

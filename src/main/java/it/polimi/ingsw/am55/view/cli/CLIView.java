@@ -534,7 +534,8 @@ public class CLIView implements ClientModelObserver {
 
         System.out.println(ConsoleColor.CYAN_BOLD + "RESOLVE EVENTS" + ConsoleColor.RESET);
         for (ResolveEventView view : gameView.getResolveEvents()) {
-            view.showEvent();
+            System.out.println(ConsoleColor.RED_BOLD + view.getNameEvent() + ConsoleColor.RESET);
+            System.out.println(view.showEvent());
             System.out.println();
         }
 

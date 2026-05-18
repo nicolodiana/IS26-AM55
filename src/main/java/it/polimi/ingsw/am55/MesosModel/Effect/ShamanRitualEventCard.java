@@ -65,9 +65,6 @@ public class ShamanRitualEventCard extends EventCard {
                 }
             }
         }
-
-        /// occhio sono test
-        System.out.println("DOPO PUT PP: " + effectToPP);
     }
     public int getOrder(){
         return 2;
@@ -76,7 +73,6 @@ public class ShamanRitualEventCard extends EventCard {
     public ShamanRitualView toView() { return new ShamanRitualView(getId(), this.era, this.maxPP, this.minPP); }
 
     public ResolveShamanRitualView toViewResolve() {
-        System.out.println("SONO TO VIEW RESOLVE DI SHAMAN RITUAL");
         return new ResolveShamanRitualView(effectToPP, "SHAMAN RITUAL"); }
 
 }

@@ -15,6 +15,6 @@ public class CollectorCardView extends CardView {
 
     @Override
     public String toString() {
-        return "| Collector {id= " + id + "} |";
+        return "Collector";
     }
 }

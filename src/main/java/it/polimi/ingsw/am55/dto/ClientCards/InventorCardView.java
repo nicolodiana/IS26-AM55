@@ -19,6 +19,7 @@ public class InventorCardView extends CardView {
 
     @Override
     public String toString() {
-        return "| Inventor with " + iconInvention + " {id=" + id + "} |";
+        return "Inventor" +
+                "\nIcon: " + iconInvention;
     }
 }

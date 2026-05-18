@@ -22,13 +22,12 @@ public class BuildingCardView extends CardView {
 
     @Override
     public String toString() {
-        return type + " {" +
-                "id=" + id +
-                ", foodCost=" + foodCost +
-                ", numOfPP=" + numOfPP +
-                //", type=" + type +
-                ", CharType=" + CharType +
-                ", effectPP=" + effectPP +
-                '}';
+        return //type + " " +
+                "Id: " + id +
+                "\nFood cost: " + foodCost +
+                "\nNum of PP: " + numOfPP +
+                "\nType: " + type +
+                "\nCharType: " + CharType +
+                "\nEffect to PP: " + effectPP;
     }
 }

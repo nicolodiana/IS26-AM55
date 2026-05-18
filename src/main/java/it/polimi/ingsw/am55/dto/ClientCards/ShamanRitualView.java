@@ -14,9 +14,8 @@ public class ShamanRitualView extends CardView {
 
     @Override
     public String toString() {
-        return "| ShamanRitualView{" +
-                "maxPP=" + maxPP +
-                ", minPP=" + minPP +
-                "} |";
+        return  "Shaman Ritual Event" +
+                "\nMax PP: " + maxPP +
+                "\nMin PP: " + minPP;
     }
 }

@@ -17,6 +17,7 @@ public class HuntEventView extends CardView {
 
     @Override
     public String toString() {
-        return "| Hunting Event: " + this.numPP + " PP |";
+        return "Hunt Event" +
+                "\nNum of PP: " + this.numPP;
     }
 }

@@ -13,8 +13,7 @@ public class SustenanceEventView extends CardView {
 
     @Override
     public String toString() {
-        return "| SustenanceEventView{" +
-                "numPP=" + numPP +
-                "} |";
+        return  "Sustenance Event" +
+                "\nNumPP: " + numPP;
     }
 }

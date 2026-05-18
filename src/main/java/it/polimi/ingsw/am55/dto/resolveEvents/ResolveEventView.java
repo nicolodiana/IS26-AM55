@@ -19,5 +19,6 @@ public class ResolveEventView implements Serializable {
         return nameEvent;
     }
 
-    public void showEvent() {}
+    //public void showEvent() {}
+    public StringBuilder showEvent() { return new StringBuilder(); }
 }

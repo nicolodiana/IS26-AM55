@@ -50,9 +50,6 @@ public class PaintingsEventCard extends EventCard {
                 effectToPP.put(p.getNickname(), counterArtist * lowerPP);
             }
         }
-
-        System.out.println("DOPO PUT PP: " + effectToPP);
-        System.out.println("DOPO PUT PP: " + effectToFood);
     }
 
     public int getOrder(){
@@ -63,7 +60,6 @@ public class PaintingsEventCard extends EventCard {
             this.upperNumberOfArtist, this.lowerNumberOfArtist); }
 
     public ResolvePaintingsView toViewResolve() {
-        System.out.println("SONO TO VIEW REOSLVE DI PAINTINGS");
         return new ResolvePaintingsView(effectToFood, effectToPP, "PAINTINGS"); }
 
 }

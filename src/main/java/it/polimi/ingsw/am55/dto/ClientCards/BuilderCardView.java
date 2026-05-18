@@ -24,6 +24,8 @@ public class BuilderCardView extends CardView {
 
     @Override
     public String toString() {
-        return "| Builder with " + numPP + "PP {id=" + id + "} |";
+        return "Builder " +
+                "\nNum of PP: " + numPP +
+                "\nBuilding discount: " + pickbuildingdiscount + " food";
     }
 }
