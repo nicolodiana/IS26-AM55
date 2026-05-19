@@ -12,20 +12,20 @@ public interface VirtualServer {
      * Azione richiesta dal client: placeTotem.
      */
 
-    void createGame(String playerId, String totemColor, int numPlayers) throws Exception;
-
-    void joinGame(String playerId, String totemColor) throws Exception;
+    void createGame(String playerId, String totemColor, int numPlayers,VirtualView sender) throws Exception;
+    void joinGame(String playerId, String totemColor,VirtualView sender) throws Exception;
 
     void placeTotem(String playerId, int index) throws Exception;
 
     void pickCard(String playerId, int cardId) throws Exception;
+
     void pickSpecial(String playerId, int cardId) throws Exception;
 
     void ping (VirtualView client) throws Exception;
 
     void quitGame(String playerId) throws Exception;
 
-    void closeConnections(VirtualView sender) throws Exception;
+    void closeConnection(String playerId) throws Exception;
     /*
 
     void endTurn(String playerId) throws Exception;

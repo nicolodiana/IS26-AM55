@@ -2,6 +2,8 @@ package it.polimi.ingsw.am55.virtualview;
 
 import it.polimi.ingsw.am55.message.MessageToClient;
 
+import java.rmi.RemoteException;
+
 public interface VirtualView {
 
     /**

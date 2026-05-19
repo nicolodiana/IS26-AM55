@@ -24,25 +24,27 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
 
     @Override
     public void connect(String playerId, VirtualViewRmi client) throws RemoteException {
-        // connect rimane SINCRONA — deve registrare il client subito
-        serverApplication.registerClient(playerId, client);
+        // La registrazione non avviene più qui.
+        // Viene rimandata a create/join, e solo se la richiesta è valida.
+        System.out.println("[RMI_SERVER] connect ricevuta per " + playerId + " ma registrazione rimandata a create/join.");
     }
 
     @Override
-    public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
+    public void createGame(String playerId, String totemColor, int numPlayers, VirtualView client) throws RemoteException {
         rmiExecutor.submit(() -> {
-            try { serverApplication.executeCommand(new CreateGameCommand(playerId, totemColor, numPlayers), null); }
+            try { serverApplication.executeCommand(new CreateGameCommand(playerId, totemColor, numPlayers), client); }
             catch (Exception e) { e.printStackTrace(); }
         });
     }
 
     @Override
-    public void joinGame(String playerId, String totemColor) throws RemoteException {
+    public void joinGame(String playerId, String totemColor, VirtualView client) throws RemoteException {
         rmiExecutor.submit(() -> {
-            try { serverApplication.executeCommand(new JoinGameCommand(playerId, totemColor), null); }
+            try { serverApplication.executeCommand(new JoinGameCommand(playerId, totemColor),client); }
             catch (Exception e) { e.printStackTrace(); }
         });
     }
+
 
     @Override
     public void placeTotem(String playerId, int index) throws RemoteException {
@@ -100,13 +102,14 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
     }
 
     @Override
-    public void closeConnections(VirtualView sender) throws RemoteException {
+    public void closeConnection(String playerId) throws RemoteException {
         rmiExecutor.submit(() -> {
             try {
-                serverApplication.executeCommand(new CloseConnectionsCommand(), sender);
+                serverApplication.executeCommand(new CloseConnectionCommand(playerId), null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
     }
+
 }

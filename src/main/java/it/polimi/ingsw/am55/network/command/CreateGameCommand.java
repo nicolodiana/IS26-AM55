@@ -24,10 +24,6 @@ public class CreateGameCommand implements ServerCommand {
 
     @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
-        if (sender != null) {
-            serverApplication.registerClient(playerId, sender);
-        }
-
-        serverApplication.createGame(playerId, totemColor, numPlayers);
+        serverApplication.createGame(playerId, totemColor, numPlayers, sender);
     }
 }

@@ -3,6 +3,8 @@ package it.polimi.ingsw.am55.network;
 import it.polimi.ingsw.am55.controller.GameController;
 import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.message.ErrorMessage;
+import it.polimi.ingsw.am55.message.StartPingMessage;
 import it.polimi.ingsw.am55.network.command.PingCommand;
 import it.polimi.ingsw.am55.message.QuitGameMessage;
 import it.polimi.ingsw.am55.message.SoloQuitMessage;
@@ -38,8 +40,20 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] ServerApplication creata.");
     }
 
-    public void registerClient(String playerId, VirtualView client) {
+    public boolean registerClient(String playerId, VirtualView client) {
+        if (client == null) {
+            System.out.println("[SERVER_APP] ERRORE: VirtualView nulla per: " + playerId);
+            return false;
+        }
+
         synchronized (clients) {
+            VirtualView alreadyRegistered = clients.get(playerId);
+
+            if (alreadyRegistered != null && alreadyRegistered != client) {
+                System.out.println("[SERVER_APP] ERRORE: nickname già registrato: " + playerId);
+                return false;
+            }
+
             clients.put(playerId, client);
 
             System.out.println("[SERVER_APP] Registrato client: " + playerId);
@@ -51,6 +65,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         }
         startAliveChecker();
 
+        return true;
     }
 
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
@@ -76,7 +91,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     }
 
     @Override
-    public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
+    public void createGame(String playerId, String totemColor, int numPlayers, VirtualView sender) throws Exception {
         System.out.println("[SERVER_APP] createGame chiamato da: "
                 + playerId
                 + ", colore = "
@@ -89,11 +104,11 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] createGame ha prodotto messaggio: "
                 + message.getClass().getSimpleName());
 
-        message.deliver(playerId, this);
+        completeConnectionSetup(playerId, sender, message);
     }
 
     @Override
-    public void joinGame(String playerId, String totemColor) throws Exception {
+    public void joinGame(String playerId, String totemColor, VirtualView sender) throws Exception {
         System.out.println("[SERVER_APP] joinGame chiamato da: "
                 + playerId
                 + ", colore = "
@@ -104,7 +119,39 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] joinGame ha prodotto messaggio: "
                 + message.getClass().getSimpleName());
 
+
+        completeConnectionSetup(playerId, sender, message);
+    }
+
+    private void completeConnectionSetup(String playerId, VirtualView sender, MessageToClient message) throws Exception {
+
+        // Se create/join fallisce, NON registro il sender nella mappa clients.
+        // Inoltre invio l'errore direttamente al richiedente, altrimenti con un nickname duplicato
+        // l'ErrorMessage finirebbe al vecchio client già registrato con quel nickname.
+        if (!message.isConnectionSetupSuccessful()) {
+            sender.onMessage(message);
+            return;
+        }
+
+        if (!registerClient(playerId, sender)) {
+            sender.onMessage(new ErrorMessage("Nickname already exists"));
+            return;
+        }
+
         message.deliver(playerId, this);
+        authorizeClientPing(playerId, sender);
+    }
+
+    private void authorizeClientPing(String playerId, VirtualView client) {
+        try {
+            client.onMessage(new StartPingMessage());;
+            System.out.println("[PING] Autorizzazione ping inviata a: " + playerId);
+        } catch (Exception e) {
+            System.out.println("[PING] Impossibile autorizzare il ping per "
+                    + playerId
+                    + ": "
+                    + e.getMessage());
+        }
     }
 
     @Override
@@ -178,33 +225,27 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
     //Chiusura di tutte le connessioni a seguito di fine partita oppure di crash di un client oppure perché un client
     //richiede di disconnettersi
     @Override
-    public void closeConnections(VirtualView sender) throws Exception {
+    public void closeConnection(String playerId) throws Exception {
         System.out.println("[SERVER_APP] Tutti i client verranno disconnessi");
-        if(pingTimer!=null){
-            pingTimer.cancel();
-        }
-        List<Map.Entry<String, VirtualView>> clientsToClose;
-
+        VirtualView sender;
         synchronized (clients) {
-            clientsToClose = new ArrayList<>(clients.entrySet());
-            clients.clear();
+            sender = clients.get(playerId);
+            clients.remove(playerId);
         }
         synchronized (lastPingByClient) {
-            lastPingByClient.clear();
+            lastPingByClient.remove(sender);
         }
-
-        for (Map.Entry<String, VirtualView> entry : clientsToClose) {
-            String playerId = entry.getKey();
-            VirtualView client = entry.getValue();
-
-            System.out.println("[SERVER_APP] Il giocatore " + playerId + " è stato disconnesso");
-            client.close();
+        if (sender != null) {
+            sender.close();
         }
     }
 
     //TODO Da implementare!
     @Override
     public void ping(VirtualView client) throws Exception {
+        if (client == null) {
+            return;
+        }
         synchronized (lastPingByClient) {
             lastPingByClient.put(client, System.currentTimeMillis());
         }
@@ -224,6 +265,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
         System.out.println("[PING] Alive checker AVVIATO");
     }
+
     private void checkPingTimeouts() {
         List<VirtualView> disconnectedClients = new ArrayList<>();
         long now = System.currentTimeMillis();
@@ -237,7 +279,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
                 if (elapsed > PING_TIMEOUT_MS) {
                     disconnectedClients.add(client);
-                    pingTimer.cancel();
                 }
             }
         }
@@ -263,6 +304,10 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         synchronized (lastPingByClient) {
             lastPingByClient.remove(disconnectedClient);
         }
+        synchronized (clients) {
+            clients.remove(disconnectedPlayer);
+        }
+//        stopAliveCheckerIfNoClients();
         //notifyAllClients("Il player si è disconnesso: "+disconnectedPlayer+ " la partita termina.");
         //Quando il client si disconnette: si dichiara il game in stato crashed
         MessageToClient message= null;

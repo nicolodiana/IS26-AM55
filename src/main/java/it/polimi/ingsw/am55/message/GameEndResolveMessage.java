@@ -24,6 +24,7 @@ public class GameEndResolveMessage implements MessageToClient {
         model.setEndGameResultView(endGameResultView);
         model.setStateRequest(message);
         model.setGameStarted(false);
+        model.setGameEnded(true);
         model.setLastMessageUpdatedGameView(true);
     }
 

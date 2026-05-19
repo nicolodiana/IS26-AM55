@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.rmi.RemoteException;
 
 public class SocketClientHandler implements VirtualViewSocket{
 
@@ -17,6 +18,7 @@ public class SocketClientHandler implements VirtualViewSocket{
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     private final ServerApplication serverApplication;
+    private String playerId;
     private Thread virtualViewThread;
 
 
@@ -63,6 +65,20 @@ public class SocketClientHandler implements VirtualViewSocket{
         output.flush();
         output.reset();
     }
+
+//    @Override
+//    public String getPlayerId() throws Exception {
+//        if(playerId == null){
+//            throw new Exception("PlayerId non configurato");
+//        }else{
+//            return this.playerId;
+//        }
+//    }
+//
+//    @Override
+//    public void setPlayerId(String playerId) throws Exception {
+//        this.playerId = playerId;
+//    }
 
 
     //Permette la chiusura del socket(dovrebbe essere invocato in serverapplication)

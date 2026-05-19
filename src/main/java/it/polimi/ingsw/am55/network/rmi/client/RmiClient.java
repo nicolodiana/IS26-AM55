@@ -3,6 +3,7 @@ package it.polimi.ingsw.am55.network.rmi.client;
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientCommands;
+import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
 
 import java.rmi.RemoteException;
@@ -20,12 +21,13 @@ import java.util.TimerTask;
  * - inoltrare i messaggi ricevuti al ClientModel
  * - offrire metodi di rete chiamabili dal ClientController
  */
-public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, ClientCommands {
+public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, ClientCommands, ClientConnectionControl {
 
     private final VirtualServerRmi server;
     private final ClientModel model;
     private String playerId;
     private Timer timer;
+    private boolean pingStarted;
 
     public RmiClient(VirtualServerRmi server, ClientModel model) throws RemoteException {
         super();
@@ -33,13 +35,22 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.model = model;
         this.playerId = null;
         this.timer = new Timer(true);
+        this.pingStarted = false;
     }
 
     @Override
     public void onMessage(MessageToClient message) throws RemoteException {
-        model.update(message);
-        if(model.isGameCrashed() || model.isGameEnded()){//Se rilevo la fine della paritita oppure game crashato =>chiudo tutte le connessioni
-            server.closeConnections(this);
+        if(message.shouldUpdateModel()){
+            model.update(message);
+            if(model.isGameCrashed() || model.isGameEnded()){//Se rilevo la fine della paritita oppure game crashato =>chiudo tutte le connessioni
+                server.closeConnection(this.playerId);
+            }
+        }else{
+            try{
+                message.executeClientNetworkAction(this);
+            }catch (Exception e){
+                System.out.println("[RMI CLIENT] Non è possibile avviare il ping");
+            }
         }
     }
 
@@ -56,17 +67,13 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
         this.playerId = playerId;
-        server.connect(playerId, this);
-        server.createGame(playerId, totemColor, numPlayers);
-        startPing();
+        server.createGame(playerId, totemColor, numPlayers, this);
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws RemoteException {
         this.playerId = playerId;
-        server.connect(playerId, this);
-        server.joinGame(playerId, totemColor);
-        startPing();
+        server.joinGame(playerId, totemColor, this);
     }
 
     @Override
@@ -105,13 +112,19 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     che si attiva periodicamente e faccia una richiesta
     remota la server, chiamando la funzione ping
     * */
-    private void startPing(){
+    @Override
+    public synchronized void startPing(){
+        if (pingStarted) {
+            return;
+        }
+        pingStarted = true;
+
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 try {
                     pingToServer();
                 } catch (Exception e) {
-                    System.out.println("[SOCKET_CLIENT] Invio ping fallito. Chiudo il client.");
+                    System.out.println("[RMI_CLIENT] Invio ping fallito. Chiudo il client.");
                     try {
                         close();
                     } catch (RemoteException ex) {

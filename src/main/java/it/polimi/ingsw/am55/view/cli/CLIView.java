@@ -89,8 +89,7 @@ public class CLIView implements ClientModelObserver {
                 askQuitGame(this.id);
                 return;
             }
-
-            model.removeObserver(this);
+            //model.removeObserver(this);
             //System.exit(0);
             return;
         }
@@ -298,6 +297,7 @@ public class CLIView implements ClientModelObserver {
     // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
     @Override
     public void onModelChanged(ClientModel updatedModel) {
+        this.waitingServerResponse=false;
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
@@ -324,10 +324,10 @@ public class CLIView implements ClientModelObserver {
             printEndGameResult(endGameResultView);
         }
 
-        if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
-            scheduleExpectedActionPrint(4);
-            return;
-        }
+//        if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
+//            scheduleExpectedActionPrint(4);
+//            return;
+//        }
         if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
             showMessage("Partita terminata. Chiusura connessioni in corso...");
             model.removeObserver(this);

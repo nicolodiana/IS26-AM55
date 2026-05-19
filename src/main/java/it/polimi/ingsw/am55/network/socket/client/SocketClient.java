@@ -4,13 +4,14 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.command.QuitGameCommand;
 import it.polimi.ingsw.am55.network.ClientCommands;
+import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.*;
 import java.io.*;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class SocketClient implements ClientCommands {
+public class SocketClient implements ClientCommands, ClientConnectionControl {
 
     private final ClientModel model;
     private ObjectInputStream input;
@@ -20,6 +21,7 @@ public class SocketClient implements ClientCommands {
     private Timer timer;//Consente di schedulare un thread in modo da lanciarlo periodicamente
     private volatile boolean running = true;
     private Thread virtualServerThread;
+    private boolean pingStarted;
 
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
     public SocketClient(String host, int port ,ClientModel model) throws IOException {
@@ -28,13 +30,20 @@ public class SocketClient implements ClientCommands {
         this.input = new ObjectInputStream(socket.getInputStream());
         this.output = new ObjectOutputStream(socket.getOutputStream());
         this.timer = new Timer(true);
+        this.pingStarted = false;
 
         runVirtualServer();
     }
 
     //Gestione del ping delegata ad un esecutore che viene attivato periodicamente
     //1.5 s
-    private void startPing(){
+    @Override
+    public synchronized void startPing(){
+        if (pingStarted) {
+            return;
+        }
+        pingStarted = true;
+
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 try {
@@ -54,11 +63,15 @@ public class SocketClient implements ClientCommands {
                     MessageToClient response = (MessageToClient) input.readObject();
 
                     if(response != null){
-                        synchronized (model) {
-                            model.update(response);
-                            if(model.isGameEnded() || model.isGameCrashed()){
-                                sendCommand(new CloseConnectionsCommand());
+                        if(response.shouldUpdateModel()){
+                            synchronized (model) {
+                                model.update(response);
+                                if(model.isGameEnded() || model.isGameCrashed()){
+                                    sendCommand(new CloseConnectionCommand(this.playerId));
+                                }
                             }
+                        }else{
+                            response.executeClientNetworkAction(this);
                         }
                     }
                     //Serve perché voglio che il socket client invii verso il server una richiesta
@@ -84,6 +97,7 @@ public class SocketClient implements ClientCommands {
     }
 
     public void close() throws IOException {
+        running = false;
         try {
             timer.cancel(); //Viene interrotto il ping
         } catch (Exception ignored) {}
@@ -102,14 +116,12 @@ public class SocketClient implements ClientCommands {
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
         this.playerId = playerId;
         sendCommand(new CreateGameCommand(playerId, totemColor, numPlayers));
-        startPing();
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws Exception {
         this.playerId = playerId;
         sendCommand(new JoinGameCommand(playerId, totemColor));
-        startPing();
     }
 
     @Override

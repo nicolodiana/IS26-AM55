@@ -21,4 +21,9 @@ public class ErrorMessage implements MessageToClient {
     public void deliver(String playerId, MessageDelivery context) {
         context.sendTo(playerId, this);
     }
+
+    @Override
+    public boolean isConnectionSetupSuccessful() {
+        return false;
+    }
 }
