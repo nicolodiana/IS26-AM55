@@ -106,10 +106,11 @@ public class CLIView implements ClientModelObserver {
         ClientAction action = actionResolver.resolve(currentGameView, id);
 
         if (command.equals("myhand") || command.equals("hand")) {
-            printMyHand(action);
-            printExpectedAction(); //per riprendere con l'azione da intraprendere per continuare il gioco
+            handleHandCommand(action, parts);
+            printExpectedAction();
             return;
         }
+
 
         if (waitingServerResponse) {
             System.out.println(ConsoleColor.YELLOW_BOLD
@@ -136,7 +137,15 @@ public class CLIView implements ClientModelObserver {
             case WAITING_FOR_STATE -> showMessage("Nessuna azione disponibile: attendi un aggiornamento dello stato.");
         }
     }
+    private void handleHandCommand(ClientAction currentState, String[] parts) {
+        if (parts.length > 2) {
+            showError("Uso corretto: myhand oppure myhand <nickname>");
+            return;
+        }
 
+        String targetNickname = parts.length == 2 ? parts[1].trim() : id;
+        printHand(currentState, targetNickname);
+    }
     private void handleLobbyCommand(String command, String[] parts) {
         switch (command) {
             case "create" -> handleCreateCommand(parts);
@@ -587,9 +596,6 @@ public class CLIView implements ClientModelObserver {
             view.showEvent();
             System.out.println();
         }
-
-        System.out.println(ConsoleColor.CYAN_BOLD + "END RESOLVE EVENTS" + ConsoleColor.RESET);
-        System.out.println(ConsoleColor.CYAN_BOLD + "=========================" + ConsoleColor.RESET);
     }
 
     private void printEndGameResult(EndGameResultView result) {
@@ -603,7 +609,8 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
 
             for (ResolveEventView view : result.getResolvedEvents()) {
-                view.showEvent();
+                System.out.println(ConsoleColor.RED_BOLD + view.getNameEvent() + ConsoleColor.RESET);
+                System.out.println(view.showEvent());
                 System.out.println();
             }
         }
@@ -644,30 +651,35 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
         }
     }
-    private void printMyHand(ClientAction currentstate) {
-        if (currentGameView == null || id == null) {
-            showError("Nessuna partita o giocatore associato.");
-            return;
-        }
 
-        if (currentstate == ClientAction.LOBBY || currentstate == ClientAction.WAITING_TO_START) {
+    private void printHand(ClientAction currentState, String targetNickname) {
+        if (currentState == ClientAction.LOBBY || currentState == ClientAction.WAITING_TO_START) {
             showError("Non puoi visualizzare la mano prima dell'inizio della partita.");
             return;
         }
 
-        PlayerView me = currentGameView.getPlayer(id);
+        PlayerView targetPlayer = null;
 
-        if (me == null) {
-            showError("Giocatore non trovato.");
+        for (PlayerView player : currentGameView.getPlayers()) {
+            if (player.getNickname().equalsIgnoreCase(targetNickname)) {
+                targetPlayer = player;
+                break;
+            }
+        }
+
+        if (targetPlayer == null) {
+            showError("Giocatore non trovato: " + targetNickname);
             return;
         }
 
-        if (me.getMyHand() == null || me.getMyHand().isEmpty()) {
-            showMessage("La tua mano è vuota.");
-            return;
-        }
+        boolean isMyHand = targetPlayer.getNickname().equalsIgnoreCase(id);
 
-        cliRenderHelper.printPersonalDeck(me.getMyHand());
+
+        cliRenderHelper.printPersonalDeck(
+                targetPlayer.getMyHand(),
+                targetPlayer.getNickname(),
+                isMyHand
+        );
     }
 
     private void shutdown() {

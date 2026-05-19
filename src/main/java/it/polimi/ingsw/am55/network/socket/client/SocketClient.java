@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class SocketClient implements ClientCommands, ClientConnectionControl {
+public class SocketClient implements ClientCommands {
 
     private final ClientModel model;
     private ObjectInputStream input;

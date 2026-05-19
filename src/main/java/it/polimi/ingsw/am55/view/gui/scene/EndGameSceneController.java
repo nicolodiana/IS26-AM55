@@ -83,11 +83,19 @@ public class EndGameSceneController implements GenericSceneController {
         }
 
         for (ResolveEventView event : result.getResolvedEvents()) {
-            Label title = new Label(event.getNameEvent());
+            VBox eventBox = new VBox(4);
+            eventBox.getStyleClass().add("event-box");
+
+            String name = event == null ? "Evento" : event.getNameEvent();
+
+            Label title = new Label(name == null ? "Evento" : name);
             title.getStyleClass().add("event-title");
-            Label details = new Label(event.toString());
+
+            Label details = new Label(event == null ? "" : event.showEvent().toString());
             details.setWrapText(true);
-            finalEventsBox.getChildren().addAll(title, details);
+
+            eventBox.getChildren().addAll(title, details);
+            finalEventsBox.getChildren().add(eventBox);
         }
     }
 

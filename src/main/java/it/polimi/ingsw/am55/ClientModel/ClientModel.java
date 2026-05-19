@@ -32,8 +32,8 @@ public class ClientModel {
         this.gameStarted = false;
         this.observers = new ArrayList<>();
         this.myHand = new ArrayList<>();
-       // this.gameEnded = false;
-       // this.gameCrashed = false;
+        this.gameEnded = false;
+        this.gameCrashed = false;
     }
 
     public void update(MessageToClient message) {

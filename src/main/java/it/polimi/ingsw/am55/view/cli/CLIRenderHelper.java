@@ -28,22 +28,23 @@ public class CLIRenderHelper {
         cliBoard(boardView);
         System.out.println(boardData);
     }
-    public void printPersonalDeck(List<CardView> cards) {
+    public void printPersonalDeck(List<CardView> cards, String ownerNickname, boolean isMyHand) {
         System.out.println();
 
+        String title = isMyHand
+                ? "MY HAND"
+                : ownerNickname + "'s HAND";
+
         if (cards == null || cards.isEmpty()) {
-            System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "La tua mano è vuota."
+            System.out.println(ConsoleColor.RED_BOLD
+                    + title + " is empty ."
                     + ConsoleColor.RESET);
             return;
         }
 
-        System.out.println(ConsoleColor.GREEN_BOLD
-                + "========== MY HAND =========="
-                + ConsoleColor.RESET);
 
         System.out.println(renderCardRow(
-                "PERSONAL DECK",
+                title,
                 cards,
                 ConsoleColor.GREEN_BOLD
         ));

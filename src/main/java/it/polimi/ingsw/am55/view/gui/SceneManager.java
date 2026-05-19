@@ -62,6 +62,9 @@ public final class SceneManager {
             showLobbyScene();
         }
     }
+    public static void showQuitGameScene() {
+        changeRoot("/it/polimi/ingsw/am55/fxml/QuitGameScene.fxml");
+    }
 
     public static void showEndGameScene() {
         changeRoot("/it/polimi/ingsw/am55/fxml/EndGameScene.fxml");

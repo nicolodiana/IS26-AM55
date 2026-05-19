@@ -245,7 +245,7 @@ public class GameController {
             gameModel.quitGame();
 
             return new QuitGameMessage(gameModel.toView(),
-                    "Il giocatore " + playerId + " ha chiesto di uscire. La partita è terminata. Chiusura connessioni in corso...");
+                    "PLAYER  " + playerId + " has quitted. The game is finshed , connection are closed ");
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());

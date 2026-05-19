@@ -222,6 +222,8 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] Broadcast di quit completato.");
     }
 
+
+
     //Chiusura di tutte le connessioni a seguito di fine partita oppure di crash di un client oppure perché un client
     //richiede di disconnettersi
     @Override

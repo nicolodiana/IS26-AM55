@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="it.polimi.ingsw.am55.view.gui.scene.QuitGameSceneController"
+            stylesheets="@../css/gui.css"
+            styleClass="root-pane">
+
+    <center>
+        <VBox alignment="CENTER" spacing="22" styleClass="quit-card">
+            <padding>
+                <Insets top="50" right="70" bottom="50" left="70"/>
+            </padding>
+
+            <Label text="Partita terminata" styleClass="quit-title"/>
+            <Label fx:id="messageLabel"
+                   wrapText="true"
+                   textAlignment="CENTER"
+                   styleClass="quit-message"/>
+        </VBox>
+    </center>
+</BorderPane>

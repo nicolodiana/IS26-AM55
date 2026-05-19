@@ -10,6 +10,7 @@ import it.polimi.ingsw.am55.view.ClientModelObserver;
 import it.polimi.ingsw.am55.view.gui.scene.EndGameSceneController;
 import it.polimi.ingsw.am55.view.gui.scene.GameSceneController;
 import it.polimi.ingsw.am55.view.gui.scene.LobbySceneController;
+import it.polimi.ingsw.am55.view.gui.scene.QuitGameSceneController;
 import javafx.application.Platform;
 
 import java.util.Objects;
@@ -93,15 +94,23 @@ public class GuiView implements ClientModelObserver {
 
             case END_GAME -> {
                 EndGameResultView endGameResult = model.getEndGameResultView();
+
                 if (endGameResult != null) {
                     showEndGame(endGameResult);
                 } else {
-                    showGame(currentGameView, action);
+                    showQuitGame(currentInfoMessage);
                 }
             }
-
             default -> showGame(currentGameView, action);
         }
+    }
+    private void showQuitGame(String message) {
+        SceneManager.showQuitGameScene();
+
+        QuitGameSceneController controller =
+                (QuitGameSceneController) SceneManager.getActiveController();
+
+        controller.render(message);
     }
 
     private void showLobby(boolean locked) {
@@ -176,7 +185,13 @@ public class GuiView implements ClientModelObserver {
             end.showStatus("Errore: " + message);
         }
     }
+    public void quitGame() {
+        if (!ensureActionHandler() || playerId == null) {
+            return;
+        }
 
+        submitCommand(() -> actionHandler.onQuitGameSelected(playerId));
+    }
     public void createGame(String playerId, String totemColor, int numPlayers) {
         if (!ensureActionHandler()) {
             return;
