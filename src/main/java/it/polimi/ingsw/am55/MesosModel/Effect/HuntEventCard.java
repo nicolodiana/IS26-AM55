@@ -18,8 +18,8 @@ public class HuntEventCard extends EventCard {
     private Map<String, Integer> effectToPP = new HashMap<>();
 
     public HuntEventCard(int id, int era, int numPP) {
-        this.numPP = numPP;
         super(id, era);
+        this.numPP = numPP;
     }
 
     //evento caccia
