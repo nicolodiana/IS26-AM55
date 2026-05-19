@@ -1,6 +1,5 @@
 package it.polimi.ingsw.am55.dto.ClientCards;
 
-import it.polimi.ingsw.am55.ClientModel.ClientCard;
 import it.polimi.ingsw.am55.dto.CardView;
 
 public class CollectorCardView extends CardView {

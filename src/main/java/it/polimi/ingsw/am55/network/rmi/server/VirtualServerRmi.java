@@ -36,7 +36,7 @@ public interface VirtualServerRmi extends Remote, VirtualServer {
 
     void quitGame(String id) throws RemoteException;
 
-    void closeConnections(VirtualView sender) throws RemoteException;
+    void closeConnection(String playerId) throws RemoteException;
 
     /*
     altri metodi da aggiungere: dovranno poi anche aggiungersi dentro RMIServer che

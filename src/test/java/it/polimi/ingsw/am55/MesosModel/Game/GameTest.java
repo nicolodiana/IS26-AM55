@@ -8,11 +8,11 @@ import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -89,9 +89,9 @@ class GameTest {
     @Test
     void testAddPlayerToGame_ExceedingLimit() throws PlayerNumberOutOfRange{
         g.addPlayer("Player1", "white");
-        g.addPlayer("Player2", "black");
+        g.addPlayer("Player2", "Blue");
         assertEquals(2, g.getNumPlayers());
-        assertThrows(PlayerNumberOutOfRange.class, ()->g.addPlayer("Player3", "red"));
+        assertThrows(PlayerNumberOutOfRange.class, ()->g.addPlayer("Player3", "orange"));
         assertEquals(2, g.getNumPlayers());
     }
 
@@ -105,7 +105,7 @@ class GameTest {
     void testAddPlayerToGame_NicknameAlreadyUsed() throws PlayerNumberOutOfRange {
         g.addPlayer("Player1", "white");
         assertEquals(1, g.getNumPlayers());
-        assertThrows(NicknameAlreadyUsed.class,()->g.addPlayer("Player1", "black"));
+        assertThrows(NicknameAlreadyUsed.class,()->g.addPlayer("Player1", "blue"));
         assertEquals(1, g.getNumPlayers());
     }
 
@@ -135,15 +135,15 @@ class GameTest {
                 () -> assertEquals(0, g.getNumPlayers()),
                 () -> assertEquals(GameState.CREATED, g.getGameState()),
                 () -> assertTrue(g.getTotemColorsValid().contains("white")),
-                () -> assertTrue(g.getTotemColorsValid().contains("black"))
+                () -> assertTrue(g.getTotemColorsValid().contains("blue"))
         );
 
         g.addPlayer("Player1", "white");
-        g.addPlayer("Player2", "black");
+        g.addPlayer("Player2", "blue");
 
         assertAll(
                 () -> assertFalse(g.getTotemColorsValid().contains("white")),
-                () -> assertFalse(g.getTotemColorsValid().contains("black")),
+                () -> assertFalse(g.getTotemColorsValid().contains("blue")),
                 () -> assertEquals(2, g.getNumPlayers()),
                 () -> assertEquals("Player1", g.getPlayers().getFirst().getNickname()),
                 () -> assertEquals("Player2", g.getPlayers().get(1).getNickname()),
@@ -152,6 +152,11 @@ class GameTest {
                 () -> assertEquals(1, g.getCountRound()),
                 () -> assertEquals(GameState.PLACETOTEM, g.getGameState())
         );
+    }
+
+    @Test
+    void testAddPlayertoGame_WrongTotemColor() throws PlayerNumberOutOfRange {
+        assertThrows(WrongTotemColor.class, ()->g.addPlayer("Player1", "wrong"));
     }
 
     // =========================
@@ -344,6 +349,12 @@ class GameTest {
         g.placeTotem(3, g.getCurrentPlayer());// Bidding tile F: upper and upper.
         //Optional<Player> secondPlayer = g.getSharedBoard().getNextPlayerFirstPhase(firstPlayer);
         g.placeTotem(2, g.getCurrentPlayer());// Bidding tile E: upper and lower.
+        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(1,true, 1));
+        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(2,true, 1));
+        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(3,false, 1));
+        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(4,false, 1));
+        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(5,false, 1));
+        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(6,false, 1));
 
         CharacterCard firstUpperCard = firstUpperCharacterCard();
         g.pickCard(firstUpperCard.getId(), g.getCurrentPlayer());
@@ -541,10 +552,10 @@ class GameTest {
 
         CharacterCard upperCard = firstUpperCharacterCard();
         g.pickCard(upperCard.getId(), g.getCurrentPlayer());
-        g.eventResolve();
+        g.endGame();
 
         assertAll(
-                () -> assertEquals(11, g.getCountRound()),
+                () -> assertEquals(10, g.getCountRound()),
                 () -> assertEquals(GameState.ENDED, g.getGameState())
         );
     }
@@ -616,6 +627,12 @@ class GameTest {
     // endGame / effects
     // =========================
 
+    @Test
+    void testEndGame_illegalStateException()
+            throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed {
+        addTwoPlayers();
+        assertThrows(IllegalStateException.class, () -> g.endGame());
+    }
     /**
      * Verifies that all end-game effects inside the scoring loop are applied correctly
      * and that a single winner is produced.
@@ -625,7 +642,7 @@ class GameTest {
     @Test
     void testEndGame_ShouldApplyAllEffectsInsideForLoopOneWinner() throws Exception {
         g.addPlayer("rich", "white");
-        g.addPlayer("plain", "black");
+        g.addPlayer("plain", "blue");
 
         Player rich = g.getPlayers().getFirst();
         Player plain = g.getPlayers().get(1);
@@ -659,16 +676,17 @@ class GameTest {
         plain.addTribeCard(new Inventor("rope", 23, 1));
         plain.addTribeCard(new Artist(24, 1));
 
-        /*Map<String, Integer> winners = g.endGame();
-
-        assertAll(
-                () -> assertEquals(77, rich.getNumPP()),
-                () -> assertEquals(9, plain.getNumPP()),
-                () -> assertEquals(1, winners.size()),
-                () -> assertTrue(winners.containsKey(rich.getNickname())),
-                () -> assertTrue(winners.containsValue(77)),
-                () -> assertEquals(GameState.ENDED, g.getGameState())
-        );*/
+//        g.changeState(GameState.ENDGAMERESOLVE);
+//        EndGameResultView endGameResultView = g.endGame();
+//
+//        assertAll(
+//                () -> assertEquals(77, rich.getNumPP()),
+//                () -> assertEquals(9, plain.getNumPP()),
+//                () -> assertEquals(1, endGameResultView.getWinners().size()),
+//                () -> assertTrue(endGameResultView.getWinners().containsKey(rich.getNickname())),
+//                () -> assertTrue(endGameResultView.getWinners().containsValue(77)),
+//                () -> assertEquals(GameState.ENDED, g.getGameState())
+//        );
     }
 
     /**
@@ -681,7 +699,7 @@ class GameTest {
     void testEndGame_SharedVictory_WithAppliedEffects() throws PlayerNumberOutOfRange {
 
         Game game = new Game(2);
-        game.addPlayer("alice", "red");
+        game.addPlayer("alice", "orange");
         game.addPlayer("bob", "blue");
 
         Player p1 = game.getPlayers().get(0);
@@ -699,20 +717,48 @@ class GameTest {
         new PaintingsEventCard(20, 1, 2, 1, 1, 0).activateEvent(players);
         new SustenanceEventCard(19, 1, 1).activateEvent(players);
 
-        /*Map<String, Integer> winners ;
+        game.changeState(GameState.ENDGAMERESOLVE);
+        EndGameResultView endGameResultView = game.endGame();
+//
+//        assertAll(
+//                () -> assertEquals(GameState.ENDED, game.getGameState()),
+//                () -> assertEquals(2, endGameResultView.getWinners().size()),
+//                () -> assertTrue(endGameResultView.getWinners().containsKey("alice")),
+//                () -> assertTrue(endGameResultView.getWinners().containsKey("bob")),
+//                () -> assertEquals(1, endGameResultView.getWinners().get("alice")),
+//                () -> assertEquals(1, endGameResultView.getWinners().get("bob")),
+//                () -> assertEquals(20, p1.getNumPP()),
+//                () -> assertEquals(20, p2.getNumPP()),
+//                () -> assertEquals(1, p1.getNumFoods()),
+//                () -> assertEquals(1, p2.getNumFoods())
+//        );
+    }
 
-        assertAll(
-                () -> assertEquals(GameState.ENDED, game.getGameState()),
-                () -> assertEquals(2, winners.size()),
-                () -> assertTrue(winners.containsKey("alice")),
-                () -> assertTrue(winners.containsKey("bob")),
-                () -> assertEquals(1, winners.get("alice")),
-                () -> assertEquals(1, winners.get("bob")),
-                () -> assertEquals(20, p1.getNumPP()),
-                () -> assertEquals(20, p2.getNumPP()),
-                () -> assertEquals(1, p1.getNumFoods()),
-                () -> assertEquals(1, p2.getNumFoods())
-        );*/
+    @Test
+    void testEventResolver() throws PlayerNumberOutOfRange {
+        assertThrows(IllegalStateException.class, g::eventResolve);
+        addTwoPlayers();
+        g.getSharedBoard().getLowerRow().addEventCard(new HuntEventCard(21, 1, 1));
+        g.changeState(GameState.EVENTRESOLVE);
+
+        assertNotNull(g.eventResolve());
+    }
+
+    @Test
+    void testIsInGame() throws PlayerNumberOutOfRange{
+        Game game = new Game(2);
+        game.addPlayer("alice", "orange");
+        game.addPlayer("bob", "blue");
+
+        assertTrue(game.isInGame("alice"));
+        assertFalse(game.isInGame("fabio"));
+    }
+
+    @Test
+    void quitGame() throws PlayerNumberOutOfRange {
+        Game game = new Game(2);
+        game.quitGame();
+        assertEquals(GameState.ENDED , game.getGameState());
     }
 
     // =========================
@@ -726,7 +772,7 @@ class GameTest {
      */
     private void addTwoPlayers() throws PlayerNumberOutOfRange{
         g.addPlayer("Player1", "white");
-        g.addPlayer("Player2", "black");
+        g.addPlayer("Player2", "blue");
     }
 
     /**
@@ -738,9 +784,9 @@ class GameTest {
     private Game createFivePlayerGame() throws PlayerNumberOutOfRange {
         Game game = new Game(5);
         game.addPlayer("Player1", "white");
-        game.addPlayer("Player2", "black");
-        game.addPlayer("Player3", "red");
-        game.addPlayer("Player4", "blue");
+        game.addPlayer("Player2", "blue");
+        game.addPlayer("Player3", "orange");
+        game.addPlayer("Player4", "purple");
         game.addPlayer("Player 5", "yellow");
         return game;
     }

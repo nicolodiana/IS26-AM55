@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.network.socket.client;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.QuitGameCommand;
 import it.polimi.ingsw.am55.network.ClientCommands;
 import it.polimi.ingsw.am55.network.command.*;
@@ -10,7 +11,7 @@ import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class SocketClient implements ClientCommands {
+public class SocketClient implements ClientCommands , ClientConnectionControl {
 
     private final ClientModel model;
     private ObjectInputStream input;
