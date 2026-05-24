@@ -2,7 +2,7 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 
-public class ErrorMessage implements MessageToClient {
+public class ErrorMessage extends MessageToClient {
 
     private final String message;
 

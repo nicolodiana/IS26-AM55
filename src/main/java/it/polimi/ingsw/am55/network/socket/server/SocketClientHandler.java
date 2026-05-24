@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.network.socket.server;
 
 import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.message.PongMessage;
 import it.polimi.ingsw.am55.network.ServerApplication;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.network.socket.VirtualViewSocket;
@@ -28,6 +29,7 @@ public class SocketClientHandler implements VirtualViewSocket{
         this.input = input;
         this.output = output;
         this.serverApplication = serverApplication;
+        this.playerId = "";
         runVirtualView();
     }
 
@@ -64,6 +66,29 @@ public class SocketClientHandler implements VirtualViewSocket{
         output.writeObject(message);
         output.flush();
         output.reset();
+    }
+
+    @Override
+    public String getPlayerId() throws Exception {
+        if(this.playerId==null){
+            throw new Exception("Player id nullo");
+        }else{
+            return this.playerId;
+        }
+    }
+
+    @Override
+    public void setPlayerId(String playerId){
+        this.playerId=playerId;
+    }
+
+    @Override
+    public void pong() {
+        try{
+            this.onMessage(new PongMessage());
+        }catch(Exception e){
+            System.out.println("[SOCKET CLIENT HANDLER] Impossibili inviare il ping al client");
+        }
     }
 
 //    @Override

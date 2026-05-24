@@ -5,7 +5,7 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultipleMessages implements MessageToClient {
+public class MultipleMessages extends MessageToClient {
     List<MessageToClient> messages = new ArrayList<>();
 
     public MultipleMessages(List<MessageToClient> messages) {
@@ -26,3 +26,4 @@ public class MultipleMessages implements MessageToClient {
         }
     }
 }
+

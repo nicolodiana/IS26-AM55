@@ -31,9 +31,9 @@ i metodi di socket o di RMI
     }
 
     @Override
-    public void onPlaceTotemSelected(int index) {
+    public void onPlaceTotemSelected(String playerId,int index) {
         try {
-            client.placeTotem(index);
+            client.placeTotem(playerId,index);
         } catch (Exception e) {
             System.err.println("Errore durante placeTotem: " + e.getMessage());
         }

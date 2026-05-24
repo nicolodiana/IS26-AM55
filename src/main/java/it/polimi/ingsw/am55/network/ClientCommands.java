@@ -6,7 +6,7 @@ public interface ClientCommands {
 
     void joinGame(String playerId, String totemColor) throws Exception;
 
-    void placeTotem(int index) throws Exception;
+    void placeTotem(String playerId,int index) throws Exception;
 
     void pickCard(String playerId, int cardId) throws Exception;
 

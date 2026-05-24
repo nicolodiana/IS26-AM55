@@ -266,7 +266,7 @@ public class CLIView implements ClientModelObserver {
         }
 
         this.waitingServerResponse = true;
-        actionHandler.onPlaceTotemSelected(index);
+        actionHandler.onPlaceTotemSelected(this.id,index);
     }
 
     public void askPickCard(int cardId) {

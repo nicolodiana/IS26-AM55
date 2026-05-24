@@ -7,4 +7,6 @@ package it.polimi.ingsw.am55.network;
  */
 public interface ClientConnectionControl {
     void startPing() throws Exception;
+    void stopPing() throws Exception;
+    void pongFromSever();
 }

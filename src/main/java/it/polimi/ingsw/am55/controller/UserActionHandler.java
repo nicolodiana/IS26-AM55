@@ -10,7 +10,7 @@ public interface UserActionHandler {
 
     void onPickSpecialSelected(String playerId, int cardId);
 
-    void onPlaceTotemSelected(int index);
+    void onPlaceTotemSelected(String playerId,int index);
 
     void onQuitGameSelected(String playerId);
 

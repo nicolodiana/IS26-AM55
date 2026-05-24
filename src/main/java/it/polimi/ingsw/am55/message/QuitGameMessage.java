@@ -2,11 +2,12 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.QuitGameCommand;
 
 import java.io.Serializable;
 
-public class QuitGameMessage implements MessageToClient{
+public class QuitGameMessage extends MessageToClient{
 
     private GameView gameView;
     private String message;
@@ -28,5 +29,10 @@ public class QuitGameMessage implements MessageToClient{
     @Override
     public void deliver(String playerId, MessageDelivery context) {
         context.broadcast(this);
+    }
+
+    @Override
+    public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
+        client.stopPing();
     }
 }

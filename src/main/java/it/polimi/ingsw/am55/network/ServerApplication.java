@@ -1,13 +1,9 @@
 package it.polimi.ingsw.am55.network;
 
+import it.polimi.ingsw.am55.Client;
 import it.polimi.ingsw.am55.controller.GameController;
-import it.polimi.ingsw.am55.message.MessageDelivery;
-import it.polimi.ingsw.am55.message.MessageToClient;
-import it.polimi.ingsw.am55.message.ErrorMessage;
-import it.polimi.ingsw.am55.message.StartPingMessage;
+import it.polimi.ingsw.am55.message.*;
 import it.polimi.ingsw.am55.network.command.PingCommand;
-import it.polimi.ingsw.am55.message.QuitGameMessage;
-import it.polimi.ingsw.am55.message.SoloQuitMessage;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
@@ -20,10 +16,12 @@ import java.util.concurrent.TimeUnit;
 public class ServerApplication implements VirtualServer, MessageDelivery {
 
     private final GameController controller;
+
     private final Map<String, VirtualView> clients;
     private final Map<VirtualView,Long> lastPingByClient;
     private Timer pingTimer;
     private static final long PING_TIMEOUT_MS = 6_000;
+
     private boolean aliveCheckerStarted=false;
     //private final ScheduledExecutorService aliveChecker = Executors.newSingleThreadScheduledExecutor();
     /*
@@ -40,22 +38,9 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] ServerApplication creata.");
     }
 
-    public boolean registerClient(String playerId, VirtualView client) {
-        if (client == null) {
-            System.out.println("[SERVER_APP] ERRORE: VirtualView nulla per: " + playerId);
-            return false;
-        }
-
+    public void registerClient(String playerId,VirtualView client) {
         synchronized (clients) {
-            VirtualView alreadyRegistered = clients.get(playerId);
-
-            if (alreadyRegistered != null && alreadyRegistered != client) {
-                System.out.println("[SERVER_APP] ERRORE: nickname già registrato: " + playerId);
-                return false;
-            }
-
             clients.put(playerId, client);
-
             System.out.println("[SERVER_APP] Registrato client: " + playerId);
             System.out.println("[SERVER_APP] Client registrati: " + clients.keySet());
         }
@@ -64,8 +49,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             lastPingByClient.put(client, System.currentTimeMillis());
         }
         startAliveChecker();
-
-        return true;
     }
 
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
@@ -129,30 +112,18 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         // Inoltre invio l'errore direttamente al richiedente, altrimenti con un nickname duplicato
         // l'ErrorMessage finirebbe al vecchio client già registrato con quel nickname.
         if (!message.isConnectionSetupSuccessful()) {
-            sender.onMessage(message);
-            return;
-        }
+            sender.onMessage(message); //Perché se non lo registra nella mappa bisogna chiamarlo singolarmente
+        }else{
+            sender.setPlayerId(playerId);
+            registerClient(playerId, sender);
 
-        if (!registerClient(playerId, sender)) {
-            sender.onMessage(new ErrorMessage("Nickname already exists"));
-            return;
-        }
-
-        message.deliver(playerId, this);
-        authorizeClientPing(playerId, sender);
-    }
-
-    private void authorizeClientPing(String playerId, VirtualView client) {
-        try {
-            client.onMessage(new StartPingMessage());;
-            System.out.println("[PING] Autorizzazione ping inviata a: " + playerId);
-        } catch (Exception e) {
-            System.out.println("[PING] Impossibile autorizzare il ping per "
-                    + playerId
-                    + ": "
-                    + e.getMessage());
+            //Se la join oppure la create sono andare a buon fine allora invio il messaggio al singolo client
+            //Inoltre a seguito di questa istruzione il server avvisa il client che può iniziare il suo ping
+            message.deliver(playerId,this);
         }
     }
+
+
 
     @Override
     public void placeTotem(String playerId, int index) throws Exception {
@@ -219,14 +190,25 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
         message.deliver(playerId, this);
 
+        VirtualView client;
+        synchronized (clients){
+            client = clients.get(playerId);
+            clients.get(playerId).close();
+            clients.remove(playerId);
+        }
+        synchronized (lastPingByClient){
+            lastPingByClient.remove(client);
+        }
+        pingTimer.cancel();
+        aliveCheckerStarted=false;
+
         System.out.println("[SERVER_APP] Broadcast di quit completato.");
     }
 
-    //Chiusura di tutte le connessioni a seguito di fine partita oppure di crash di un client oppure perché un client
-    //richiede di disconnettersi
+
     @Override
     public void closeConnection(String playerId) throws Exception {
-        System.out.println("[SERVER_APP] Tutti i client verranno disconnessi");
+        System.out.println("[SERVER_APP] Sto scollegando "+ playerId);
         VirtualView sender;
         synchronized (clients) {
             sender = clients.get(playerId);
@@ -240,7 +222,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         }
     }
 
-    //TODO Da implementare!
+    //Il metodo ha la responsabilità di salvare l' u
     @Override
     public void ping(VirtualView client) throws Exception {
         if (client == null) {
@@ -249,6 +231,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         synchronized (lastPingByClient) {
             lastPingByClient.put(client, System.currentTimeMillis());
         }
+        client.pong();
     }
     private synchronized void startAliveChecker() {
         if (aliveCheckerStarted) { //Deve avviarsi una sola volta il checker
@@ -256,7 +239,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         }
         aliveCheckerStarted = true;
 
-        pingTimer.scheduleAtFixedRate(new TimerTask() {
+        pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 checkPingTimeouts();
@@ -316,6 +299,8 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         }
         if(message!=null){
             message.deliver(disconnectedPlayer, this);
+            pingTimer.cancel();
+            aliveCheckerStarted=false;
         }
     }
 

@@ -5,7 +5,7 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 
-public class GameEndResolveMessage implements MessageToClient {
+public class GameEndResolveMessage extends MessageToClient {
 
     private final GameView gameView;
     private final EndGameResultView endGameResultView;

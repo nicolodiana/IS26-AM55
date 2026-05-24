@@ -55,6 +55,21 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     }
 
     @Override
+    public String getPlayerId() throws Exception {
+        return "";
+    }
+
+    @Override
+    public void setPlayerId(String playerId) {
+
+    }
+
+    @Override
+    public void pong() {
+
+    }
+
+    @Override
     public void close() throws RemoteException {
         timer.cancel();
         try {
@@ -66,18 +81,18 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
 
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
-        this.playerId = playerId;
+        //this.playerId = playerId;
         server.createGame(playerId, totemColor, numPlayers, this);
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws RemoteException {
-        this.playerId = playerId;
+        //this.playerId = playerId;
         server.joinGame(playerId, totemColor, this);
     }
 
     @Override
-    public void placeTotem(int index) throws RemoteException {
+    public void placeTotem(String playerId,int index) throws RemoteException {
         if (playerId == null) {
             throw new RemoteException("Player non ancora registrato tramite createGame/joinGame.");
         }
@@ -134,6 +149,17 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
             }
         }, 0, 1500);
     }
+
+    @Override
+    public void stopPing() throws Exception {
+
+    }
+
+    @Override
+    public void pongFromSever() {
+
+    }
+
     private void pingToServer() throws Exception {
         server.ping(this);
     }

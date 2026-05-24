@@ -2,7 +2,7 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 
-public class SoloQuitMessage implements MessageToClient {
+public class SoloQuitMessage extends MessageToClient {
     
     @Override
     public void update(ClientModel model){}

@@ -2,8 +2,9 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.network.ClientConnectionControl;
 
-public class UpdateViewMessage implements MessageToClient {
+public class UpdateViewMessage extends MessageToClient {
 
     private final GameView gameView;
     private final String message;
@@ -31,5 +32,9 @@ public class UpdateViewMessage implements MessageToClient {
     @Override
     public void deliver(String playerId, MessageDelivery context) {
         context.broadcast(this);
+    }
+    @Override
+    public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
+        client.startPing();
     }
 }

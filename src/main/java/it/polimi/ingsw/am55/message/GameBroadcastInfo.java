@@ -2,7 +2,7 @@ package it.polimi.ingsw.am55.message;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 
-public class GameBroadcastInfo implements MessageToClient {
+public class GameBroadcastInfo extends MessageToClient {
 
     private final String message;
 

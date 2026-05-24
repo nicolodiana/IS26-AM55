@@ -200,7 +200,7 @@ public class GuiView implements ClientModelObserver {
             return;
         }
 
-        submitCommand(() -> actionHandler.onPlaceTotemSelected(ticketIndex));
+        submitCommand(() -> actionHandler.onPlaceTotemSelected(this.playerId,ticketIndex));
     }
 
     public void pickCard(int cardId) {
