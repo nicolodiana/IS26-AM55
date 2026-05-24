@@ -40,7 +40,7 @@ public class ResolvePaintingsView extends ResolveEventView implements Serializab
 
         for (String id : effectToPP.keySet()) {
             result.append("Food gained/lost by " + id + ": " + effectToPP.get(id) +
-                            "PP gained/lost by " + id + ": " + effectToPlayer.get(id) + "\n");
+                            "\nPP gained/lost by " + id + ": " + effectToPlayer.get(id) + "\n");
         }
 
         return result;

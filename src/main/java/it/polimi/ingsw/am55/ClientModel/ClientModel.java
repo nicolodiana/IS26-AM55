@@ -1,5 +1,6 @@
 package it.polimi.ingsw.am55.ClientModel;
 
+import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.dto.CardView;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
@@ -82,7 +83,10 @@ public class ClientModel {
     }
     public boolean isGameEnded() {
         synchronized (lock) {
-            return gameEnded;
+            if (gameView.getState().equals(GameState.ENDED)) {
+                return true;
+            }
+            return false;
         }
     }
     public GameView getGameView() {

@@ -44,7 +44,6 @@ public class GameSceneController implements GenericSceneController {
     @FXML private HBox biddingTrailBox;
     @FXML private HBox upperRowBox;
     @FXML private HBox lowerRowBox;
-    @FXML private HBox myHand;
     @FXML private VBox eventsBox;
     @FXML private ScrollPane eventsScrollPane;
 
@@ -74,7 +73,6 @@ public class GameSceneController implements GenericSceneController {
         renderBiddingTrail(gameView.getBoard(), myPlayerId);
         renderRows(gameView.getBoard(), myPlayerId);
         renderEvents(gameView.getResolveEvents());
-        renderMyHand(gameView.getPlayer(myPlayerId).getMyHand());
         updateInstruction(action, gameView, myPlayerId, locked);
     }
 
@@ -102,6 +100,11 @@ public class GameSceneController implements GenericSceneController {
     @FXML
     private void onRefreshClick() {
         guiView.refreshCurrentScene();
+    }
+
+    @FXML
+    private void onQuitClick() {
+        guiView.quitGame();
     }
 
     private GuiInteractionMode toGuiMode(ClientAction action) {
@@ -506,17 +509,7 @@ public class GameSceneController implements GenericSceneController {
         }
     }
 
-    private void renderMyHand(List<CardView> cards) {
-        myHand.getChildren().clear();
 
-        if (cards == null || cards.isEmpty()) {
-            return;
-        }
-
-        for (CardView card : cards) {
-            myHand.getChildren().add(createHandCardPane(card));
-        }
-    }
 
     private void updateInstruction(ClientAction action, GameView gameView, String myPlayerId, boolean locked) {
         if (locked) {

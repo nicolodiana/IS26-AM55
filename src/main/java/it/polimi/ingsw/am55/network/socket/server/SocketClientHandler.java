@@ -19,7 +19,6 @@ public class SocketClientHandler implements VirtualViewSocket{
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     private final ServerApplication serverApplication;
-    private String playerId;
     private Thread virtualViewThread;
 
 

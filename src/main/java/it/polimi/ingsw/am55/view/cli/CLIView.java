@@ -19,7 +19,6 @@ import java.util.concurrent.TimeUnit;
 
 public class CLIView implements ClientModelObserver {
 
-    private static final String EVENT_RESOLUTION_START_MESSAGE = "Inizia la risoluzione degli eventi...";
 
     private final ClientModel model;
     private final Scanner input;
@@ -107,10 +106,11 @@ public class CLIView implements ClientModelObserver {
         ClientAction action = actionResolver.resolve(currentGameView, id);
 
         if (command.equals("myhand") || command.equals("hand")) {
-            printMyHand(action);
-            printExpectedAction(); //per riprendere con l'azione da intraprendere per continuare il gioco
+            handleHandCommand(action, parts);
+            printExpectedAction();
             return;
         }
+
 
         if (waitingServerResponse) {
             System.out.println(ConsoleColor.YELLOW_BOLD
@@ -137,7 +137,15 @@ public class CLIView implements ClientModelObserver {
             case WAITING_FOR_STATE -> showMessage("Nessuna azione disponibile: attendi un aggiornamento dello stato.");
         }
     }
+    private void handleHandCommand(ClientAction currentState, String[] parts) {
+        if (parts.length > 2) {
+            showError("Uso corretto: myhand oppure myhand <nickname>");
+            return;
+        }
 
+        String targetNickname = parts.length == 2 ? parts[1].trim() : id;
+        printHand(currentState, targetNickname);
+    }
     private void handleLobbyCommand(String command, String[] parts) {
         switch (command) {
             case "create" -> handleCreateCommand(parts);
@@ -295,9 +303,11 @@ public class CLIView implements ClientModelObserver {
         }
     }
     // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
+    private volatile boolean pendingEventResolutionDelay = false;
+
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        this.waitingServerResponse=false;
+        this.waitingServerResponse = false;
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
@@ -312,24 +322,55 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        if (currentInfoMessage != null) {
-            showMessage(currentInfoMessage);
+        // Messaggio 1 del MultipleMessage: stato già EVENTRESOLVE
+        // La board non è ancora aggiornata con gli eventi, non la stampiamo
+        if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
+            showMessage("Inizia la risoluzione degli eventi...");
+            pendingEventResolutionDelay = true; //ci serve un po come trigger per ritardare 2 messaggio
+            return; // non renderizzi nulla ora ma nel prossimo msg ricevuto con board senza eventi
         }
-//PER LO WAITING MESSAGE IL LAST GAME BOARD UPDATED E FALSE QUINDI NON FA IL RENDER E NON RISTAMPA LA BOARD
+        if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
+            showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita ");
+            pendingEventResolutionDelay = true; //ci serve un po come trigger per ritardare 2 messaggio
+            return; // non renderizzi nulla ora ma nel prossimo msg ricevuto con board senza eventi
+        }
+
+        if (currentInfoMessage != null) {
+            if (!pendingEventResolutionDelay) {
+                showMessage(currentInfoMessage); //se non e da ritardare lo stampa subito (senno l'unico caso da ritardare e quando stampo eventi quindi lo mando insieme al render quando lo ritardo
+
+            }
+
+        }
+
         if (gameViewUpdated && currentGameView != null) {
+            // Messaggio 2: board aggiornata post-eventi, mostrala con ritardo
+            if (pendingEventResolutionDelay) {
+                pendingEventResolutionDelay = false;
+                final GameView snapshot = currentGameView;
+                scheduler.schedule(() -> {
+                    showMessage(currentInfoMessage);
+                    renderGame(snapshot);
+                    printExpectedAction();
+                }, 4, TimeUnit.SECONDS);
+                return;
+            }
+            //altrimenti ritorna falso e la stampa subito la board
+
             renderGame(currentGameView);
         }
-
+//il render finale è sempre ritardato perche ha sempre eventi risolti
         if (endGameResultView != null) {
-            printEndGameResult(endGameResultView);
+            scheduler.schedule(() -> {
+                showMessage(currentInfoMessage);
+                printEndGameResult(endGameResultView);
+            }, 4, TimeUnit.SECONDS);
+            return;
         }
 
-//        if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
-//            scheduleExpectedActionPrint(4);
-//            return;
-//        }
         if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
-            showMessage("Partita terminata. Chiusura connessioni in corso...");
+            showMessage("Chiusura connessioni in corso...");
+
             model.removeObserver(this);
             return;
         }
@@ -556,9 +597,6 @@ public class CLIView implements ClientModelObserver {
             System.out.println(view.showEvent());
             System.out.println();
         }
-
-        System.out.println(ConsoleColor.CYAN_BOLD + "END RESOLVE EVENTS" + ConsoleColor.RESET);
-        System.out.println(ConsoleColor.CYAN_BOLD + "=========================" + ConsoleColor.RESET);
     }
 
     private void printEndGameResult(EndGameResultView result) {
@@ -572,7 +610,8 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
 
             for (ResolveEventView view : result.getResolvedEvents()) {
-                view.showEvent();
+                System.out.println(ConsoleColor.RED_BOLD + view.getNameEvent() + ConsoleColor.RESET);
+                System.out.println(view.showEvent());
                 System.out.println();
             }
         }
@@ -613,30 +652,35 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
         }
     }
-    private void printMyHand(ClientAction currentstate) {
-        if (currentGameView == null || id == null) {
-            showError("Nessuna partita o giocatore associato.");
-            return;
-        }
 
-        if (currentstate == ClientAction.LOBBY || currentstate == ClientAction.WAITING_TO_START) {
+    private void printHand(ClientAction currentState, String targetNickname) {
+        if (currentState == ClientAction.LOBBY || currentState == ClientAction.WAITING_TO_START) {
             showError("Non puoi visualizzare la mano prima dell'inizio della partita.");
             return;
         }
 
-        PlayerView me = currentGameView.getPlayer(id);
+        PlayerView targetPlayer = null;
 
-        if (me == null) {
-            showError("Giocatore non trovato.");
+        for (PlayerView player : currentGameView.getPlayers()) {
+            if (player.getNickname().equalsIgnoreCase(targetNickname)) {
+                targetPlayer = player;
+                break;
+            }
+        }
+
+        if (targetPlayer == null) {
+            showError("Giocatore non trovato: " + targetNickname);
             return;
         }
 
-        if (me.getMyHand() == null || me.getMyHand().isEmpty()) {
-            showMessage("La tua mano è vuota.");
-            return;
-        }
+        boolean isMyHand = targetPlayer.getNickname().equalsIgnoreCase(id);
 
-        cliRenderHelper.printPersonalDeck(me.getMyHand());
+
+        cliRenderHelper.printPersonalDeck(
+                targetPlayer.getMyHand(),
+                targetPlayer.getNickname(),
+                isMyHand
+        );
     }
 
     private void shutdown() {

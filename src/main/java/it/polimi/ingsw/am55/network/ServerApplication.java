@@ -1,9 +1,10 @@
 package it.polimi.ingsw.am55.network;
 
-import it.polimi.ingsw.am55.Client;
 import it.polimi.ingsw.am55.controller.GameController;
 import it.polimi.ingsw.am55.message.*;
 import it.polimi.ingsw.am55.network.command.PingCommand;
+import it.polimi.ingsw.am55.message.QuitGameMessage;
+import it.polimi.ingsw.am55.message.SoloQuitMessage;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;

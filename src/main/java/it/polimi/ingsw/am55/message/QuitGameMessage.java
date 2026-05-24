@@ -21,7 +21,7 @@ public class QuitGameMessage extends MessageToClient{
         model.clearError();
         model.setGameView(gameView);
         model.setStateRequest(message);
-        model.setGameEnded(true);
+       // model.setGameEnded(true);
         model.setGameStarted(false);
         model.setLastMessageUpdatedGameView(true);
     }
