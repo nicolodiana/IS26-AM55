@@ -66,11 +66,15 @@ public class GuiView implements ClientModelObserver {
 
             LobbySceneController controller =
                     (LobbySceneController) SceneManager.getActiveController();
-
-            controller.renderLobby(currentLobbyView, false);
-            controller.showMessage("Connesso al server. Crea o unisciti a una partita.");
+//per far si che se ancora non ho ricevuto 1 lobby state message non mi faccia vedere una schermata incoerente (caso avvio client dopo tanto e non tutti insieme)
+            controller.showSyncing();
+            renderCurrentState();
+            showPendingMessages();
         });
     }
+
+
+
 
     @Override
     public void onModelChanged(ClientModel updatedModel) {

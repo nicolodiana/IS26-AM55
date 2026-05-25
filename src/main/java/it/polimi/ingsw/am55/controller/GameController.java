@@ -22,8 +22,11 @@ public class GameController {
         this.numPlayers = 0;
     }
 
-
     public LobbyView getLobbyView() {
+        if (gameModel == null) {
+            return new LobbyView(null, null);
+        }
+
         return new LobbyView(
                 gameModel.getState(),
                 gameModel.getPlayers()

@@ -65,7 +65,9 @@ public class CLIView implements ClientModelObserver {
     //la scelta di metterlo separato è stata fatta per evitare di tenere occupato il thread principale che sarebbe quello degli aggiornamenti
     public void start() {
         System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
-        printLobbyHelp();
+//        System.out.println(ConsoleColor.YELLOW_BOLD
+//                + "Sincronizzazione con la lobby del server..."
+//                + ConsoleColor.RESET);
 
         Thread inputThread = new Thread(this::inputLoop);
         inputThread.setName("CLI-Input-Thread");
@@ -88,7 +90,12 @@ public class CLIView implements ClientModelObserver {
     private void handleCommand(String line) {
         String[] parts = line.split("\\s+");
         String command = parts[0].toLowerCase();
-
+        //non viene quasi mai fatto perche l'aggiornamento arriva instantaneamente però per sicurezza lo metto cosi se
+        //il thread di input si trova a gestire un messaggio prima dell'aggiornamento sa come rispondermi
+        if (inLobby && currentLobbyView == null) {
+            showMessage("Attendi la sincronizzazione iniziale con la lobby del server.");
+            return;
+        }
         if (command.equals("quit") || command.equals("exit")) {
             if (id != null) {
                 askQuitGame(this.id);
@@ -467,7 +474,7 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
 
             case END_GAME -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Partita terminata. Usa refresh per ristampare board/risultati."
+                    + "Partita terminata. "
                     + ConsoleColor.RESET);
 
             case CRASHED -> System.out.println(ConsoleColor.RED_BOLD

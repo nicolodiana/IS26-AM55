@@ -59,6 +59,20 @@ public class LobbySceneController implements GenericSceneController {
             showMessage("Una partita è già in corso su questo server. Puoi solo uscire.");
         }
     }
+    //per mostrare bottoni tutti disabilitati prima che avvenga la connect con server e ricevo info della lobbystatus
+    public void showSyncing() {
+        createButton.setDisable(true);
+        joinButton.setDisable(true);
+        refreshButton.setDisable(false);
+
+        nicknameField.setDisable(true);
+        totemComboBox.setDisable(true);
+        numPlayersSpinner.setDisable(true);
+
+        statusLabel.getStyleClass().removeAll("error-text", "info-text");
+        statusLabel.getStyleClass().add("info-text");
+        statusLabel.setText("Sincronizzazione con la lobby del server...");
+    }
 //per togliere i totem dalla gui una volta scelti da altri player
     private void updateAvailableTotems(LobbyView lobbyView) {
         String previousSelection = totemComboBox.getValue();
