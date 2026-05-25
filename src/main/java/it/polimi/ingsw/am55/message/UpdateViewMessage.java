@@ -26,6 +26,7 @@ public class UpdateViewMessage extends MessageToClient {
         model.setGameView(gameView);
         model.setStateRequest(message);
         model.setGameStarted(true);
+        model.setInLobby(false); //per far passare la view non piu da lobby mode ma a Game mode
         model.setLastMessageUpdatedGameView(true);
     }
 

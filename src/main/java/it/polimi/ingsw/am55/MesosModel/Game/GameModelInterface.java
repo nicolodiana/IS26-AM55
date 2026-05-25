@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.MesosModel.Game;
 
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
@@ -115,4 +116,8 @@ public interface GameModelInterface {
     void quitGame();
 
     boolean isInGame(String idPlayer);
+
+    GameState getState();
+
+    List<Player> getPlayers();
 }

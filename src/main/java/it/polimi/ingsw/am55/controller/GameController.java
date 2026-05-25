@@ -4,6 +4,7 @@ import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Game.Game;
 import it.polimi.ingsw.am55.MesosModel.Game.GameModelInterface;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import it.polimi.ingsw.am55.message.*;
@@ -21,6 +22,13 @@ public class GameController {
         this.numPlayers = 0;
     }
 
+
+    public LobbyView getLobbyView() {
+        return new LobbyView(
+                gameModel.getState(),
+                gameModel.getPlayers()
+        );
+    }
     public MessageToClient createGame(String playerId, String totemColor, int numPlayers) {
         if (gameModel != null) {
             return new ErrorMessage("La partita esiste già.");

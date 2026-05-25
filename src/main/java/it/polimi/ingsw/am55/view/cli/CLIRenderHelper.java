@@ -1,9 +1,6 @@
 package it.polimi.ingsw.am55.view.cli;
 
-import it.polimi.ingsw.am55.dto.BiddingTicketView;
-import it.polimi.ingsw.am55.dto.BoardView;
-import it.polimi.ingsw.am55.dto.CardView;
-import it.polimi.ingsw.am55.dto.PlayerView;
+import it.polimi.ingsw.am55.dto.*;
 import it.polimi.ingsw.am55.dto.ClientCards.*;
 
 import java.security.cert.CertPathValidatorException;
@@ -83,7 +80,25 @@ public class CLIRenderHelper {
 
         boardData = sb.toString();
     }
+    public String availableTotemsForLobby(LobbyView lobbyView) {
+        List<String> colors = new ArrayList<>(List.of(
+                "BLUE", "ORANGE", "PURPLE", "YELLOW", "WHITE"
+        ));
 
+        if (lobbyView == null || lobbyView.getChosenTotems() == null) {
+            return String.join(", ", colors);
+        }
+
+        for (String chosenTotem : lobbyView.getChosenTotems()) {
+            colors.removeIf(color -> color.equalsIgnoreCase(chosenTotem));
+        }
+
+        if (colors.isEmpty()) {
+            return "nessun totem disponibile";
+        }
+
+        return String.join(", ", colors);
+    }
     private String renderTurnTicket(List<PlayerView> turnTicket) {
         StringBuilder sb = new StringBuilder();
 

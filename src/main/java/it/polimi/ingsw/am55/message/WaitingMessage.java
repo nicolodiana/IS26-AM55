@@ -20,6 +20,7 @@ public class WaitingMessage extends MessageToClient {
         model.setGameView(gameView); //gli passo la Game View solo per lo stato created essenzialmente
         model.setStateRequest(message);
         model.setGameStarted(false);
+        model.setInLobby(false); //per far passare la view non piu da lobby mode ma a Game mode
         model.setLastMessageUpdatedGameView(false);
     }
 

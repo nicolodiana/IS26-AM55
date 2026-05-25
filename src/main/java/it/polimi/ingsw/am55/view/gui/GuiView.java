@@ -85,7 +85,7 @@ public class GuiView implements ClientModelObserver {
             return;
         }
 
-        ClientAction action = actionResolver.resolve(currentGameView, playerId);
+        ClientAction action = actionResolver.resolve(currentGameView, playerId, false);
 
         switch (action) {
             case LOBBY -> showLobby(false);

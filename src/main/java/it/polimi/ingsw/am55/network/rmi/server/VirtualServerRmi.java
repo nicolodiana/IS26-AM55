@@ -14,7 +14,7 @@ import java.rmi.RemoteException;
  *
  * Definisce i metodi remoti esposti dal server ai client.
  */
-public interface VirtualServerRmi extends Remote, VirtualServer {
+public interface VirtualServerRmi extends Remote  {
 
     /**
      * Mantenuto per compatibilità con versioni precedenti.
@@ -22,9 +22,10 @@ public interface VirtualServerRmi extends Remote, VirtualServer {
      */
     void connect(String playerId, VirtualViewRmi client) throws RemoteException;
 
-    void createGame(String playerId, String totemColor, int numPlayers, VirtualView client) throws RemoteException;
+    void createGame(String playerId, String totemColor, int numPlayers, String sessionId) throws RemoteException;
 
-    void joinGame(String playerId, String totemColor, VirtualView client) throws RemoteException;
+    void joinGame(String playerId, String totemColor, String sessionId) throws RemoteException;
+
 
     void placeTotem(String playerId, int index) throws RemoteException;
 

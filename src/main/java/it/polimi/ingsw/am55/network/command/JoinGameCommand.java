@@ -9,10 +9,11 @@ public class JoinGameCommand implements ServerCommand {
 
     private final String playerId;
     private final String totemColor;
-
-    public JoinGameCommand(String playerId, String totemColor) {
+    private final String sessionId;
+    public JoinGameCommand(String playerId, String totemColor, String sessionId) {
         this.playerId = playerId;
         this.totemColor = totemColor;
+        this.sessionId = sessionId;
     }
 
     @Override
@@ -21,7 +22,7 @@ public class JoinGameCommand implements ServerCommand {
     }
 
     @Override
-    public void execute(ServerApplication serverApplication, VirtualView sender)throws Exception {
-        serverApplication.joinGame(playerId, totemColor, sender);
+    public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
+        serverApplication.joinGame(playerId, totemColor, sessionId);
     }
 }

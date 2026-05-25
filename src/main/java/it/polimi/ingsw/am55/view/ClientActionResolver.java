@@ -10,17 +10,19 @@ import it.polimi.ingsw.am55.dto.GameView;
  */
 public class ClientActionResolver {
 
-    public ClientAction resolve(GameView gameView, String myPlayerId) {
-        if (gameView == null) {
+    public ClientAction resolve(GameView gameView, String myPlayerId, boolean inLobby) {
+        if (inLobby) {
             return ClientAction.LOBBY;
         }
 
 
         GameState state = gameView.getState();
+
         if (state == null) {
             return ClientAction.WAITING_FOR_STATE;
         }
-        if (state == GameState.CREATED){
+
+        if (state == GameState.CREATED && !inLobby) {
             return ClientAction.WAITING_TO_START;
         }
 

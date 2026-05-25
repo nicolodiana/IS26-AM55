@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 /**
  * Questa classe rappresenta la logica di rete del client implementata con tecnologia RMI.
@@ -28,7 +29,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     private String playerId;
     private Timer timer;
     private boolean pingStarted;
-
+    private final String sessionId;
     public RmiClient(VirtualServerRmi server, ClientModel model) throws RemoteException {
         super();
         this.server = server;
@@ -36,6 +37,8 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.playerId = null;
         this.timer = new Timer(true);
         this.pingStarted = false;
+        this.sessionId = UUID.randomUUID().toString(); //genero id session randomico e univoco x ogni client
+        server.connect(this.sessionId, this);
     }
 
     @Override
@@ -77,14 +80,12 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
 
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws RemoteException {
-        //this.playerId = playerId;
-        server.createGame(playerId, totemColor, numPlayers, this);
+        server.createGame(playerId, totemColor, numPlayers, sessionId);
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws RemoteException {
-        //this.playerId = playerId;
-        server.joinGame(playerId, totemColor, this);
+        server.joinGame(playerId, totemColor, sessionId);
     }
 
     @Override

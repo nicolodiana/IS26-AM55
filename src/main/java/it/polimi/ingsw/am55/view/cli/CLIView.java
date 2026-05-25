@@ -1,8 +1,10 @@
 package it.polimi.ingsw.am55.view.cli;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
+import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
@@ -32,6 +34,8 @@ public class CLIView implements ClientModelObserver {
     private volatile String currentErrorMessage;
     private volatile boolean waitingServerResponse;
     private volatile String id;
+    private volatile boolean inLobby;
+    private volatile LobbyView currentLobbyView;
 
     public CLIView(ClientModel model) {
         this.model = model;
@@ -49,6 +53,8 @@ public class CLIView implements ClientModelObserver {
         this.currentInfoMessage = null;
         this.currentErrorMessage = null;
         this.waitingServerResponse = false;
+        this.inLobby = true;
+        this.currentLobbyView = null;
         this.id = null;
     }
 
@@ -98,12 +104,12 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        if (command.equals("refresh")) {
-            refresh();
-            return;
-        }
+//        if (command.equals("refresh")) {
+//            refresh();
+//            return;
+//        }
 
-        ClientAction action = actionResolver.resolve(currentGameView, id);
+        ClientAction action = actionResolver.resolve(currentGameView, id, inLobby);
 
         if (command.equals("myhand") || command.equals("hand")) {
             handleHandCommand(action, parts);
@@ -148,8 +154,28 @@ public class CLIView implements ClientModelObserver {
     }
     private void handleLobbyCommand(String command, String[] parts) {
         switch (command) {
-            case "create" -> handleCreateCommand(parts);
-            case "join" -> handleJoinCommand(parts);
+            case "create" -> {
+                if (currentLobbyView != null && currentLobbyView.getGameState() != null) {
+                    showError("Una partita è già stata creata. Usa join.");
+                    printLobbyHelp();
+                    return;
+                }
+                handleCreateCommand(parts);
+            }
+            case "join" -> {
+                if (currentLobbyView == null || currentLobbyView.getGameState() == null) {
+                    showError("Nessuna partita creata. Usa create.");
+                    printLobbyHelp();
+                    return;
+                }
+
+                if (currentLobbyView.getGameState() != GameState.CREATED) {
+                    showError("La partita non accetta nuovi giocatori.");
+                    printLobbyHelp();
+                    return;
+                }
+                handleJoinCommand(parts);
+            }
             default -> {
                 showError("Comando non valido in lobby.");
                 printLobbyHelp();
@@ -308,91 +334,112 @@ public class CLIView implements ClientModelObserver {
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         this.waitingServerResponse = false;
+
         this.currentErrorMessage = updatedModel.getLastError();
         this.currentInfoMessage = updatedModel.getStateRequest();
         this.currentGameView = updatedModel.getGameView();
+
+        this.inLobby = updatedModel.isInLobby();
+        this.currentLobbyView = updatedModel.getLobbyView();
+
         EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
         boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
-        ClientAction action = actionResolver.resolve(currentGameView, id);
-        System.out.println();
 
+        ClientAction action = actionResolver.resolve(currentGameView, id, inLobby);
+
+        System.out.println();
+        //post messaggio di errore dal server e in lobby (nickname duplicato, totem errato o non presente, rimando i comandi lobby perche devo rimanere in interfaccia lobby (perche essendo ancora in lobby lo swtich andra a fare print lobby help)
+        //post  messaggio di errore quando non sono in lobby, mostro l'interfaccia game mode con prossimo comando                //post  messaggio di errore quando non sono in lobby, mostro l'interfaccia game mode con prossimo comando
         if (currentErrorMessage != null) {
             showError(currentErrorMessage);
             printExpectedAction();
             return;
         }
+        //gestisco aggiornamenti real time lobby rimandandogli l'interfaccia lobby aggiornata
+        //qualcuno ha creato una partita
+        //qualcuno ha scelto un totem
+        //qualcuno è entrato in partita
+        if (inLobby) {
+            if (currentInfoMessage != null) {
+                showMessage(currentInfoMessage);
+            }
 
-        // Messaggio 1 del MultipleMessage: stato già EVENTRESOLVE
-        // La board non è ancora aggiornata con gli eventi, non la stampiamo
+            printExpectedAction();
+            return;
+        }
+//tutti questi controlli vengono fatti invece per stati riguardanti i client in game
         if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
             showMessage("Inizia la risoluzione degli eventi...");
-            pendingEventResolutionDelay = true; //ci serve un po come trigger per ritardare 2 messaggio
-            return; // non renderizzi nulla ora ma nel prossimo msg ricevuto con board senza eventi
+            pendingEventResolutionDelay = true;
+            return;
         }
+
         if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
-            showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita ");
-            pendingEventResolutionDelay = true; //ci serve un po come trigger per ritardare 2 messaggio
-            return; // non renderizzi nulla ora ma nel prossimo msg ricevuto con board senza eventi
+            showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita");
+            pendingEventResolutionDelay = true;
+            return;
         }
 
         if (currentInfoMessage != null) {
             if (!pendingEventResolutionDelay) {
-                showMessage(currentInfoMessage); //se non e da ritardare lo stampa subito (senno l'unico caso da ritardare e quando stampo eventi quindi lo mando insieme al render quando lo ritardo
-
+                showMessage(currentInfoMessage);
             }
-
         }
 
         if (gameViewUpdated && currentGameView != null) {
-            // Messaggio 2: board aggiornata post-eventi, mostrala con ritardo
             if (pendingEventResolutionDelay) {
                 pendingEventResolutionDelay = false;
+
                 final GameView snapshot = currentGameView;
+                final String infoSnapshot = currentInfoMessage;
+
                 scheduler.schedule(() -> {
-                    showMessage(currentInfoMessage);
+                    showMessage(infoSnapshot);
                     renderGame(snapshot);
                     printExpectedAction();
                 }, 4, TimeUnit.SECONDS);
+
                 return;
             }
-            //altrimenti ritorna falso e la stampa subito la board
 
             renderGame(currentGameView);
         }
-//il render finale è sempre ritardato perche ha sempre eventi risolti
+
         if (endGameResultView != null) {
+            final String infoSnapshot = currentInfoMessage;
+
             scheduler.schedule(() -> {
-                showMessage(currentInfoMessage);
+                showMessage(infoSnapshot);
                 printEndGameResult(endGameResultView);
             }, 4, TimeUnit.SECONDS);
+
             return;
         }
 
         if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
             showMessage("Chiusura connessioni in corso...");
-
             model.removeObserver(this);
             return;
         }
+
         if (updatedModel.isGameCrashed()) {
             showMessage("Partita terminata per crash di un client. Connessione in chiusura...");
             model.removeObserver(this);
             return;
         }
+
         printExpectedAction();
     }
-
     // Equivalente testuale delle schermate/interazioni che la futura GUI mostrerà.
     private void printExpectedAction() {
-        ClientAction action = actionResolver.resolve(currentGameView, id);
+        ClientAction action = actionResolver.resolve(currentGameView, id, inLobby);
 
         System.out.println();
 
         switch (action) {
-            case LOBBY -> System.out.println(ConsoleColor.YELLOW_BOLD
-                    + "Prossima azione da compiere: create <nickname> <totemColor> <numPlayers>"
-                    + " oppure join <nickname> <totemColor>"
-                    + ConsoleColor.RESET);
+            case LOBBY -> {
+                printLobbyHelp();
+            }
             case WAITING_TO_START -> System.out.println(ConsoleColor.YELLOW_BOLD
                     + "PRINT EXPECTED ACTION: IN ATTESA DI INIZIO PARTITA "
 
@@ -432,35 +479,42 @@ public class CLIView implements ClientModelObserver {
                     + ConsoleColor.RESET);
         }
     }
-//menu proposto proprio all'avvio della cli
     private void printLobbyHelp() {
         System.out.println();
         System.out.println(ConsoleColor.YELLOW_BOLD + "========== COMANDI LOBBY ==========" + ConsoleColor.RESET);
-        System.out.println(
-                "create <nickname> <totemColor> "
-                        + "(RIGHT TOTEM COLOR: "
-                        + ConsoleColor.GREEN_BOLD
-                        + "BLUE, ORANGE, PURPLE, YELLOW, WHITE"
-                        + ConsoleColor.RESET
-                        + ")"
-        );
-        System.out.println(
-                "join <nickname> <totemColor> "
-                        + "(RIGHT TOTEM COLOR: "
-                        + ConsoleColor.GREEN_BOLD
-                        + "BLUE, ORANGE, PURPLE, YELLOW, WHITE"
-                        + ConsoleColor.RESET
-                        + ")"
-        );
+
+        if (currentLobbyView == null || currentLobbyView.getGameState() == null) {
+            System.out.println("Nessuna partita creata.");
+            System.out.println(
+                    "create <nickname> <totemColor> <numPlayers> "
+                            + "(TOTEM: "
+                            + ConsoleColor.GREEN_BOLD
+                            + "BLUE, ORANGE, PURPLE, YELLOW, WHITE"
+                            + ConsoleColor.RESET
+                            + ")"
+            );
+        } else if (currentLobbyView.getGameState() == GameState.CREATED) {
+            System.out.println("Partita già creata. Puoi unirti.");
+            System.out.println(
+                    "join <nickname> <totemColor> "
+                            + "(TOTEM DISPONIBILI: "
+                            + ConsoleColor.GREEN_BOLD
+                            + cliRenderHelper.availableTotemsForLobby(currentLobbyView)
+                            + ConsoleColor.RESET
+                            + ")"
+            );
+        } else {
+            System.out.println("La partita è già iniziata o non accetta nuovi giocatori.");
+        }
+
         System.out.println("refresh");
         System.out.println("help");
         System.out.println("quit");
         System.out.println(ConsoleColor.YELLOW_BOLD + "===================================" + ConsoleColor.RESET);
-        printExpectedAction();
     }
 
     private void printHelp() {
-        ClientAction action = actionResolver.resolve(currentGameView, id);
+        ClientAction action = actionResolver.resolve(currentGameView, id, inLobby);
 
         if (action == ClientAction.LOBBY) {
             printLobbyHelp();
@@ -484,21 +538,21 @@ public class CLIView implements ClientModelObserver {
         printExpectedAction();
     }
 
-    private void refresh() {
-        GameView gameView = currentGameView != null ? currentGameView : model.getGameView();
-
-        if (gameView != null) {
-            renderGame(gameView);
-            EndGameResultView result = model.getEndGameResultView();
-            if (result != null) {
-                printEndGameResult(result);
-            }
-        } else {
-            showMessage("Nessuna partita da mostrare.");
-        }
-
-        printExpectedAction();
-    }
+//    private void refresh() {
+//        GameView gameView = currentGameView != null ? currentGameView : model.getGameView();
+//
+//        if (gameView != null) {
+//            renderGame(gameView);
+//            EndGameResultView result = model.getEndGameResultView();
+//            if (result != null) {
+//                printEndGameResult(result);
+//            }
+//        } else {
+//            showMessage("Nessuna partita da mostrare.");
+//        }
+//
+//        printExpectedAction();
+//    }
 
     private void showWaitingForTurnMessage() {
         System.out.println(ConsoleColor.YELLOW_BOLD
@@ -654,7 +708,7 @@ public class CLIView implements ClientModelObserver {
     }
 
     private void printHand(ClientAction currentState, String targetNickname) {
-        if (currentState == ClientAction.LOBBY || currentState == ClientAction.WAITING_TO_START) {
+        if (currentState == ClientAction.LOBBY || currentState == ClientAction.WAITING_TO_START || currentGameView == null) {
             showError("Non puoi visualizzare la mano prima dell'inizio della partita.");
             return;
         }

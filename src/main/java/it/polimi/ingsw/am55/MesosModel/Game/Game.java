@@ -11,6 +11,7 @@ import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
@@ -104,6 +105,7 @@ public class Game implements GameModelInterface{
     public GameView toView() {
         return new GameView(this);
     }
+    public LobbyView toLobbyView() {return new LobbyView(getGameState(), getPlayers());}
     public String addPlayer(String nickname, String totem)
             throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed, WrongTotemColor {
 
@@ -724,6 +726,11 @@ public class Game implements GameModelInterface{
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public GameState getState() {
+        return getGameState();
     }
 
 }

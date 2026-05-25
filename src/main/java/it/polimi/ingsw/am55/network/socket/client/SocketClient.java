@@ -10,10 +10,12 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 public class SocketClient implements ClientCommands , ClientConnectionControl {
 
     private final ClientModel model;
+    private final String sessionId;
     private ObjectInputStream input;
     private final ObjectOutputStream output;
     private final Socket socket;
@@ -27,18 +29,30 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
     private Thread virtualServerThread;
     private boolean pingStarted;
 
+
     //La signature del metodo lancia un' eccezione che sarà propagata all' interno della classe Client comune
-    public SocketClient(String host, int port ,ClientModel model) throws IOException {
+    public SocketClient(String host, int port, ClientModel model) throws IOException {
         this.model = model;
-        this.socket = new Socket(host, port); //Client si collega al server
-        this.input = new ObjectInputStream(socket.getInputStream());
+        this.socket = new Socket(host, port);
+
         this.output = new ObjectOutputStream(socket.getOutputStream());
+        this.output.flush();
+        this.input = new ObjectInputStream(socket.getInputStream());
+
         this.timer = new Timer(true);
         this.pingStarted = false;
         this.timerChekerAliver = new Timer(true);
-        this.playerId="";
+        this.playerId = "";
         this.pingLock = new Object();
+        this.sessionId = UUID.randomUUID().toString();
+
         runVirtualServer();
+
+        try {
+            sendCommand(new RegisterLobbyCommand(sessionId));
+        } catch (Exception e) {
+            throw new IOException("Registrazione lobby fallita", e);
+        }
     }
 
     //Gestione del ping delegata ad un esecutore che viene attivato periodicamente
@@ -99,19 +113,27 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
         }, 1500, 1500);
     }
     //Serve per leggere solo le risposte che invia il server e per applicare le modifiche sul model del client
-    private void runVirtualServer(){
+    private void runVirtualServer() {
+        if (virtualServerThread != null && virtualServerThread.isAlive()) {
+            return;
+        }
+
         virtualServerThread = new Thread(() -> {
             while (running) {
                 try {
                     MessageToClient response = (MessageToClient) input.readObject();
 
-                    if(response != null){
+                    if (response != null) {
+                        System.out.println("[SOCKET_CLIENT] Ricevuto messaggio: "
+                                + response.getClass().getSimpleName());
+
                         response.executeClientNetworkAction(this);
-                        if(response.shouldUpdateModel()){
+
+                        if (response.shouldUpdateModel()) {
                             synchronized (model) {
                                 model.update(response);
-                                if(model.isGameEnded() || model.isGameCrashed()){
-                                    //sendCommand(new CloseConnectionCommand(this.playerId));
+
+                                if (model.isGameEnded() || model.isGameCrashed()) {
                                     close();
                                     System.out.println("[SOCKET_CLIENT] Richiesta terminata");
                                     break;
@@ -119,13 +141,12 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
                             }
                         }
                     }
-                    //Serve perché voglio che il socket client invii verso il server una richiesta
-                    //di disconnessione solo se il game è terminat.
 
                 } catch (IOException | ClassNotFoundException e) {
+                    System.out.println("[SOCKET_CLIENT] Reader socket terminato: " + e.getMessage());
                     break;
                 } catch (Exception e) {
-                    System.out.println("[SOCKET_CLIENT] Richiesta disconnessione non andata a buon fine "+ e.getMessage());
+                    System.out.println("[SOCKET_CLIENT] Errore gestione messaggio: " + e.getMessage());
                 }
             }
         });
@@ -155,16 +176,13 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
     }
     @Override
     public void createGame(String playerId, String totemColor, int numPlayers) throws Exception {
-        //this.playerId = playerId;
-        sendCommand(new CreateGameCommand(playerId, totemColor, numPlayers));
+        sendCommand(new CreateGameCommand(playerId, totemColor, numPlayers, sessionId));
     }
 
     @Override
     public void joinGame(String playerId, String totemColor) throws Exception {
-        //this.playerId = playerId;
-        sendCommand(new JoinGameCommand(playerId, totemColor));
+        sendCommand(new JoinGameCommand(playerId, totemColor, sessionId));
     }
-
     @Override
     public void placeTotem(String playerId, int index) throws Exception {
         if(playerId==null){

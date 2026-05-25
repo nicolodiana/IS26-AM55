@@ -21,32 +21,52 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         super();
         this.serverApplication = serverApplication;
     }
+//appena mi connetto mi registro nella lobbymap della server application
 
-    @Override
-    public void connect(String playerId, VirtualViewRmi client) throws RemoteException {
-        // La registrazione non avviene più qui.
-        // Viene rimandata a create/join, e solo se la richiesta è valida.
-        System.out.println("[RMI_SERVER] connect ricevuta per " + playerId + " ma registrazione rimandata a create/join.");
-    }
-
-    @Override
-    public void createGame(String playerId, String totemColor, int numPlayers, VirtualView client) throws RemoteException {
+    public void connect(String sessionId, VirtualViewRmi client) throws RemoteException {
         rmiExecutor.submit(() -> {
-            try { serverApplication.executeCommand(new CreateGameCommand(playerId, totemColor, numPlayers), client); }
-            catch (Exception e) { e.printStackTrace(); }
+            try {
+                serverApplication.executeCommand(
+                        new RegisterLobbyCommand(sessionId),
+                        client
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+//    come parametro dell'esecute command per create game e joingame la virtualview sender è null, perche non mi serve, gestisco
+//    tutto tramite il session Id, tuttavia la firma di executecommand non posso modificarla perche poi nel registerLobbyClient
+//    ho bisogno della virtual view per fare mapping view id nella mappa
+
+    public void createGame(String playerId, String totemColor, int numPlayers, String sessionId) throws RemoteException {
+        rmiExecutor.submit(() -> {
+            try {
+                serverApplication.executeCommand(
+                        new CreateGameCommand(playerId, totemColor, numPlayers, sessionId),
+                        null
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
-    @Override
-    public void joinGame(String playerId, String totemColor, VirtualView client) throws RemoteException {
+    public void joinGame(String playerId, String totemColor, String sessionId) throws RemoteException {
         rmiExecutor.submit(() -> {
-            try { serverApplication.executeCommand(new JoinGameCommand(playerId, totemColor),client); }
-            catch (Exception e) { e.printStackTrace(); }
+            try {
+                serverApplication.executeCommand(
+                        new JoinGameCommand(playerId, totemColor, sessionId),
+                        null
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
 
-    @Override
+
     public void placeTotem(String playerId, int index) throws RemoteException {
         rmiExecutor.submit(() -> {
             try { serverApplication.executeCommand(new PlaceTotemCommand(playerId, index), null); }
@@ -54,7 +74,7 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         });
     }
 
-    @Override
+
     public void pickCard(String playerId, int cardId) throws RemoteException {
         rmiExecutor.submit(() -> {
             try { serverApplication.executeCommand(new PickCardCommand(playerId, cardId), null); }
@@ -62,7 +82,7 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         });
     }
 
-    @Override
+
     public void pickSpecial(String playerId, int cardId) throws RemoteException {
         rmiExecutor.submit(() -> {
             try { serverApplication.executeCommand(new PickSpecialCommand(playerId, cardId), null); }
@@ -78,7 +98,7 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
     Da aggiungere l' implementazione per la gestione del ping
     periodico inviato verso il server dal client.
      */
-    @Override
+
     public void ping(VirtualView client) throws RemoteException {
         rmiExecutor.submit(()->{
             try {
@@ -90,7 +110,6 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         });
     }
 
-    @Override
     public void quitGame(String id) throws RemoteException {
         rmiExecutor.submit(() -> {
             try {
@@ -101,7 +120,6 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         });
     }
 
-    @Override
     public void closeConnection(String playerId) throws RemoteException {
         rmiExecutor.submit(() -> {
             try {

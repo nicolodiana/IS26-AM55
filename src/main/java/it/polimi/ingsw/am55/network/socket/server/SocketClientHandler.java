@@ -4,14 +4,14 @@ import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.message.PongMessage;
 import it.polimi.ingsw.am55.network.ServerApplication;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
-import it.polimi.ingsw.am55.network.socket.VirtualViewSocket;
+import it.polimi.ingsw.am55.virtualview.VirtualView;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class SocketClientHandler implements VirtualViewSocket {
+public class SocketClientHandler implements VirtualView {
 
     private final Socket socket;
     private final ObjectInputStream input;
@@ -66,14 +66,7 @@ public class SocketClientHandler implements VirtualViewSocket {
         output.reset();
     }
 
-    @Override
-    public String getPlayerId() throws Exception {
-        if (this.playerId == null) {
-            throw new Exception("Player id nullo");
-        } else {
-            return this.playerId;
-        }
-    }
+
 
     @Override
     public void setPlayerId(String playerId) {

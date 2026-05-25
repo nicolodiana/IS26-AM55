@@ -6,14 +6,16 @@ package it.polimi.ingsw.am55.virtualview;
  * Rappresenta il contratto logico client -> server,
  * indipendente dalla tecnologia di comunicazione usata.
  */
-public interface VirtualServer {
+public interface VirtualServer  {
 
     /**
      * Azione richiesta dal client: placeTotem.
      */
 
-    void createGame(String playerId, String totemColor, int numPlayers,VirtualView sender) throws Exception;
-    void joinGame(String playerId, String totemColor,VirtualView sender) throws Exception;
+    void createGame(String playerId, String totemColor, int numPlayers, String sessionId) throws Exception;
+
+    void joinGame(String playerId, String totemColor, String sessionId) throws Exception;
+    void registerLobbyClient(String sessionId, VirtualView sender) throws Exception;
 
     void placeTotem(String playerId, int index) throws Exception;
 

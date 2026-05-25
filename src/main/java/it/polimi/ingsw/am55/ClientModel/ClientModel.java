@@ -3,6 +3,7 @@ package it.polimi.ingsw.am55.ClientModel;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.dto.CardView;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.view.ClientModelObserver;
@@ -21,6 +22,8 @@ public class ClientModel {
     private boolean gameEnded;
     private boolean gameCrashed;
     private boolean commandDone = false;
+    private boolean inLobby = true;
+    private LobbyView lobbyView;
 
     private final List<ClientModelObserver> observers;
     private final List<CardView> myHand;
@@ -83,10 +86,7 @@ public class ClientModel {
     }
     public boolean isGameEnded() {
         synchronized (lock) {
-            if (gameView.getState().equals(GameState.ENDED)) {
-                return true;
-            }
-            return false;
+            return gameView != null && gameView.getState().equals(GameState.ENDED);
         }
     }
     public GameView getGameView() {
@@ -143,17 +143,7 @@ public class ClientModel {
         }
     }
 
-    public boolean isCommandDone() {
-        synchronized (lock) {
-            return commandDone;
-        }
-    }
 
-    public void setCommandDone(boolean commandDone) {
-        synchronized (lock) {
-            this.commandDone = commandDone;
-        }
-    }
 
     public List<CardView> getMyHand() {
         synchronized (lock) {
@@ -203,16 +193,27 @@ public class ClientModel {
         }
     }
 
-    //------------------METODI CHE MODIFICANO IL MODEL----------------------
-
-    public void addCard(int cardId) {
+    public boolean isInLobby() {
         synchronized (lock) {
-            /*
-             * Quando riattiverai CardLoader/CardFactory:
-             *
-             * ClientCard card = cardFactory.createCard(String.valueOf(cardId));
-             * this.myHand.add(card);
-             */
+            return inLobby;
         }
     }
-}
+
+    public void setInLobby(boolean inLobby) {
+        synchronized (lock) {
+            this.inLobby = inLobby;
+        }
+    }
+
+    public LobbyView getLobbyView() {
+        synchronized (lock) {
+            return lobbyView;
+        }
+    }
+
+    public void setLobbyView(LobbyView lobbyView) {
+        synchronized (lock) {
+            this.lobbyView = lobbyView;
+        }
+    }
+    }
