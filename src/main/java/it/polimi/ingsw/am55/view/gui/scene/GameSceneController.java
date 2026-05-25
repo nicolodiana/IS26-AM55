@@ -20,10 +20,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -204,45 +201,115 @@ public class GameSceneController implements GenericSceneController {
 
     private void renderTurnTicket(BoardView board) {
         turnTicketBox.getChildren().clear();
-        if (board == null || board.getTurnTicket() == null) {
+
+        if (board == null || board.getTurnTicket() == null || board.getTurnTicket().isEmpty()) {
             return;
         }
 
         int numPlayers = board.getTurnTicket().size();
         Image turnTicket = imageResources.loadTurnTicket(numPlayers);
 
-        if (turnTicket != null) {
-            ImageView view = new ImageView(turnTicket);
-            view.setFitWidth(170);
-            view.setPreserveRatio(true);
-            turnTicketBox.getChildren().add(view);
+        if (turnTicket == null) {
+            return;
         }
+
+        double ticketWidth = 170;
+        double ticketHeight = turnTicket.getHeight() * ticketWidth / turnTicket.getWidth();
+
+        // spazio extra a destra per i totem
+        double panelWidth = ticketWidth + 85;
+
+        ImageView ticketView = new ImageView(turnTicket);
+        ticketView.setFitWidth(ticketWidth);
+        ticketView.setPreserveRatio(true);
+        ticketView.setLayoutX(0);
+        ticketView.setLayoutY(0);
+
+        Pane ticketPane = new Pane();
+        ticketPane.setPrefSize(panelWidth, ticketHeight);
+        ticketPane.setMinSize(panelWidth, ticketHeight);
+        ticketPane.setMaxSize(panelWidth, ticketHeight);
+
+        ticketPane.getChildren().add(ticketView);
 
         for (int i = 0; i < board.getTurnTicket().size(); i++) {
             PlayerView player = board.getTurnTicket().get(i);
-            StackPane slot = new StackPane();
-            slot.getStyleClass().add("turn-slot");
-            slot.setPrefSize(90, 64);
 
             if (player == null) {
-                slot.getChildren().add(new Label("-"));
-            } else {
-                VBox content = new VBox(2);
-                content.setAlignment(Pos.CENTER);
-                Image totem = imageResources.loadTotem(player.getTotemColor());
-                if (totem != null) {
-                    ImageView totemView = new ImageView(totem);
-                    totemView.setFitWidth(32);
-                    totemView.setFitHeight(32);
-                    totemView.setPreserveRatio(true);
-                    content.getChildren().add(totemView);
-                }
-                content.getChildren().add(new Label(player.getNickname()));
-                slot.getChildren().add(content);
+                continue;
             }
-            turnTicketBox.getChildren().add(slot);
+
+            VBox marker = createTurnTicketMarker(player);
+
+            marker.setLayoutX(turnTicketMarkerX(ticketWidth));
+            marker.setLayoutY(turnTicketMarkerY(i, numPlayers, ticketHeight));
+
+            ticketPane.getChildren().add(marker);
         }
+
+        turnTicketBox.getChildren().add(ticketPane);
     }
+
+    private VBox createTurnTicketMarker(PlayerView player) {
+        VBox marker = new VBox(2);
+        marker.setAlignment(Pos.CENTER);
+        marker.setMouseTransparent(true);
+        marker.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
+
+        Image totem = imageResources.loadTotem(player.getTotemColor());
+
+        if (totem != null) {
+            ImageView totemView = new ImageView(totem);
+            totemView.setFitWidth(26);
+            totemView.setFitHeight(26);
+            totemView.setPreserveRatio(true);
+            marker.getChildren().add(totemView);
+        }
+
+        Label nickname = new Label(player.getNickname());
+        nickname.setStyle("-fx-font-size: 10px; -fx-background-color: transparent;");
+
+        marker.getChildren().add(nickname);
+
+        return marker;
+    }
+    private double turnTicketMarkerX(double ticketWidth) {
+        // mette il totem a destra del ticket
+        return ticketWidth + 10;
+    }
+
+    private double turnTicketMarkerY(int index, int numPlayers, double ticketHeight) {
+        if (numPlayers == 2) {
+            return switch (index) {
+                case 0 -> 40;
+                case 1 -> 95;
+                default -> 36;
+            };
+        }
+
+        if (numPlayers == 3) {
+            return switch (index) {
+                case 0 -> 28;
+                case 1 -> 74;
+                case 2 -> 120;
+                default -> 28;
+            };
+        }
+
+        if (numPlayers == 4) {
+            return switch (index) {
+                case 0 -> 20;
+                case 1 -> 58;
+                case 2 -> 96;
+                case 3 -> 134;
+                default -> 20;
+            };
+        }
+
+        // fallback
+        return 30 + index * 45;
+    }
+
 
     private void renderBiddingTrail(BoardView board, String myPlayerId) {
         biddingTrailBox.getChildren().clear();

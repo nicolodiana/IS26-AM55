@@ -1,6 +1,8 @@
 package it.polimi.ingsw.am55.network;
 
+import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.GameController;
+import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.message.*;
 import it.polimi.ingsw.am55.network.command.PingCommand;
 import it.polimi.ingsw.am55.message.QuitGameMessage;
@@ -46,8 +48,20 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             lobbyClients.put(sessionId, client);
         }
 
-        //client.onMessage(new LobbyStatusMessage(controller.getLobbyView()));
+        LobbyView lobbyView = controller.getLobbyView();
+
+        String message;
+        if (lobbyView == null || lobbyView.getGameState() == null) {
+            message = "Connesso alla lobby.";
+        } else if (lobbyView.getGameState() == GameState.CREATED) {
+            message = "Esiste già una partita creata. Puoi unirti.";
+        } else {
+            message = "Una partita è già in corso su questo server. Puoi solo uscire.";
+        }
+
+        client.onMessage(new LobbyStatusMessage(lobbyView, message));
     }
+
 //    public void registerClient(String playerId,VirtualView client) { ??FORSE IL PING VA SPOSTATO IN REGISTER LOBBY??
 //        synchronized (gameClients) {
 //            gameClients.put(playerId, client);

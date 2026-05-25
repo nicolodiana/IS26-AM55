@@ -1,8 +1,10 @@
 package it.polimi.ingsw.am55.view.gui;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
+import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.view.ClientAction;
 import it.polimi.ingsw.am55.view.ClientActionResolver;
@@ -31,6 +33,9 @@ public class GuiView implements ClientModelObserver {
     private volatile String currentErrorMessage;
     private volatile boolean waitingServerResponse;
     private volatile String playerId;
+    private volatile boolean inLobby = true;
+    private volatile LobbyView currentLobbyView;
+
 
     public GuiView(ClientModel model) {
         this.model = Objects.requireNonNull(model, "model");
@@ -58,7 +63,11 @@ public class GuiView implements ClientModelObserver {
     public void showInitialScene() {
         Platform.runLater(() -> {
             SceneManager.showLobbyScene();
-            LobbySceneController controller = (LobbySceneController) SceneManager.getActiveController();
+
+            LobbySceneController controller =
+                    (LobbySceneController) SceneManager.getActiveController();
+
+            controller.renderLobby(currentLobbyView, false);
             controller.showMessage("Connesso al server. Crea o unisciti a una partita.");
         });
     }
@@ -71,6 +80,9 @@ public class GuiView implements ClientModelObserver {
             currentErrorMessage = updatedModel.getLastError();
             currentInfoMessage = updatedModel.getStateRequest();
             currentGameView = updatedModel.getGameView();
+//per leggere info della lobby
+            inLobby = updatedModel.isInLobby();
+            currentLobbyView = updatedModel.getLobbyView();
 
             renderCurrentState();
             showPendingMessages();
@@ -78,6 +90,11 @@ public class GuiView implements ClientModelObserver {
     }
 
     private void renderCurrentState() {
+        if (inLobby) {
+            showLobby(false);
+            return;
+        }
+
         EndGameResultView result = model.getEndGameResultView();
 
         if (result != null) {
@@ -101,6 +118,7 @@ public class GuiView implements ClientModelObserver {
                     showQuitGame(currentInfoMessage);
                 }
             }
+
             default -> showGame(currentGameView, action);
         }
     }
@@ -112,22 +130,25 @@ public class GuiView implements ClientModelObserver {
 
         controller.render(message);
     }
+//metodi per gestire scena lobby
+private void showLobby(boolean locked) {
+    SceneManager.showLobbySceneIfNeeded();
 
-    private void showLobby(boolean locked) {
-        SceneManager.showLobbySceneIfNeeded();
+    LobbySceneController controller =
+            (LobbySceneController) SceneManager.getActiveController();
 
-        LobbySceneController controller =
-                (LobbySceneController) SceneManager.getActiveController();
+    controller.renderLobby(currentLobbyView, locked || waitingServerResponse);
 
-        if (locked) {
-            controller.lock(
-                    currentInfoMessage != null && !currentInfoMessage.isBlank()
-                            ? currentInfoMessage
-                            : "Partita creata. In attesa degli altri giocatori..."
-            );
-        }
+    if (locked) {
+        controller.lock(
+                currentInfoMessage != null && !currentInfoMessage.isBlank()
+                        ? currentInfoMessage
+                        : "Partita creata. In attesa degli altri giocatori..."
+        );
     }
+}
 
+//metodi per gestire scena game
     private void showGame(GameView gameView, ClientAction action) {
         if (gameView == null) {
             showLobby(false);
@@ -156,6 +177,13 @@ public class GuiView implements ClientModelObserver {
     }
 
     private void showPendingMessages() {
+        if (inLobby
+                && currentLobbyView != null
+                && currentLobbyView.getGameState() != null
+                && currentLobbyView.getGameState() != GameState.CREATED) {
+            return;
+        }
+
         if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
             showError(currentErrorMessage);
             return;
