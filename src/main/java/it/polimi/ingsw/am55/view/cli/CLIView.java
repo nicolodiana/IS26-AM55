@@ -90,12 +90,11 @@ public class CLIView implements ClientModelObserver {
         String command = parts[0].toLowerCase();
 
         if (command.equals("quit") || command.equals("exit")) {
-            if (id != null) {
+            if (!this.inLobby) {
                 askQuitGame(this.id);
                 return;
             }
-            //model.removeObserver(this);
-            //System.exit(0);
+            askQuitLobby();
             return;
         }
 
@@ -320,7 +319,13 @@ public class CLIView implements ClientModelObserver {
         this.waitingServerResponse = true;
         actionHandler.onPickSpecialSelected(this.id, cardId);
     }
-
+    public void askQuitLobby(){
+        if (actionHandler != null) {
+            this.waitingServerResponse = true;
+            showMessage("Richiesta di uscita inviata al server...");
+            actionHandler.onQuitSelectedLobby();
+        }
+    }
     public void askQuitGame(String playerId) {
         if (actionHandler != null && playerId != null) {
             this.waitingServerResponse = true;

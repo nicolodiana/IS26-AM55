@@ -16,6 +16,10 @@ public class ClientActionResolver {
         }
 
 
+        if (gameView == null) {
+            return ClientAction.WAITING_FOR_STATE;
+        }
+
         GameState state = gameView.getState();
 
         if (state == null) {

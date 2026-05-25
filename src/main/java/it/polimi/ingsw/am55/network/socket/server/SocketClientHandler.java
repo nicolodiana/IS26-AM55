@@ -66,6 +66,10 @@ public class SocketClientHandler implements VirtualView {
         output.reset();
     }
 
+    @Override
+    public String getPlayerId() {
+        return this.playerId;
+    }
 
 
     @Override
@@ -73,14 +77,14 @@ public class SocketClientHandler implements VirtualView {
         this.playerId = playerId;
     }
 
-    @Override
-    public void pong() {
-        try {
-            this.onMessage(new PongMessage());
-        } catch (Exception e) {
-            System.out.println("[SOCKET CLIENT HANDLER] Impossibili inviare il ping al client");
-        }
-    }
+//    @Override
+//    public void pong() {
+//        try {
+//            this.onMessage(new PongMessage());
+//        } catch (Exception e) {
+//            System.out.println("[SOCKET CLIENT HANDLER] Impossibili inviare il ping al client");
+//        }
+//    }
 
 
 

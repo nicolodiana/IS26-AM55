@@ -253,7 +253,7 @@ public class GameController {
             gameModel.quitGame();
 
             return new QuitGameMessage(gameModel.toView(),
-                    "PLAYER  " + playerId + " has quitted. The game is finshed , connection are closed ");
+                    "PLAYER  " + playerId + " è uscito. ");
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());

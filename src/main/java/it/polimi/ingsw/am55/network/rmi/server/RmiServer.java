@@ -120,10 +120,21 @@ public class RmiServer extends UnicastRemoteObject implements VirtualServerRmi {
         });
     }
 
+    @Override
+    public void quitLobby(String sessionId) throws RemoteException {
+        rmiExecutor.submit(() -> {
+            try {
+                serverApplication.executeCommand(new QuitLobbyCommand(sessionId), null);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     public void closeConnection(String playerId) throws RemoteException {
         rmiExecutor.submit(() -> {
             try {
-                serverApplication.executeCommand(new CloseConnectionCommand(playerId), null);
+                //serverApplication.executeCommand(new CloseConnectionCommand(playerId), null);
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -95,18 +95,18 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
                 lastPingFromServer = System.currentTimeMillis();
         }
     }
+
+
+
+
     public void checkerAliver(){
         timerChekerAliver.schedule(new TimerTask() {
             public void run() {
                 long now = System.currentTimeMillis();
                 synchronized (pingLock) {
                     if(now-lastPingFromServer>6000){
-                        try {
-                            System.out.println("[SOCKET_CLIENT] Sto chiudendo il client");
-                            close();
-                        } catch (IOException e) {
-                            System.out.println("[SOCKET_CLIENT] Impossibile chiudere il client");
-                        }
+                        System.out.println("[SOCKET_CLIENT] Sto chiudendo il client perché il server è crashato");
+                        closeConnection();
                     }
                 }
             }
@@ -124,22 +124,15 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
                     MessageToClient response = (MessageToClient) input.readObject();
 
                     if (response != null) {
-                        System.out.println("[SOCKET_CLIENT] Ricevuto messaggio: "
-                                + response.getClass().getSimpleName());
-
-                        response.executeClientNetworkAction(this);
+//                        System.out.println("[SOCKET_CLIENT] Ricevuto messaggio: "
+//                                + response.getClass().getSimpleName());
 
                         if (response.shouldUpdateModel()) {
                             synchronized (model) {
                                 model.update(response);
-
-                                if (model.isGameEnded() || model.isGameCrashed()) {
-                                    close();
-                                    System.out.println("[SOCKET_CLIENT] Richiesta terminata");
-                                    break;
-                                }
                             }
                         }
+                        response.executeClientNetworkAction(this);
                     }
 
                 } catch (IOException | ClassNotFoundException e) {
@@ -155,7 +148,8 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
         virtualServerThread.start();
     }
 
-    public void close() throws IOException {
+    @Override
+    public void closeConnection() {
         running = false;
         try {
             timer.cancel(); //Viene interrotto il ping
@@ -186,7 +180,7 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
     @Override
     public void placeTotem(String playerId, int index) throws Exception {
         if(playerId==null){
-            throw new Exception("[SOCKET_CLIENT] Il playerId non trovat0.");
+            throw new Exception("[SOCKET_CLIENT] Il playerId non trovato.");
         }
         sendCommand(new PlaceTotemCommand(playerId, index));
     }
@@ -214,6 +208,11 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
         }
         //timer.cancel(); //Se il client chiede la disconnessione => smetto di pingare verso il server
         sendCommand(new QuitGameCommand(playerId));
+    }
+
+    @Override
+    public void quitLobby() throws Exception {
+        sendCommand(new QuitLobbyCommand(this.sessionId));
     }
 
     //Permette di inviare i comandi verso il server

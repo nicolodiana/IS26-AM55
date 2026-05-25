@@ -49,6 +49,7 @@ public class ClientModel {
         message.update(this);
         notifyObservers();
     }
+
     public void setGameEnded(boolean gameEnded) {
         this.gameEnded = gameEnded;
     }

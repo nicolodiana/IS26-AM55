@@ -9,4 +9,5 @@ public interface ClientConnectionControl {
     void startPing() throws Exception;
     void stopPing() throws Exception;
     void pongFromSever();
+    void closeConnection();
 }

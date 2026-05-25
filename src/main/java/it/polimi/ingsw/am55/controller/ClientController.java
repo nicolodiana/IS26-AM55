@@ -48,6 +48,14 @@ i metodi di socket o di RMI
         }
     }
 
+    @Override
+    public void onQuitSelectedLobby() {
+        try{
+            client.quitLobby();
+        }catch(Exception e){
+            System.err.println("Errore durante quitGame: " + e.getMessage());
+        }
+    }
 
 
     @Override

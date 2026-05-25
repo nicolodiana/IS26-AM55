@@ -4,6 +4,7 @@ module it.polimi.ingsw.am55 {
     requires javafx.fxml;
     requires org.controlsfx.controls;
     //requires it.polimi.ingsw.am55;
+    //requires it.polimi.ingsw.am55;
 
     exports it.polimi.ingsw.am55;
 

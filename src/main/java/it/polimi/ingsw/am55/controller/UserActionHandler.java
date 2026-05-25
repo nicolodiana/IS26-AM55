@@ -14,4 +14,6 @@ public interface UserActionHandler {
 
     void onQuitGameSelected(String playerId);
 
+    void onQuitSelectedLobby();
+
 }

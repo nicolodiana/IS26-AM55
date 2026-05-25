@@ -14,4 +14,6 @@ public interface ClientCommands {
 
     void quitGame(String playerId) throws Exception;
 
+    void quitLobby() throws Exception;
+
 }

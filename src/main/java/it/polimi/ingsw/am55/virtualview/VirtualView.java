@@ -11,8 +11,8 @@ public interface VirtualView {
      * un messaggio generico contenente un aggiornamento di stato.
      */
     void onMessage(MessageToClient message) throws Exception;
-    //String getPlayerId()throws Exception;
+    String getPlayerId();
     void setPlayerId(String playerId) throws Exception;
-    void pong()throws Exception;
+    //void pong()throws Exception;
     void close() throws Exception;
 }
