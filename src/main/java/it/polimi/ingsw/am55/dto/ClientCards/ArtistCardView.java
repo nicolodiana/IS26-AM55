@@ -1,6 +1,13 @@
 package it.polimi.ingsw.am55.dto.ClientCards;
 
+import it.polimi.ingsw.am55.MesosModel.Cards.Card;
 import it.polimi.ingsw.am55.dto.CardView;
+import it.polimi.ingsw.am55.view.cli.CLIRenderHelper;
+import it.polimi.ingsw.am55.view.cli.CliCardDetails;
+import it.polimi.ingsw.am55.view.cli.CliCardInfo;
+import it.polimi.ingsw.am55.view.cli.ConsoleColor;
+
+import java.util.List;
 
 public class ArtistCardView extends CardView {
 
@@ -13,4 +20,14 @@ public class ArtistCardView extends CardView {
         return "Artist";
     }
 
+    public CliCardInfo getCliCardInfo() {
+        return new CliCardInfo(
+                "CHARACTER",
+                ConsoleColor.CYAN_BOLD,
+                List.of(
+                    new CliCardDetails("Type", "Artist"),
+                    new CliCardDetails("Effect", "Artist card")
+                )
+            );
+    }
 }

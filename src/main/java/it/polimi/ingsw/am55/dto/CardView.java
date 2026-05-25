@@ -1,6 +1,11 @@
 package it.polimi.ingsw.am55.dto;
 
+import it.polimi.ingsw.am55.view.cli.CliCardDetails;
+import it.polimi.ingsw.am55.view.cli.CliCardInfo;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CardView implements Serializable {
 
@@ -22,4 +27,6 @@ public class CardView implements Serializable {
     public int getEra() {
         return era;
     }
+
+    public CliCardInfo getCliCardInfo() { return new CliCardInfo("", "", null); }
 }

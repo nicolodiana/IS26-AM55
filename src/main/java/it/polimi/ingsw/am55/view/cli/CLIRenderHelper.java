@@ -211,70 +211,12 @@ public class CLIRenderHelper {
     }
 
     private void addCardDetails(List<String> lines, CardView card, String borderColor) {
-        if (card instanceof ArtistCardView) {
-            appendDetail(lines, borderColor, "Type", "Artist");
-            appendDetail(lines, borderColor, "Effect", "Artist card");
-            return;
-        }
+        CliCardInfo info = card.getCliCardInfo();
+        if (card != null){
+            for (CliCardDetails detail : info.details()) {
+                appendDetail(lines, borderColor, detail.label(), detail.value());
+            }
 
-        if (card instanceof BuilderCardView builder) {
-            appendDetail(lines, borderColor, "Type", "Builder");
-            appendDetail(lines, borderColor, "PP", String.valueOf(builder.getNumPP()));
-            appendDetail(lines, borderColor, "Discount", String.valueOf(builder.getPickbuildingdiscount()));
-            return;
-        }
-
-        if (card instanceof CollectorCardView) {
-            appendDetail(lines, borderColor, "Type", "Collector");
-            appendDetail(lines, borderColor, "Effect", "Food discount");
-            return;
-        }
-
-        if (card instanceof HunterCardView hunter) {
-            appendDetail(lines, borderColor, "Type", "Hunter");
-            appendDetail(lines, borderColor, "Icon", String.valueOf(hunter.getIcon()));
-            return;
-        }
-
-        if (card instanceof InventorCardView inventor) {
-            appendDetail(lines, borderColor, "Type", "Inventor");
-            appendDetail(lines, borderColor, "Icon", inventor.getIconInvention());
-            return;
-        }
-
-        if (card instanceof ShamanCardView shaman) {
-            appendDetail(lines, borderColor, "Type", "Shaman");
-            appendDetail(lines, borderColor, "Stars", String.valueOf(shaman.getNumStars()));
-            return;
-        }
-
-        if (card instanceof BuildingCardView building) {
-            appendDetail(lines, borderColor, "Type", "Building");
-            appendDetail(lines, borderColor, "Info", building.toString());
-            return;
-        }
-
-        if (card instanceof HuntEventView hunt) {
-            appendDetail(lines, borderColor, "Type", "Hunt Event");
-            appendDetail(lines, borderColor, "Info", hunt.toString());
-            return;
-        }
-
-        if (card instanceof PaintingsEventView paintings) {
-            appendDetail(lines, borderColor, "Type", "Paintings Event");
-            appendDetail(lines, borderColor, "Info", paintings.toString());
-            return;
-        }
-
-        if (card instanceof ShamanRitualEventView ritual) {
-            appendDetail(lines, borderColor, "Type", "Shaman Ritual");
-            appendDetail(lines, borderColor, "Info", ritual.toString());
-            return;
-        }
-
-        if (card instanceof SustenanceEventView sustenance) {
-            appendDetail(lines, borderColor, "Type", "Sustenance Event");
-            appendDetail(lines, borderColor, "Info", sustenance.toString());
             return;
         }
 
@@ -396,45 +338,18 @@ public class CLIRenderHelper {
         return player.getNickname() + " / " + player.getTotemColor();
     }
     private String getCardCategory(CardView card) {
-        if (card instanceof BuildingCardView) {
-            return "BUILDING";
-        }
+        CliCardInfo info = card.getCliCardInfo();
 
-        if (card instanceof HuntEventView
-                || card instanceof PaintingsEventView
-                || card instanceof ShamanRitualEventView
-                || card instanceof SustenanceEventView) {
-            return "EVENT";
-        }
-
-        if (card instanceof ArtistCardView
-                || card instanceof BuilderCardView
-                || card instanceof CollectorCardView
-                || card instanceof HunterCardView
-                || card instanceof InventorCardView
-                || card instanceof ShamanCardView) {
-            return "CHARACTER";
-        }
-
-        return "CARD";
+        return info.category();
     }
 
     private String getCardColor(CardView card) {
-        if (card instanceof BuildingCardView) {
-            return ConsoleColor.YELLOW_BOLD;
-        }
+        CliCardInfo info = card.getCliCardInfo();
 
-        if (card instanceof HuntEventView
-                || card instanceof PaintingsEventView
-                || card instanceof ShamanRitualEventView
-                || card instanceof SustenanceEventView) {
-            return ConsoleColor.RED_BOLD;
-        }
-
-        return ConsoleColor.CYAN_BOLD;
+        return info.Color();
     }
 
-    private void appendDetail(List<String> lines, String borderColor, String label, String value) {
+    public void appendDetail(List<String> lines, String borderColor, String label, String value) { // public to use override in addCardDetails
         /*String text = label + ": " + safe(value);
         List<String> wrapped = wrap(text, CARD_WIDTH - 2);
 
