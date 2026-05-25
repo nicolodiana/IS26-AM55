@@ -207,30 +207,15 @@ public class GameSceneController implements GenericSceneController {
         }
 
         int numPlayers = board.getTurnTicket().size();
+
         Image turnTicket = imageResources.loadTurnTicket(numPlayers);
 
-        if (turnTicket == null) {
-            return;
+        if (turnTicket != null) {
+            ImageView ticketView = new ImageView(turnTicket);
+            ticketView.setFitWidth(170);
+            ticketView.setPreserveRatio(true);
+            turnTicketBox.getChildren().add(ticketView);
         }
-
-        double ticketWidth = 170;
-        double ticketHeight = turnTicket.getHeight() * ticketWidth / turnTicket.getWidth();
-
-        // spazio extra a destra per i totem
-        double panelWidth = ticketWidth + 85;
-
-        ImageView ticketView = new ImageView(turnTicket);
-        ticketView.setFitWidth(ticketWidth);
-        ticketView.setPreserveRatio(true);
-        ticketView.setLayoutX(0);
-        ticketView.setLayoutY(0);
-
-        Pane ticketPane = new Pane();
-        ticketPane.setPrefSize(panelWidth, ticketHeight);
-        ticketPane.setMinSize(panelWidth, ticketHeight);
-        ticketPane.setMaxSize(panelWidth, ticketHeight);
-
-        ticketPane.getChildren().add(ticketView);
 
         for (int i = 0; i < board.getTurnTicket().size(); i++) {
             PlayerView player = board.getTurnTicket().get(i);
@@ -239,75 +224,37 @@ public class GameSceneController implements GenericSceneController {
                 continue;
             }
 
-            VBox marker = createTurnTicketMarker(player);
+            StackPane slot = new StackPane();
+            slot.getStyleClass().add("turn-slot");
+            slot.setPrefSize(110, 90);
 
-            marker.setLayoutX(turnTicketMarkerX(ticketWidth));
-            marker.setLayoutY(turnTicketMarkerY(i, numPlayers, ticketHeight));
+            VBox content = new VBox(4);
+            content.setAlignment(Pos.CENTER);
+            Label boxLabel = new Label(player.getNickname() + " ON BOX " + (i + 1));
+            boxLabel.setStyle("""
+        -fx-font-family: 'Impact';
+        -fx-font-size: 14px;
+        -fx-font-weight: bold;
+        -fx-text-fill: #f77f00;
+        -fx-effect: dropshadow(gaussian, lightskyblue, 1.5, 0.6, 0.8, 1);
+        """);
+            Image totem = imageResources.loadTotem(player.getTotemColor());
 
-            ticketPane.getChildren().add(marker);
+            if (totem != null) {
+                ImageView totemView = new ImageView(totem);
+                totemView.setFitWidth(38);
+                totemView.setFitHeight(38);
+                totemView.setPreserveRatio(true);
+
+                content.getChildren().addAll(boxLabel, totemView);
+            } else {
+                Label fallback = new Label(player.getTotemColor());
+                content.getChildren().addAll(boxLabel, fallback);
+            }
+
+            slot.getChildren().add(content);
+            turnTicketBox.getChildren().add(slot);
         }
-
-        turnTicketBox.getChildren().add(ticketPane);
-    }
-
-    private VBox createTurnTicketMarker(PlayerView player) {
-        VBox marker = new VBox(2);
-        marker.setAlignment(Pos.CENTER);
-        marker.setMouseTransparent(true);
-        marker.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
-
-        Image totem = imageResources.loadTotem(player.getTotemColor());
-
-        if (totem != null) {
-            ImageView totemView = new ImageView(totem);
-            totemView.setFitWidth(26);
-            totemView.setFitHeight(26);
-            totemView.setPreserveRatio(true);
-            marker.getChildren().add(totemView);
-        }
-
-        Label nickname = new Label(player.getNickname());
-        nickname.setStyle("-fx-font-size: 10px; -fx-background-color: transparent;");
-
-        marker.getChildren().add(nickname);
-
-        return marker;
-    }
-    private double turnTicketMarkerX(double ticketWidth) {
-        // mette il totem a destra del ticket
-        return ticketWidth + 10;
-    }
-
-    private double turnTicketMarkerY(int index, int numPlayers, double ticketHeight) {
-        if (numPlayers == 2) {
-            return switch (index) {
-                case 0 -> 40;
-                case 1 -> 95;
-                default -> 36;
-            };
-        }
-
-        if (numPlayers == 3) {
-            return switch (index) {
-                case 0 -> 28;
-                case 1 -> 74;
-                case 2 -> 120;
-                default -> 28;
-            };
-        }
-
-        if (numPlayers == 4) {
-            return switch (index) {
-                case 0 -> 20;
-                case 1 -> 58;
-                case 2 -> 96;
-                case 3 -> 134;
-                default -> 20;
-            };
-        }
-
-        // fallback
-        return 30 + index * 45;
     }
 
 
