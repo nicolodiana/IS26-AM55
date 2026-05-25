@@ -20,4 +20,11 @@ public class QuitGameSceneController implements GenericSceneController {
                 ? "La partita è stata chiusa."
                 : message);
     }
+
+    @Override
+    public void showError(String message) { }
+
+    public void showStatus(String message) { }
+
+    public void lockInteractions(String message) { }
 }

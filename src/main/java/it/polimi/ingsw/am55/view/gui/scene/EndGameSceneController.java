@@ -107,4 +107,9 @@ public class EndGameSceneController implements GenericSceneController {
     public void showStatus(String message) {
         statusLabel.setText(message == null ? "" : message);
     }
+
+    public void showError(String message) { statusLabel.setText(message == null ? "" : ("Errore: " + message)); }
+
+    @Override
+    public void lockInteractions(String message) { }
 }

@@ -59,7 +59,7 @@ public class GuiView implements ClientModelObserver {
         Platform.runLater(() -> {
             SceneManager.showLobbyScene();
             LobbySceneController controller = (LobbySceneController) SceneManager.getActiveController();
-            controller.showMessage("Connesso al server. Crea o unisciti a una partita.");
+            controller.showStatus("Connesso al server. Crea o unisciti a una partita.");
         });
     }
 
@@ -120,7 +120,7 @@ public class GuiView implements ClientModelObserver {
                 (LobbySceneController) SceneManager.getActiveController();
 
         if (locked) {
-            controller.lock(
+            controller.lockInteractions(
                     currentInfoMessage != null && !currentInfoMessage.isBlank()
                             ? currentInfoMessage
                             : "Partita creata. In attesa degli altri giocatori..."
@@ -167,24 +167,28 @@ public class GuiView implements ClientModelObserver {
     }
 
     private void showInfo(String message) {
-        if (SceneManager.getActiveController() instanceof LobbySceneController lobby) {
+        /*if (SceneManager.getActiveController() instanceof LobbySceneController lobby) {
             lobby.showMessage(message);
         } else if (SceneManager.getActiveController() instanceof GameSceneController game) {
             game.showStatus(message);
         } else if (SceneManager.getActiveController() instanceof EndGameSceneController end) {
             end.showStatus(message);
-        }
+        }*/
+
+        SceneManager.getActiveController().showStatus(message);
     }
 
     private void showError(String message) {
-        if (SceneManager.getActiveController() instanceof LobbySceneController lobby) {
+        /*if (SceneManager.getActiveController() instanceof LobbySceneController lobby) {
             lobby.showError(message);
         } else if (SceneManager.getActiveController() instanceof GameSceneController game) {
             game.showError(message);
         } else if (SceneManager.getActiveController() instanceof EndGameSceneController end) {
             end.showStatus("Errore: " + message);
-        }
+        }*/
+        SceneManager.getActiveController().showError(message);
     }
+
     public void quitGame() {
         if (!ensureActionHandler() || playerId == null) {
             return;
@@ -244,11 +248,13 @@ public class GuiView implements ClientModelObserver {
     private void submitCommand(Runnable command) {
         waitingServerResponse = true;
 
-        if (SceneManager.getActiveController() instanceof GameSceneController game) {
+        /*if (SceneManager.getActiveController() instanceof GameSceneController game) {
             game.lockInteractions("Comando inviato. In attesa del server...");
         } else if (SceneManager.getActiveController() instanceof LobbySceneController lobby) {
-            lobby.lock("Comando inviato. In attesa del server...");
-        }
+            lobby.lockInteractions("Comando inviato. In attesa del server...");
+        }*/
+
+        SceneManager.getActiveController().lockInteractions("Command sent. Waiting the server...");
 
         commandExecutor.submit(() -> {
             try {
