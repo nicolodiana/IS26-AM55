@@ -10,7 +10,9 @@ import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import it.polimi.ingsw.am55.view.ClientAction;
 import it.polimi.ingsw.am55.view.ClientActionResolver;
 import it.polimi.ingsw.am55.view.ClientModelObserver;
+import javafx.scene.layout.CornerRadii;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.Executors;
@@ -111,6 +113,12 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
+        if (command.equals("allhands")) {
+            handleAllHandsCommand(action, parts);
+            printExpectedAction();
+            return;
+        }
+
 
         if (waitingServerResponse) {
             System.out.println(ConsoleColor.YELLOW_BOLD
@@ -137,6 +145,20 @@ public class CLIView implements ClientModelObserver {
             case WAITING_FOR_STATE -> showMessage("Nessuna azione disponibile: attendi un aggiornamento dello stato.");
         }
     }
+
+    public void handleAllHandsCommand(ClientAction currentState, String[] parts) {
+        if (parts.length > 2) {
+            showError("Uso corretto: allhands");
+            return;
+        }
+
+        if (this.currentGameView != null) {
+            for (PlayerView player : this.currentGameView.getPlayers()) {
+                printHand(currentState, player.getNickname());
+            }
+        }
+    }
+
     private void handleHandCommand(ClientAction currentState, String[] parts) {
         if (parts.length > 2) {
             showError("Uso corretto: myhand oppure myhand <nickname>");
