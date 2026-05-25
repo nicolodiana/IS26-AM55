@@ -6,12 +6,10 @@ import it.polimi.ingsw.am55.network.ServerApplication;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.network.socket.VirtualViewSocket;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
-import java.rmi.RemoteException;
 
 public class SocketClientHandler implements VirtualViewSocket {
 
