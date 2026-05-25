@@ -11,5 +11,6 @@ public interface VirtualViewRmi extends Remote,VirtualView{
     void onMessage(MessageToClient message) throws RemoteException;
     void close() throws RemoteException;
     void setPlayerId(String playerId) throws RemoteException;
+    String getPlayerId() throws RemoteException;
     //void pong() throws  RemoteException;
 }

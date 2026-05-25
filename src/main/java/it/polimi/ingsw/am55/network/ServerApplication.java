@@ -83,7 +83,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         System.out.println("[SERVER_APP] Command completato: "
                 + command.getClass().getSimpleName());
     }
-    private void pong(VirtualView sender) {
+    private void pong(VirtualView sender) throws Exception {
         synchronized (gameClients) {
             if (sender.getPlayerId() != null && gameClients.containsKey(sender.getPlayerId())) {
                 sendTo(sender.getPlayerId(), new PongMessage());
