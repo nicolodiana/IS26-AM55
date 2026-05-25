@@ -54,14 +54,10 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         }
     }
 
-    @Override
-    public String getPlayerId() throws Exception {
-        return "";
-    }
 
     @Override
     public void setPlayerId(String playerId) {
-
+        this.playerId = playerId;
     }
 
     @Override
@@ -129,25 +125,25 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     * */
     @Override
     public synchronized void startPing(){
-        if (pingStarted) {
-            return;
-        }
-        pingStarted = true;
-
-        timer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                try {
-                    pingToServer();
-                } catch (Exception e) {
-                    System.out.println("[RMI_CLIENT] Invio ping fallito. Chiudo il client.");
-                    try {
-                        close();
-                    } catch (RemoteException ex) {
-                        throw new RuntimeException(ex);
-                    }
-                }
-            }
-        }, 0, 1500);
+//        if (pingStarted) {
+//            return;
+//        }
+//        pingStarted = true;
+//
+//        timer.scheduleAtFixedRate(new TimerTask() {
+//            public void run() {
+//                try {
+//                    pingToServer();
+//                } catch (Exception e) {
+//                    System.out.println("[RMI_CLIENT] Invio ping fallito. Chiudo il client.");
+//                    try {
+//                        close();
+//                    } catch (RemoteException ex) {
+//                        throw new RuntimeException(ex);
+//                    }
+//                }
+//            }
+//        }, 0, 1500);
     }
 
     @Override
@@ -159,8 +155,8 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
     public void pongFromSever() {
 
     }
-
-    private void pingToServer() throws Exception {
-        server.ping(this);
-    }
+//
+//    private void pingToServer() throws Exception {
+//        server.ping(this);
+//    }
 }

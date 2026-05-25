@@ -13,12 +13,13 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.rmi.RemoteException;
 
-public class SocketClientHandler implements VirtualViewSocket{
+public class SocketClientHandler implements VirtualViewSocket {
 
     private final Socket socket;
     private final ObjectInputStream input;
     private final ObjectOutputStream output;
     private final ServerApplication serverApplication;
+    private String playerId;
     private Thread virtualViewThread;
 
 
@@ -36,22 +37,22 @@ public class SocketClientHandler implements VirtualViewSocket{
     //"Orecchio" del socketclient handler verso i client, permette di passare il comando
     //da eseguire a serverapplication
     public void runVirtualView() {
-        virtualViewThread = new  Thread(() -> {
+        virtualViewThread = new Thread(() -> {
             ServerCommand command;
-            try{
-                while((command = (ServerCommand) input.readObject()) != null){
-                    try{
-                        serverApplication.executeCommand(command,this);
-                    }catch(Exception e){
-                        System.out.println("[SOCKET_HANDLER] Errore esecuzione del comando "+e.getMessage());
+            try {
+                while ((command = (ServerCommand) input.readObject()) != null) {
+                    try {
+                        serverApplication.executeCommand(command, this);
+                    } catch (Exception e) {
+                        System.out.println("[SOCKET_HANDLER] Errore esecuzione del comando " + e.getMessage());
                     }
                 }
-            } catch (IOException | ClassNotFoundException e){
+            } catch (IOException | ClassNotFoundException e) {
                 System.out.println("[SOCKET_HANDLER] Il client tcp si è disconesso " + e.getMessage());
                 close();
             }
-     });
-     virtualViewThread.start();
+        });
+        virtualViewThread.start();
     }
 
     //Invia i messaggi di risposta verso il client che gestisce
@@ -69,40 +70,27 @@ public class SocketClientHandler implements VirtualViewSocket{
 
     @Override
     public String getPlayerId() throws Exception {
-        if(this.playerId==null){
+        if (this.playerId == null) {
             throw new Exception("Player id nullo");
-        }else{
+        } else {
             return this.playerId;
         }
     }
 
     @Override
-    public void setPlayerId(String playerId){
-        this.playerId=playerId;
+    public void setPlayerId(String playerId) {
+        this.playerId = playerId;
     }
 
     @Override
     public void pong() {
-        try{
+        try {
             this.onMessage(new PongMessage());
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println("[SOCKET CLIENT HANDLER] Impossibili inviare il ping al client");
         }
     }
 
-//    @Override
-//    public String getPlayerId() throws Exception {
-//        if(playerId == null){
-//            throw new Exception("PlayerId non configurato");
-//        }else{
-//            return this.playerId;
-//        }
-//    }
-//
-//    @Override
-//    public void setPlayerId(String playerId) throws Exception {
-//        this.playerId = playerId;
-//    }
 
 
     //Permette la chiusura del socket(dovrebbe essere invocato in serverapplication)
@@ -124,3 +112,19 @@ public class SocketClientHandler implements VirtualViewSocket{
         System.out.println("[SOCKET_HANDLER] Socket è stato chiuso");
     }
 }
+
+
+
+//    @Override
+//    public String getPlayerId() throws Exception {
+//        if(playerId == null){
+//            throw new Exception("PlayerId non configurato");
+//        }else{
+//            return this.playerId;
+//        }
+//    }
+//
+//    @Override
+//    public void setPlayerId(String playerId) throws Exception {
+//        this.playerId = playerId;
+//    }

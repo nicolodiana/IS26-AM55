@@ -46,10 +46,10 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             System.out.println("[SERVER_APP] Client registrati: " + clients.keySet());
         }
         //Perché devo registrare l'istante in cui il client si collega al server per la prima volta, per ragioni di ping
-        synchronized (lastPingByClient) {
-            lastPingByClient.put(client, System.currentTimeMillis());
-        }
-        startAliveChecker();
+//        synchronized (lastPingByClient) {
+//            lastPingByClient.put(client, System.currentTimeMillis());
+//        }
+//        startAliveChecker();
     }
 
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {

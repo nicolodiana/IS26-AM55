@@ -33,8 +33,8 @@ public class UpdateViewMessage extends MessageToClient {
     public void deliver(String playerId, MessageDelivery context) {
         context.broadcast(this);
     }
-    @Override
-    public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
-        client.startPing();
-    }
+//    @Override
+//    public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
+//        client.startPing();
+//    }
 }
