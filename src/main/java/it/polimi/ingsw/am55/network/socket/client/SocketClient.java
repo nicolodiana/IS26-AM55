@@ -68,16 +68,15 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
             public void run() {
                 try {
                     if(!checkerAliverActive){
-                        synchronized (pingLock) {
-                            lastPingFromServer = System.currentTimeMillis();
-                        }
+//                        synchronized (pingLock) {
+//                            lastPingFromServer = System.currentTimeMillis();
+//                        }
                         checkerAliverActive = true;
                         checkerAliver();
                     }
                     sendCommand(new PingCommand());
                 } catch (Exception e) {
-                    System.out.println("[SOCKET_CLIENT] Invio ping fallito. Chiudo il client.");
-                    timer.cancel(); //Chiudo il ping verso il server
+                    System.out.println("[SOCKET_CLIENT] Invio ping fallito ");
                 }
             }
         }, 0, 1500);
@@ -97,15 +96,14 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
     }
 
 
-
-
     public void checkerAliver(){
         timerChekerAliver.schedule(new TimerTask() {
             public void run() {
                 long now = System.currentTimeMillis();
                 synchronized (pingLock) {
-                    if(now-lastPingFromServer>6000){
-                        System.out.println("[SOCKET_CLIENT] Sto chiudendo il client perché il server è crashato");
+                    System.out.println( lastPingFromServer);
+                    if(now-lastPingFromServer>8000){
+                        System.out.println("[SOCKET_CLIENT] Server non raggiungibile: chiudo il client.");
                         closeConnection();
                     }
                 }
@@ -155,7 +153,7 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
             timer.cancel(); //Viene interrotto il ping
         } catch (Exception ignored) {}
         try {
-            timerChekerAliver.cancel(); //Viene interrotto il ping
+            timerChekerAliver.cancel(); //Viene interrotto il controllo che il server sia crashato
         } catch (Exception ignored) {}
         try {
             input.close();

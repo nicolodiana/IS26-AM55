@@ -237,12 +237,10 @@ public class GameController {
         }
     }
     public MessageToClient handleGameCrashed(){
-        try{
-           gameModel.handleGameCrashed();
-           return new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
-        }catch(Exception e){
-            return new ErrorMessage(e.getMessage());
-        }
+
+        gameModel.handleGameCrashed();
+        return new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+
     }
     public MessageToClient quitGame(String playerId){
         if (gameModel == null) {

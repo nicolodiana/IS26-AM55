@@ -25,17 +25,17 @@ import java.util.UUID;
 public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, ClientCommands, ClientConnectionControl {
 
     private static final long PING_INTERVAL_MS = 1500;
-    private static final long SERVER_TIMEOUT_MS = 6000;
+    private static final long SERVER_TIMEOUT_MS = 10000;
 
     private final VirtualServerRmi server;
     private final ClientModel model;
     private final String sessionId;
 
     private volatile String playerId;
-    private volatile long lastPingFromServer;
+    private Long lastPingFromServer;
     private volatile boolean checkerAliverActive = false;
     private boolean pingStarted;
-    private boolean closed;
+    private final Object pingLock;
 
     private Timer timer;
     private Timer timerChekerAliver;
@@ -48,9 +48,8 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
         this.timer = new Timer(true);
         this.timerChekerAliver = new Timer(true);
         this.pingStarted = false;
-        this.closed = false;
-        this.lastPingFromServer = System.currentTimeMillis();
-        this.sessionId = UUID.randomUUID().toString(); // genero id session randomico e univoco per ogni client
+        this.pingLock = new Object();
+        this.sessionId = UUID.randomUUID().toString();// genero id session randomico e univoco per ogni client
         server.connect(this.sessionId, this);
     }
 
@@ -62,12 +61,6 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
                     model.update(message);
                 }
             }
-
-            /*
-             * L'azione tecnica va eseguita anche per i messaggi che aggiornano il model.
-             * Esempio: QuitLobbyMessage/GameCrashedBroadcast aggiornano il model e poi devono
-             * fermare ping/checker e chiudere il client.
-             */
             message.executeClientNetworkAction(this);
         } catch (Exception e) {
             System.out.println("[RMI_CLIENT] Errore gestione messaggio: " + e.getMessage());
@@ -76,7 +69,11 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
 
     @Override
     public void close() throws RemoteException {
+        pingStarted = false;
+        checkerAliverActive = false;
         timer.cancel();
+        timerChekerAliver.cancel();
+        System.out.println("[RMI_CLIENT] Chiusura avvenuta.");
     }
 
     @Override
@@ -169,28 +166,30 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
      * synchronized serve per non schedulare due TimerTask se arrivano due StartPingMessage quasi insieme.
      */
     @Override
-    public synchronized void startPing() {
-        if (closed || pingStarted) {
+    public void startPing() {
+        if (pingStarted) {
             return;
         }
-
         pingStarted = true;
-        checkerAliverActive = true;
-        lastPingFromServer = System.currentTimeMillis();
 
-        /*
-         * Se in passato stopPing() ha cancellato i timer, un Timer cancellato non può essere riusato.
-         * Per questo li ricreo quando riparte il ping.
-         */
-        timer = new Timer(true);
-        timerChekerAliver = new Timer(true);
 
-        startAliveChecker();
+
+//        timer = new Timer(true);
+//        timerChekerAliver = new Timer(true);
+//
+//        startAliveChecker();
 
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 try {
+                    if(!checkerAliverActive){
+//                        synchronized (pingLock) {
+//                            lastPingFromServer = System.currentTimeMillis();
+//                        }
+                        checkerAliverActive = true;
+                        checkerAliver();
+                    }
                     pingToServer();
                 } catch (Exception e) {
                     /*
@@ -198,23 +197,26 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
                      * Se il server non risponde davvero, sarà startAliveChecker() a chiudere
                      * dopo SERVER_TIMEOUT_MS senza PongMessage.
                      */
-                    System.out.println("[RMI_CLIENT] Invio ping fallito; attendo timeout del PongMessage.");
+                    System.out.println("[RMI_CLIENT] Invio ping fallito");
                 }
             }
-        }, 0, PING_INTERVAL_MS);
+        }, 0, 1500);
     }
 
-    private synchronized void startAliveChecker() {
+    private void checkerAliver() {
         if (!checkerAliverActive) {
             return;
         }
 
-        timerChekerAliver.scheduleAtFixedRate(new TimerTask() {
+        timerChekerAliver.schedule(new TimerTask() {
             @Override
             public void run() {
-                long elapsed = System.currentTimeMillis() - lastPingFromServer;
-
-                if (elapsed > SERVER_TIMEOUT_MS) {
+                long elapsed;
+                synchronized (pingLock) {
+                    elapsed = System.currentTimeMillis() - lastPingFromServer;
+                    System.out.println(lastPingFromServer);
+                }
+                if (elapsed > 8000) {
                     try {
                         System.out.println("[RMI_CLIENT] Server non raggiungibile: chiudo il client.");
                         close();
@@ -223,28 +225,24 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
                     }
                 }
             }
-        }, PING_INTERVAL_MS, PING_INTERVAL_MS);
+        }, 1500,1500);
     }
 
     @Override
-    public synchronized void stopPing() {
+    public void stopPing() {
         pingStarted = false;
         checkerAliverActive = false;
 
-        try {
-            timer.cancel();
-        } catch (Exception ignored) {
-        }
+        timer.cancel();
+        timerChekerAliver.cancel();
 
-        try {
-            timerChekerAliver.cancel();
-        } catch (Exception ignored) {
-        }
     }
 
     @Override
     public void pongFromSever() {
-        lastPingFromServer = System.currentTimeMillis();
+        synchronized (pingLock){
+            lastPingFromServer = System.currentTimeMillis();
+        }
     }
 
     @Override
