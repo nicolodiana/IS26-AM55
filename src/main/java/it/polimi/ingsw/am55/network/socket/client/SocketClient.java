@@ -91,7 +91,7 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
     @Override
     public void pongFromSever() {
         synchronized (pingLock) {
-                lastPingFromServer = System.currentTimeMillis();
+            lastPingFromServer = System.currentTimeMillis();
         }
     }
 
@@ -101,7 +101,7 @@ public class SocketClient implements ClientCommands , ClientConnectionControl {
             public void run() {
                 long now = System.currentTimeMillis();
                 synchronized (pingLock) {
-                    System.out.println( lastPingFromServer);
+                    //System.out.println( lastPingFromServer);
                     if(now-lastPingFromServer>8000){
                         System.out.println("[SOCKET_CLIENT] Server non raggiungibile: chiudo il client.");
                         closeConnection();

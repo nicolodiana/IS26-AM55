@@ -8,6 +8,7 @@ import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
+import it.polimi.ingsw.am55.dto.endgame.LeaderBoardEntryView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import it.polimi.ingsw.am55.view.ClientAction;
 import it.polimi.ingsw.am55.view.ClientActionResolver;
@@ -694,6 +695,32 @@ public class CLIView implements ClientModelObserver {
                 );
             }
 
+            System.out.println();
+        }
+
+        if (result.getLeaderBoard() != null && !result.getLeaderBoard().isEmpty()) {
+            System.out.println(ConsoleColor.CYAN_BOLD
+                    + "========== CLASSIFICA GENERALE =========="
+                    + ConsoleColor.RESET);
+
+            System.out.printf("%-8s %-25s %-8s %-8s%n",
+                    "Pos.", "Nickname", "PP", "Cibo");
+
+            for (LeaderBoardEntryView entry : result.getLeaderBoard()) {
+                if (entry == null) {
+                    continue;
+                }
+
+                System.out.printf("%-8d %-25s %-8d %-8d%n",
+                        entry.getPosition(),
+                        entry.getPlayerNickname(),
+                        entry.getPrestigePoint(),
+                        entry.getFoodPoint());
+            }
+
+            System.out.println(ConsoleColor.CYAN_BOLD
+                    + "========================================="
+                    + ConsoleColor.RESET);
             System.out.println();
         }
 

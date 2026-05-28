@@ -124,7 +124,7 @@ public class GameController {
                 EndGameResultView endGameResult = gameModel.endGame();
 
                 GameView finalGameView = gameModel.toView();
-
+                gameModel.getPlayers().getFirst().getNickname();
                 return new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,

@@ -214,7 +214,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualViewRmi, Cl
                 long elapsed;
                 synchronized (pingLock) {
                     elapsed = System.currentTimeMillis() - lastPingFromServer;
-                    System.out.println(lastPingFromServer);
+                    //System.out.println(lastPingFromServer);
                 }
                 if (elapsed > 8000) {
                     try {

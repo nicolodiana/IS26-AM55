@@ -351,7 +351,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
                 for (String sessionId : sessionIds) {
                     sendToSession(sessionId,new QuitLobbyMessage());
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
                 System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
             }
             synchronized (lobbyClients){
@@ -363,7 +363,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
                 for(VirtualView client : disconnectedClients){
                     client.close();
                 }
-            } catch (Exception ignored) {
+            } catch (Exception e) {
             }
             return;
         }

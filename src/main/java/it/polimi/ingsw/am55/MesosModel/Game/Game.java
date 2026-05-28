@@ -10,11 +10,13 @@ import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.database.DatabaseManger;
+import it.polimi.ingsw.am55.database.GameRepository;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.LobbyView;
-import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
+import it.polimi.ingsw.am55.dto.endgame.LeaderBoardEntryView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +32,8 @@ import java.util.UUID;
  */
 public class Game implements GameModelInterface{
     private List<EventCard> eventList = new ArrayList<>();
+
+    private GameRepository gameRepository;
     /**
      * The unique identifier for this specific game or match.
      */
@@ -375,7 +379,7 @@ public class Game implements GameModelInterface{
 
 
     private void secondPartPick() {
-        if (countRound == 10){
+        if (countRound == 2){
             changeState(GameState.ENDGAMERESOLVE);
             return;
         }
@@ -690,15 +694,21 @@ public class Game implements GameModelInterface{
         Map<String, Integer> winners = calculateWinners();
 
         /*
-         * 4. Cambio stato finale.
+        *  4.Salvo i dati nella base di dati
+        */
+        gameRepository = new DatabaseManger();
+        gameRepository.registerGame(this.id,this.numPlayers);
+        for(Player p: players){
+            gameRepository.registerPlayer(this.id,p.getNickname(),p.getNumPP(),p.getNumFoods());
+        }
+        List<LeaderBoardEntryView> leaderBoard = gameRepository.getGeneralClassification(this.numPlayers);
+
+        /*
+         * 5. Cambio stato finale.
          */
         changeState(GameState.ENDED);
 
-        return new EndGameResultView(
-                resolvedEvents,
-                endGameEffects,
-                winners
-        );
+        return new EndGameResultView(resolvedEvents, endGameEffects, winners,leaderBoard);
     }
     /**
      * Transitions the game state to CRASHED.
