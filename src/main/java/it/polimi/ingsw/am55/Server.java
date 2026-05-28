@@ -1,14 +1,12 @@
 package it.polimi.ingsw.am55;
 
 import it.polimi.ingsw.am55.network.ServerApplication;
-import it.polimi.ingsw.am55.network.rmi.server.RmiServer;
-import it.polimi.ingsw.am55.network.socket.server.SocketServer;
+import it.polimi.ingsw.am55.network.SocketServer;
 
 import java.net.InetAddress;
-import java.rmi.server.ExportException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.util.Scanner;
+import java.rmi.server.ExportException;
 
 public class Server {
 
@@ -18,17 +16,15 @@ public class Server {
 
     public static void main(String[] args) {
         try {
-            //Restituisce l' indirizzo ip del server, che verrà usato dai client per poter connettersi
             String hostIp = InetAddress.getLocalHost().getHostAddress();
             System.setProperty("java.rmi.server.hostname", hostIp);
 
             System.out.println("Server IP: " + hostIp);
 
-
             ServerApplication serverApplication = new ServerApplication();
+
             startRmiServer(serverApplication, DEFAULT_RMI_PORT);
             System.out.println("[SERVER] RMI avviato sulla porta " + DEFAULT_RMI_PORT);
-
 
             startSocketServer(serverApplication, DEFAULT_SOCKET_PORT);
             System.out.println("[SERVER] Socket avviato sulla porta " + DEFAULT_SOCKET_PORT);
@@ -40,8 +36,6 @@ public class Server {
     }
 
     private static void startRmiServer(ServerApplication serverApplication, int rmiPort) throws Exception {
-        RmiServer rmiServer = new RmiServer(serverApplication);
-
         Registry registry;
 
         try {
@@ -50,11 +44,22 @@ public class Server {
             registry = LocateRegistry.getRegistry(rmiPort);
         }
 
-        registry.rebind(RMI_SERVER_NAME, rmiServer);
+        registry.rebind(RMI_SERVER_NAME, serverApplication);
     }
 
     private static void startSocketServer(ServerApplication serverApplication, int socketPort) throws Exception {
         SocketServer socketServer = new SocketServer(socketPort, serverApplication);
-        socketServer.start();
+
+        Thread socketThread = new Thread(() -> {
+            try {
+                socketServer.start();
+            } catch (Exception e) {
+                System.err.println("[SERVER] Errore socket server: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
+
+        socketThread.setName("socket-server");
+        socketThread.start();
     }
 }

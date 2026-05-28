@@ -2,12 +2,12 @@ package it.polimi.ingsw.am55;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.controller.ClientController;
-import it.polimi.ingsw.am55.network.ClientCommands;
-import it.polimi.ingsw.am55.network.rmi.client.RmiClient;
-import it.polimi.ingsw.am55.network.rmi.server.VirtualServerRmi;
-import it.polimi.ingsw.am55.network.socket.client.SocketClient;
+import it.polimi.ingsw.am55.network.*;
+
+import it.polimi.ingsw.am55.network.middleware.ServerStub;
 import it.polimi.ingsw.am55.view.cli.CLIView;
-import it.polimi.ingsw.am55.view.gui.*;
+import it.polimi.ingsw.am55.view.gui.JavaFXGui;
+import it.polimi.ingsw.am55.virtualview.VirtualServer;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -29,7 +29,7 @@ public class Client {
             ViewMode viewMode = askViewMode(scanner);
 
             ClientModel model = new ClientModel();
-            ClientCommands client = createClient(technology, host, model);
+            ClientImpl client = createClient(technology, host, model);
             ClientController controller = new ClientController(client);
 
             switch (viewMode) {
@@ -37,8 +37,10 @@ public class Client {
                 case GUI -> startGui(model, controller);
                 default -> throw new IllegalArgumentException("View mode non supportata: " + viewMode);
             }
+
         } catch (Exception e) {
             System.err.println("[CLIENT] Errore durante l'avvio del client: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -107,7 +109,7 @@ public class Client {
         }
     }
 
-    private static ClientCommands createClient(
+    private static ClientImpl createClient(
             ConnectionTechnology technology,
             String host,
             ClientModel model
@@ -118,17 +120,26 @@ public class Client {
         };
     }
 
-    private static ClientCommands createRmiClient(String host, ClientModel model) throws Exception {
+    private static ClientImpl createRmiClient(String host, ClientModel model) throws Exception {
         Registry registry = LocateRegistry.getRegistry(host, RMI_PORT);
-        VirtualServerRmi server = (VirtualServerRmi) registry.lookup(SERVER_NAME);
+        VirtualServer server = (VirtualServer) registry.lookup(SERVER_NAME);
 
-        return new RmiClient(server, model);
+        ClientImpl client = new ClientImpl(server, model);
+        client.connect();
+
+        return client;
     }
 
-    private static ClientCommands createSocketClient(String host, ClientModel model) throws Exception {
+    private static ClientImpl createSocketClient(String host, ClientModel model) throws Exception {
+        ServerStub serverStub = new ServerStub(host, SOCKET_PORT);
 
-        return new SocketClient(host, SOCKET_PORT, model);
+        ClientImpl client = new ClientImpl(serverStub, model);
 
+        serverStub.startListener(client);
+
+        client.connect();
+
+        return client;
     }
 
     private enum ConnectionTechnology {

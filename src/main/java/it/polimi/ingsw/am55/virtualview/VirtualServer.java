@@ -1,37 +1,17 @@
 package it.polimi.ingsw.am55.virtualview;
 
+import it.polimi.ingsw.am55.network.command.ServerCommand;
+
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+
 /**
  * Interfaccia che definisce i metodi che il client
  * può invocare sul server.
  * Rappresenta il contratto logico client -> server,
  * indipendente dalla tecnologia di comunicazione usata.
  */
-public interface VirtualServer  {
+public interface VirtualServer extends Remote {
 
-    /**
-     * Azione richiesta dal client: placeTotem.
-     */
-
-    void createGame(String playerId, String totemColor, int numPlayers, String sessionId) throws Exception;
-
-    void joinGame(String playerId, String totemColor, String sessionId) throws Exception;
-    void registerLobbyClient(String sessionId, VirtualView sender) throws Exception;
-
-    void placeTotem(String playerId, int index) throws Exception;
-
-    void pickCard(String playerId, int cardId) throws Exception;
-
-    void pickSpecial(String playerId, int cardId) throws Exception;
-
-    void ping (VirtualView sender) throws Exception;
-
-    void quitGame(String playerId) throws Exception;
-
-    //void closeConnection(String playerId) throws Exception;
-
-    void quitLobby(String sessionId) throws Exception;
-    /*
-
-    void endTurn(String playerId) throws Exception;
-    */
+    void receiveCommand(ServerCommand command, VirtualView sender) throws RemoteException;
 }

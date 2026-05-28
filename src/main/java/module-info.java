@@ -3,13 +3,14 @@ module it.polimi.ingsw.am55 {
     requires javafx.controls;
     requires javafx.fxml;
     requires org.controlsfx.controls;
-    //requires it.polimi.ingsw.am55;
-    //requires it.polimi.ingsw.am55;
 
     exports it.polimi.ingsw.am55;
 
-    exports it.polimi.ingsw.am55.network.rmi.server;
-    exports it.polimi.ingsw.am55.network.rmi.client;
+    exports it.polimi.ingsw.am55.network;
+    exports it.polimi.ingsw.am55.network.command;
+    exports it.polimi.ingsw.am55.network.middleware;
+
+    exports it.polimi.ingsw.am55.virtualview;
 
     exports it.polimi.ingsw.am55.message;
     exports it.polimi.ingsw.am55.dto;
@@ -18,17 +19,17 @@ module it.polimi.ingsw.am55 {
     exports it.polimi.ingsw.am55.controller;
 
     exports it.polimi.ingsw.am55.view.cli;
-    exports it.polimi.ingsw.am55.virtualview;
+    exports it.polimi.ingsw.am55.view.gui;
 
-    opens it.polimi.ingsw.am55.network.rmi.server to java.rmi;
-    opens it.polimi.ingsw.am55.network.rmi.client to java.rmi;
+    opens it.polimi.ingsw.am55.network to java.rmi;
+    opens it.polimi.ingsw.am55.network.command to java.rmi;
+    opens it.polimi.ingsw.am55.network.middleware to java.rmi;
+    opens it.polimi.ingsw.am55.virtualview to java.rmi;
 
     opens it.polimi.ingsw.am55.message to java.rmi;
     opens it.polimi.ingsw.am55.dto to java.rmi;
     opens it.polimi.ingsw.am55.dto.ClientCards to java.rmi;
     opens it.polimi.ingsw.am55.ClientModel to java.rmi;
-
-    exports it.polimi.ingsw.am55.view.gui;
 
     opens it.polimi.ingsw.am55.view.gui to javafx.graphics;
     opens it.polimi.ingsw.am55.view.gui.scene to javafx.fxml;
