@@ -125,7 +125,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
             @Override
             public void run() {
                 long elapsed;
-
+//
                 synchronized (pingLock) {
                     elapsed = System.currentTimeMillis() - lastPingFromServer;
                 }
