@@ -5,18 +5,15 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 //sciamani
 public class Shaman extends CharacterCard {
-    private int numStars;
-    //final CharacterType type = CharacterType.SHAMAN;
+    private final int numStars;
 
     public Shaman(int id, int numStars, int era) {
         super(id, era);
         this.numStars = numStars;
-        //this.era = era;
     }
 
     @Override
     public void addToPlayer(Player player) {
-        //player.getShamansList().add(this);
         player.addTribeCard(this);
     }
 

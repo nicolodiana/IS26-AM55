@@ -106,7 +106,7 @@ public interface GameModelInterface {
      * of food. Only the players with the highest food among them remain winners.
      * @return map that cointains players winner with points
      */
-    public EndGameResultView endGame();
+    EndGameResultView endGame();
 
     List<ResolveEventView> eventResolve();
 

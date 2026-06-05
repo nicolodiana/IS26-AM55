@@ -207,7 +207,7 @@ public class BiddingTrail {
         ticketList.get(getPlayerPositionOnTrail(player)).removePlayer();
     }
 
-    public List<Integer> getTicketIds() {
+    /*public List<Integer> getTicketIds() {
         List<Integer> listOfIds = new ArrayList<>();
 
         for (BiddingTicket ticket : this.ticketList) {
@@ -218,7 +218,7 @@ public class BiddingTrail {
             return listOfIds;
         }
         return null;
-    }
+    }*/
     public void removeAllPlayers() {
         ticketList.clear();
     }

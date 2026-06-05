@@ -4,17 +4,14 @@ import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 //cacciatori
 public class Hunter extends CharacterCard {
-    private Boolean icon;
-    //final CharacterType type = CharacterType.COLLECTOR;
+    private final Boolean icon;
 
     public Hunter(int id, Boolean icon, int era) {
         super(id, era);
         this.icon = icon;
-        //this.era= era;
     }
 
     public void addToPlayer(Player player) {
-        //player.getHuntersList().add(this);
         player.addTribeCard(this);
     }
 
