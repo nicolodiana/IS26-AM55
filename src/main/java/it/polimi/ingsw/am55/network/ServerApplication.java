@@ -27,7 +27,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
     private static final long serialVersionUID = 1L;
 
-    private static final long PING_TIMEOUT_MS = 6_000;
+    private static final long PING_TIMEOUT_MS = 15_000;
 
     private final GameController controller;
 
@@ -100,7 +100,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 + command.getClass().getSimpleName()
                 + ", sender = "
                 + (sender == null ? "null" : sender.getClass().getSimpleName()));
-
+        if (sender != null) {
+            synchronized (lastPingByClient) {
+                lastPingByClient.put(sender, System.currentTimeMillis());
+            }
+        }
         if (command.requiresLock()) {
             synchronized (gameLock) {
                 command.execute(this, sender);
@@ -168,7 +172,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             lobbyClients.remove(sessionId);
         }
 
-        client.setPlayerId(playerId);
+        //client.setPlayerId(playerId);
 
         synchronized (gameClients) {
             gameClients.put(playerId, client);
@@ -305,12 +309,19 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
     private void pong(VirtualView sender) throws Exception {
         synchronized (gameClients) {
-            String playerId = sender.getPlayerId();
+            /*String playerId = sender.getPlayerId();
 
             if (playerId != null && gameClients.containsKey(playerId)) {
                 sendTo(playerId, new PongMessage());
                 System.out.println("[SERVER_APP] PongMessage game client " + playerId);
                 return;
+            }*/
+            for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
+                if (entry.getValue().equals(sender)) {
+                    sendTo(entry.getKey(), new PongMessage());
+                    System.out.println("[SERVER_APP] PongMessage game client ");
+                    return;
+                }
             }
         }
 
@@ -336,9 +347,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                checkPingTimeouts();
+                try {
+                    checkPingTimeouts();
+                } catch (Exception e) {
+                    System.out.println("[PING] Error alive checker: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
-        }, 0, 10_000);
+        }, 10_000, 5_000);
 
         System.out.println("[PING] Alive checker AVVIATO");
     }
@@ -356,6 +372,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
     }
 
     private void checkPingTimeouts() {
+
         List<VirtualView> disconnectedClients = new ArrayList<>();
         long now = System.currentTimeMillis();
 
