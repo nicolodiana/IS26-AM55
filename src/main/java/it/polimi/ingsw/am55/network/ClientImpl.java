@@ -20,7 +20,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     private static final long serialVersionUID = 1L;
 
     private static final long PING_INTERVAL_MS = 1500;
-    private static final long SERVER_TIMEOUT_MS = 15_000;
+    private static final long SERVER_TIMEOUT_MS = 30_000;
 
     private final VirtualServer server;
     private final ClientModel model;

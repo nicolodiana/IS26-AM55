@@ -27,7 +27,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
     private static final long serialVersionUID = 1L;
 
-    private static final long PING_TIMEOUT_MS = 15_000;
+    private static final long PING_TIMEOUT_MS = 30_000;
 
     private final GameController controller;
 
