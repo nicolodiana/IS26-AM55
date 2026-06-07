@@ -7,6 +7,17 @@ import it.polimi.ingsw.am55.virtualview.VirtualView;
 import java.io.Serializable;
 
 public class PingCommand implements ServerCommand{
+
+    private static final long serialVersionUID = 1L;
+
+    private final String sessionId;
+    private final String playerId;
+
+    public PingCommand(String sessionId, String playerId) {
+        this.sessionId = sessionId;
+        this.playerId = playerId;
+    }
+
     @Override
     public boolean requiresLock() {
         return false;
@@ -14,6 +25,6 @@ public class PingCommand implements ServerCommand{
 
     @Override
     public void execute(ServerApplication serverApplication, VirtualView sender) throws Exception {
-        serverApplication.ping(sender);
+        serverApplication.ping(sessionId, playerId, sender);
     }
 }

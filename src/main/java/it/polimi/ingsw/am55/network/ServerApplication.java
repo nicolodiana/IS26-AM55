@@ -96,15 +96,15 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      *      ClientSkeleton legge command da input stream -> executeCommand(...)
      */
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
-        System.out.println("[SERVER_APP] Esecuzione command: "
-                + command.getClass().getSimpleName()
-                + ", sender = "
-                + (sender == null ? "null" : sender.getClass().getSimpleName()));
         if (sender != null) {
             synchronized (lastPingByClient) {
                 lastPingByClient.put(sender, System.currentTimeMillis());
             }
         }
+        System.out.println("[SERVER_APP] Esecuzione command: "
+                + command.getClass().getSimpleName()
+                + ", sender = "
+                + (sender == null ? "null" : sender.getClass().getSimpleName()));
         if (command.requiresLock()) {
             synchronized (gameLock) {
                 command.execute(this, sender);
@@ -295,7 +295,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         System.out.println("[SERVER_APP] Client rimosso dalla lobby. SessionId = " + sessionId);
     }
 
-    public void ping(VirtualView sender) throws Exception {
+    public void ping(String sessionId, String playerId, VirtualView sender) throws Exception {
         if (sender == null) {
             return;
         }
@@ -303,6 +303,25 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         synchronized (lastPingByClient) {
             lastPingByClient.put(sender, System.currentTimeMillis());
         }
+
+        if (playerId != null) {
+            synchronized (gameClients) {
+                if (gameClients.containsKey(playerId)) {
+                    sendTo(playerId, new PongMessage());
+                    return;
+                }
+            }
+        }
+
+        if (sessionId != null) {
+            synchronized (lobbyClients) {
+                if (lobbyClients.containsKey(sessionId)) {
+                    sendToSession(sessionId, new PongMessage());
+                    return;
+                }
+            }
+        }
+
 
         pong(sender);
     }
@@ -323,6 +342,8 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                     return;
                 }
             }
+
+            System.out.println("[SERVER_APP] Pong ignorato: sender non trovato");
         }
 
         synchronized (lobbyClients) {
@@ -372,23 +393,24 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
     }
 
     private void checkPingTimeouts() {
+        synchronized (gameLock) {
+            List<VirtualView> disconnectedClients = new ArrayList<>();
+            long now = System.currentTimeMillis();
 
-        List<VirtualView> disconnectedClients = new ArrayList<>();
-        long now = System.currentTimeMillis();
+            synchronized (lastPingByClient) {
+                for (Map.Entry<VirtualView, Long> entry : lastPingByClient.entrySet()) {
+                    VirtualView client = entry.getKey();
+                    long lastPing = entry.getValue();
+                    long elapsed = now - lastPing;
 
-        synchronized (lastPingByClient) {
-            for (Map.Entry<VirtualView, Long> entry : lastPingByClient.entrySet()) {
-                VirtualView client = entry.getKey();
-                long lastPing = entry.getValue();
-                long elapsed = now - lastPing;
-
-                if (elapsed > PING_TIMEOUT_MS) {
-                    disconnectedClients.add(client);
+                    if (elapsed > PING_TIMEOUT_MS) {
+                        disconnectedClients.add(client);
+                    }
                 }
             }
-        }
 
-        handleClientDisconnection(disconnectedClients);
+            handleClientDisconnection(disconnectedClients);
+        }
     }
 
     private void handleClientDisconnection(List<VirtualView> disconnectedClients) {
