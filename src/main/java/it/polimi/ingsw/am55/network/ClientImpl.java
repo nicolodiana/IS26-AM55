@@ -72,6 +72,8 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     @Override
     public void onMessage(MessageToClient message) throws RemoteException {
+        System.out.println("[CLIENT_IMPL] Ricevuto messaggio: " + message.getClass().getSimpleName());
+
         try {
             if (message.shouldUpdateModel()) {
                 synchronized (model) {
@@ -99,6 +101,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     @Override
     public void startPing() {
+        System.out.println("[CLIENT_IMPL] Ping inviato da " + sessionId + " thread=" + Thread.currentThread().getName());
         if (pingStarted) {
             return;
         }
@@ -196,6 +199,6 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         } catch (Exception ignored) {
         }
 
-        System.out.println("[CLIENT_IMPL] Client chiuso.");
+        System.out.println("[CLIENT_IMPL] Client chiuso per " + sessionId);
     }
 }
