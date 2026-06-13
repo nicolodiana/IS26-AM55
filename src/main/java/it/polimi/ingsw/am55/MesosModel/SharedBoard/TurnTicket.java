@@ -12,7 +12,7 @@ import java.util.*;
  * position in the turn order.
  */
 public class TurnTicket {
-    int numplayerticket;
+    private int numplayerticket;
     /**
      * The list representing the current turn order of the players.
      */

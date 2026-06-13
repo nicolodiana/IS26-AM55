@@ -47,4 +47,26 @@ public class BoardView implements Serializable {
                 ", turnTicket=" + turnTicket +
                 '}';
     }
+
+    public void setPlayer(int index, PlayerView player) {
+        biddingTrail.get(index).setPlayer(player);
+    }
+
+    public CardView searchCard(int cardId) {
+
+        for (int i = 0; i < this.upperRow.size(); i++) {
+            if (upperRow.get(i).getId() == cardId) {
+                return this.upperRow.remove(i);
+            }
+        }
+
+        for (int i = 0; i < this.lowerRow.size(); i++) {
+            if (lowerRow.get(i).getId() == cardId) {
+                return this.lowerRow.remove(i);
+            }
+        }
+
+        return null;
+    }
+
 }

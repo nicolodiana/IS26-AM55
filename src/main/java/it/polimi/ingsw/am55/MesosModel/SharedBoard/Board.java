@@ -18,14 +18,14 @@ import java.util.*;
 
 public class Board {
     private int currentEra;
-    private TurnTicket playerOrder;
-    private BiddingTrail biddingTrail;
-    private TribeDeck tribeDeck;
-    private Row upperRow;
-    private Row lowerRow;
-    private BuildingDeck buildingDeckEra1;
-    private BuildingDeck buildingDeckEra2;
-    private BuildingDeck buildingDeckEra3;
+    private final TurnTicket playerOrder;
+    private final BiddingTrail biddingTrail;
+    private final TribeDeck tribeDeck;
+    private final Row upperRow;
+    private final Row lowerRow;
+    private final BuildingDeck buildingDeckEra1;
+    private final BuildingDeck buildingDeckEra2;
+    private final BuildingDeck buildingDeckEra3;
 
     public Board() {
         currentEra = 1;

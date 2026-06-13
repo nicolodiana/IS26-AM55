@@ -33,6 +33,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     private Timer pingTimer;
     private Timer aliveCheckerTimer;
+    private int missedPongs = 0;
 
     private volatile boolean pingStarted;
     private volatile boolean aliveCheckerStarted;
@@ -82,6 +83,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
         } catch (Exception e) {
             System.out.println("[CLIENT_IMPL] Errore gestione messaggio: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -97,11 +99,15 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     @Override
     public void startPing() {
+        System.out.println("[CLIENT_IMPL] Ping inviato da " + sessionId + " thread=" + Thread.currentThread().getName());
         if (pingStarted) {
             return;
         }
 
         pingStarted = true;
+        aliveCheckerStarted = true;
+
+        startAliveChecker();
 
         pingTimer.schedule(new TimerTask() {
             @Override
@@ -132,8 +138,15 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 }
 
                 if (elapsed > SERVER_TIMEOUT_MS) {
-                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
-                    closeConnection();
+//                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+//                    closeConnection();
+                    missedPongs++;
+                    System.out.println("[CLIENT_IMPL] pong mancato " + missedPongs + "/3, elapsed " + elapsed);
+
+                    if (missedPongs >= 3) {
+                        System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+                        closeConnection();
+                    }
                 }
             }
         }, PING_INTERVAL_MS, PING_INTERVAL_MS);
@@ -159,6 +172,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     public void pongFromSever() {
         synchronized (pingLock) {
             lastPingFromServer = System.currentTimeMillis();
+            this.missedPongs = 0;
         }
     }
 
@@ -179,6 +193,6 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         } catch (Exception ignored) {
         }
 
-        System.out.println("[CLIENT_IMPL] Client chiuso.");
+        System.out.println("[CLIENT_IMPL] Client chiuso per " + sessionId);
     }
 }

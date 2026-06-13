@@ -96,6 +96,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      *      ClientSkeleton legge command da input stream -> executeCommand(...)
      */
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
+//        if (sender != null) {
+//            synchronized (lastPingByClient) {
+//                lastPingByClient.put(sender, System.currentTimeMillis());
+//            }
+//        }
         System.out.println("[SERVER_APP] Esecuzione command: "
                 + command.getClass().getSimpleName()
                 + ", sender = "
@@ -149,6 +154,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
     private void completeConnectionSetup(String playerId, String sessionId, MessageToClient message) throws Exception {
         VirtualView client;
+
+        System.out.println("[PING] ricevuto. sessionId=" + sessionId
+                + ", playerId=" + playerId
+                + ", lobby=" + lobbyClients.keySet()
+                + ", game=" + gameClients.keySet());
 
         synchronized (lobbyClients) {
             client = lobbyClients.get(sessionId);
@@ -336,9 +346,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                checkPingTimeouts();
+                try {
+                    checkPingTimeouts();
+                } catch (Exception e) {
+                    System.out.println("[PING] Error alive checker: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
-        }, 0, 10_000);
+        }, 0, 10000);
 
         System.out.println("[PING] Alive checker AVVIATO");
     }
@@ -350,7 +365,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         }
 
 //        pingTimer = new Timer(true);
-        aliveCheckerStarted = false;
+//        aliveCheckerStarted = false;
 
         System.out.println("[PING] Alive checker FERMATO");
     }
@@ -426,6 +441,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
         }
+
         List<String> sessionIds = new ArrayList<>();
 
         synchronized (lobbyClients) {

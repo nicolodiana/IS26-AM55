@@ -11,7 +11,7 @@ import it.polimi.ingsw.am55.dto.BiddingTicketView;
  */
 public class BiddingTicket {
 
-    private final int id;
+    //private final int id;
     /**
      * The amount of bonus food provided to the player who takes this ticket.
      */
@@ -55,7 +55,7 @@ public class BiddingTicket {
      * @param trailPlacement  the character indicating the ticket's placement on the trail
      */
     public BiddingTicket(int id, int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement) {
-        this.id = id;
+        //this.id = id;
         this.foodBonus = foodBonus;
         this.chooseLowerCard = chooseLowerCard;
         this.chooseUpperCard = chooseUpperCard;
@@ -65,7 +65,7 @@ public class BiddingTicket {
     }
 
     public BiddingTicket(int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement) {
-        this.id = 0;
+        //this.id = 0;
         this.foodBonus = foodBonus;
         this.chooseLowerCard = chooseLowerCard;
         this.chooseUpperCard = chooseUpperCard;
@@ -149,9 +149,9 @@ public class BiddingTicket {
         this.player = null;
     }
 
-    public int getId() {
+    /*public int getId() {
         return this.id;
-    }
+    }*/
 
     public BiddingTicketView toView() { return new BiddingTicketView(this); }
 }

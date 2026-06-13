@@ -11,8 +11,8 @@ import java.util.List;
 public class GameView implements Serializable {
 
     private final String gameId;
-    private final GameState state;
-    private final String currentPlayer;
+    private GameState state;
+    private String currentPlayer;
     private final int round;
     private final List<PlayerView> players;
     private final BoardView board;
@@ -86,4 +86,24 @@ public class GameView implements Serializable {
         return null;
     }
     //public void addCardToPlayer(String nickname, )
+    public void placeTotem(String playerId, int index) {
+        PlayerView player = getPlayer(playerId);
+
+        board.getBiddingTrail().get(index).setPlayer(player);
+    }
+
+    public void pickCard(String playerId, int cardId) {
+        CardView card = this.board.searchCard(cardId);
+
+        getPlayer(playerId).pickCard(card);
+    }
+
+    public void setCurrentPlayer(String currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
+
+    public void setState(GameState state) {
+        this.state = state;
+    }
+
 }

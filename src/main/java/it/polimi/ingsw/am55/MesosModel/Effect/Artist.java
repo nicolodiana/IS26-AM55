@@ -4,10 +4,9 @@ import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 public class Artist extends CharacterCard {
-    //final CharacterType type = CharacterType.ARTIST;
+
     @Override
     public void addToPlayer(Player player) {
-        //player.getArtistsList().add(this);
         player.addTribeCard(this);
     }
 
