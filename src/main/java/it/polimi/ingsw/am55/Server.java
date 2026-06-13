@@ -8,6 +8,10 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
 
+/**gg
+ *
+ *
+ */
 public class Server {
 
     private static final int DEFAULT_RMI_PORT = 1234;
