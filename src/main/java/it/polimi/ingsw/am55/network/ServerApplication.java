@@ -353,7 +353,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                     e.printStackTrace();
                 }
             }
-        }, 0, 10000);
+        }, 0, 1500);
 
         System.out.println("[PING] Alive checker AVVIATO");
     }

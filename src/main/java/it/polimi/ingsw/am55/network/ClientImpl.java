@@ -105,9 +105,9 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         }
 
         pingStarted = true;
-        aliveCheckerStarted = true;
 
         startAliveChecker();
+        aliveCheckerStarted = true;
 
         pingTimer.schedule(new TimerTask() {
             @Override
@@ -138,15 +138,15 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 }
 
                 if (elapsed > SERVER_TIMEOUT_MS) {
-//                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
-//                    closeConnection();
-                    missedPongs++;
-                    System.out.println("[CLIENT_IMPL] pong mancato " + missedPongs + "/3, elapsed " + elapsed);
-
-                    if (missedPongs >= 3) {
-                        System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
-                        closeConnection();
-                    }
+                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+                    closeConnection();
+//                    missedPongs++;
+//                    System.out.println("[CLIENT_IMPL] pong mancato " + missedPongs + "/3, elapsed " + elapsed);
+//
+//                    if (missedPongs >= 3) {
+//                        System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+//                        closeConnection();
+//                    }
                 }
             }
         }, PING_INTERVAL_MS, PING_INTERVAL_MS);
