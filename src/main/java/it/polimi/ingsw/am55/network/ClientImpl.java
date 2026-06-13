@@ -29,7 +29,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     private volatile String playerId;
 
     private final Object pingLock;
-    private volatile long lastPingFromServer;
+    private long lastPingFromServer;
 
     private Timer pingTimer;
     private Timer aliveCheckerTimer;
@@ -47,9 +47,10 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         this.playerId = null;
 
         this.pingLock = new Object();
-        this.lastPingFromServer = System.currentTimeMillis();
+//        this.lastPingFromServer = System.currentTimeMillis();
 
-        this.pingTimer = new Timer(true);
+        this.pingTimer = new Timer(true); //Deamon perché sono thread di supporto che permettono alla JVM di terminare anche se essi stanno
+        //ancora in esecuzione
         this.aliveCheckerTimer = new Timer(true);
 
         this.pingStarted = false;
@@ -114,7 +115,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                     sendCommand(new PingCommand());
 
                 } catch (Exception e) {
-                    System.out.println("[CLIENT_IMPL] Invio ping fallito: " + e.getMessage());
+//                    System.out.println("[CLIENT_IMPL] Invio ping fallito: " + e.getMessage());
                 }
             }
         }, 0, PING_INTERVAL_MS);
@@ -172,14 +173,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     @Override
     public void close() throws RemoteException {
         stopPing();
-
-        if (server instanceof AutoCloseable) {
-            try {
-                ((AutoCloseable) server).close();
-            } catch (Exception ignored) {
-            }
-        }
-
+        //Io, oggetto remoto client, non voglio più ricevere chiamate RMI.
         try {
             UnicastRemoteObject.unexportObject(this, true);
         } catch (Exception ignored) {
