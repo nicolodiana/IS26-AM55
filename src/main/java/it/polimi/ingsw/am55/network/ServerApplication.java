@@ -399,8 +399,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 lastPingByClient.remove(client);
             }
         }
-
-
         List<String> disconnectedPlayersId = new ArrayList<>();
 
         synchronized (gameClients) {
@@ -421,25 +419,19 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             synchronized (gameLock) {
                 message = controller.handleGameCrashed();
             }
-
-            if (message != null) {
-                message.deliver(null, this);
-            }
-
-            stopAliveChecker();
-
             synchronized (gameClients) {
-                for (String playerId : disconnectedPlayersId) {
+                for(String playerId : disconnectedPlayersId) {
                     gameClients.remove(playerId);
                 }
             }
-
-            for (VirtualView client : disconnectedClients) {
-                try {
-                    client.close();
-                } catch (Exception ignored) {
+            if (message != null && !gameClients.isEmpty()) {
+                message.deliver(null, this);
+                synchronized (gameClients) {
+                    gameClients.clear();
                 }
             }
+            stopAliveChecker();
+
         }
 
         List<String> sessionIds = new ArrayList<>();
@@ -455,30 +447,35 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         }
 
         if (!sessionIds.isEmpty()) {
-            System.out.println("[SERVER_APP] Uno o più client si sono disconessi dalla lobby ");
-
-            for (String sessionId : sessionIds) {
-                try {
-                    sendToSession(sessionId, new QuitLobbyMessage());
-                } catch (Exception ignored) {
-                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
-                }
-            }
+            System.out.println("[SERVER_APP] Client disconnessi in lobby: " + sessionIds);
 
             synchronized (lobbyClients) {
                 for (String sessionId : sessionIds) {
                     lobbyClients.remove(sessionId);
                 }
+                System.out.println("[SERVER_APP] Lobby aggiornta: " + lobbyClients);
             }
 
-            for (VirtualView client : disconnectedClients) {
-                try {
-                    client.close();
-                } catch (Exception ignored) {
-                }
-            }
+//            for (String sessionId : sessionIds) {
+//                try {
+//                    sendToSession(sessionId, new QuitLobbyMessage());
+//                } catch (Exception ignored) {
+//                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
+//                }
+//            }
 
+
+//            for (VirtualView client : disconnectedClients) {
+//                try {
+//                    client.close();
+//                } catch (Exception ignored) {
+//                }
+//            }
+
+            return;
         }
+
+
     }
 
     private void broadcastLobbyStatus() {
