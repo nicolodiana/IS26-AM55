@@ -1,7 +1,6 @@
 package it.polimi.ingsw.am55.network;
 
 import it.polimi.ingsw.am55.controller.GameController;
-import it.polimi.ingsw.am55.message.GameCrashedBroadcast;
 import it.polimi.ingsw.am55.message.LobbyStatusMessage;
 import it.polimi.ingsw.am55.message.MessageDelivery;
 import it.polimi.ingsw.am55.message.MessageToClient;
@@ -368,11 +367,9 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             pingTimer.cancel();
         } catch (Exception ignored) {
         }
-
-//       pingTimer = new Timer(true);
+       pingTimer = new Timer(true);
         aliveCheckerStarted = false;
-
-        System.out.println("[PING] Alive checker FERMATO");
+        System.out.println("[ALIVE CHECKER] Alive checker FERMATO");
     }
 
     private void checkPingTimeouts() {
@@ -386,117 +383,106 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 long elapsed = now - lastPing;
 
                 if (elapsed > PING_TIMEOUT_MS) {
-                    disconnectedClients.add(client);
+                    disconnectedClients.add(client); //Rilevato un timeout
                 }
             }
         }
-
-        handleClientDisconnection(disconnectedClients);
+        if(!disconnectedClients.isEmpty()) {
+            handleDisconnectedClients(disconnectedClients);
+        }
     }
-
-    private void handleClientDisconnection(List<VirtualView> disconnectedClients){
-        if (disconnectedClients == null || disconnectedClients.isEmpty()) {
-            return;
+    private void handleClients(){
+        MessageToClient message;
+        synchronized (gameLock){
+            message = controller.handleGameCrashed();
+            System.out.println("[SERVER] Game dichiarato in stato di crash ");
+        }
+        if(message != null){ //Invio del messaggio handlegame crashed
+            message.deliver(null,this);
+        }
+        synchronized (lobbyClients) {
+            System.out.println("[SERVER] Lobby client dopo pulzia definitiva (causa crash di un player in game) " + lobbyClients);
+            for(Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()){
+                try{
+                    entry.getValue().close();
+                }catch(Exception e){
+                }
+            }
+            lobbyClients.clear();
+            System.out.println("[SERVER] Lobby client dopo pulizia definitiva (causa crash di un player in game) " + lobbyClients);
+            // Se uno o più clients erano in lobby quando un player in game è crashato devono essere eliminati dalla lobby
+        }
+        synchronized (gameClients) {
+            System.out.println("[SERVER] Game client prima pulizia definitiva (causa crash di un player in game) " + gameClients);
+            for(Map.Entry<String, VirtualView> entry : gameClients.entrySet()){
+                try{
+                    entry.getValue().close();
+                }catch(Exception e){
+                }
+            }
+            gameClients.clear();
+            System.out.println("[SERVER] Game client dopo pulzia definitiva (causa crash di un player in game) " + gameClients);
         }
         synchronized (lastPingByClient) {
-            for (VirtualView client : disconnectedClients) {
-                lastPingByClient.remove(client);
-            }
+            lastPingByClient.clear();
         }
+    }
+    private void handleLobbyClients(List<String> disconnectedLobbyClients) {
 
-
-        List<String> disconnectedPlayersId = new ArrayList<>();
-
-        synchronized (gameClients) {
-            for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
-                VirtualView gameClient = entry.getValue();
-
-                if (disconnectedClients.contains(gameClient)) {
-                    disconnectedPlayersId.add(entry.getKey());
-                }
+        synchronized (lobbyClients) {//Caso in cui non esiste un player che è presente nel game => cancello solo il player crashato in lobby
+            System.out.println("[SERVER] Lobby prima pulizia caso due player in lobby "+lobbyClients);
+            for(String sessionIds:disconnectedLobbyClients){
+                lobbyClients.remove(sessionIds);
             }
+            System.out.println("[SERVER] Lobby dopo pulizia caso due player in lobby "+lobbyClients);
         }
-        List<String> sessionDisconnectedIds = new ArrayList<>();
+    }
+    private void handleDisconnectedClients(List<VirtualView> disconnectedClients){
+        List<String> disconnectedClientsSessionIds = new ArrayList<>();
+        List<String> disconnectedClientsPlayerIds = new  ArrayList<>();
 
         synchronized (lobbyClients) {
-            for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
-                VirtualView lobbyClient = entry.getValue();
-
-                if (disconnectedClients.contains(lobbyClient)) {
-                    sessionDisconnectedIds.add(entry.getKey());
+            System.out.println("[DISCONNECTED] Lobby Clients prima della rimozione  client: "+lobbyClients);
+            for(Map.Entry<String, VirtualView> entry1 : lobbyClients.entrySet()){
+                if(disconnectedClients.contains(entry1.getValue())){
+                    disconnectedClientsSessionIds.add(entry1.getKey());
+                    try{
+                        entry1.getValue().close();
+                    }catch(Exception e){}
+                    System.out.println("[DISCONNECTED] Client disconesso in lobby, lo rimuvo: " + entry1.getKey());
+                    lobbyClients.remove(entry1.getKey());//Elimino il client disconnesso
+                    System.out.println("[DISCONNECTED] Lobby Clients dopo della rimozione  client: "+lobbyClients);
                 }
             }
         }
-        if (!disconnectedPlayersId.isEmpty()) {
-            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
-            stopAliveChecker();
-            synchronized (gameClients) {
-                for(String disconnectedPlayer : disconnectedPlayersId) {
-                    gameClients.remove(disconnectedPlayer);
+        synchronized (gameClients) {
+            System.out.println("[DISCONNECTED] Game Clients prima della rimozione client: "+gameClients);
+            for(Map.Entry<String, VirtualView> entry : gameClients.entrySet()){
+                if(disconnectedClients.contains(entry.getValue())){
+                    disconnectedClientsPlayerIds.add(entry.getKey());
+                    try{
+                        entry.getValue().close(); //Chiudo eventualmente gli skeleton dei clients o del client  disconnesso/i
+                    }catch(Exception e){}
+                    System.out.println("[DISCONNECTED] Client disconesso in lobby, lo rimuvo:"+ entry.getKey());
+                    gameClients.remove(entry.getKey());//Elimino il client disconnesso
+                    System.out.println("[DISCONNECTED] Game Clients dopo della rimozione client: "+gameClients);
                 }
             }
-            synchronized (lobbyClients) {
-                System.out.println("[SERVER_APP] lobby pre-rimozione: "+lobbyClients);
-                for(String sessionId : sessionDisconnectedIds) {
-                    lobbyClients.remove(sessionId);
-                }
-            }
-            MessageToClient message;
-
-            synchronized (gameLock) {
-                message = controller.handleGameCrashed();
-            }
-
-            if (message != null) {
-                message.deliver(null, this);
-                broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
-            }
-
-            synchronized (gameClients) {
-                for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
-                    VirtualView gameClient = entry.getValue();
-                    try {
-                        gameClient.close();
-                    } catch (Exception ignored) {
-                    }
-                }
-                gameClients.clear();
-            }
-
-            synchronized (lobbyClients) {
-                for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
-                    VirtualView lobbyClient = entry.getValue();
-                    try {
-                        lobbyClient.close();
-                        
-                    } catch (Exception ignored) {
-                    }
-                }
-                lobbyClients.clear();
-                System.out.println("[SERVER_APP] lobby aggioranta post rimozione: "+lobbyClients);
-            }
-            return;
-
-
         }
-
-
-        if (!sessionDisconnectedIds.isEmpty()) {
-            System.out.println("[SERVER_APP] client disconnessi in lobby " + sessionDisconnectedIds );
-
-            synchronized (lobbyClients) {
-                System.out.println("[SERVER_APP] lobby pre-rimozione: "+lobbyClients);
-                for (String sessionId : sessionDisconnectedIds) {
-                    lobbyClients.remove(sessionId);
+        synchronized (lastPingByClient) {
+            for(Map.Entry<VirtualView,Long> entry : lastPingByClient.entrySet()){
+                if(disconnectedClients.contains(entry.getKey())){
+                    lastPingByClient.remove(entry.getKey());
                 }
-                System.out.println("[SERVER_APP] lobby aggioranta post rimozione: "+lobbyClients);
             }
-
         }
-        for (VirtualView client : disconnectedClients) {
-            try {
-                client.close();
-            } catch (Exception ignored) {
+        if(!disconnectedClientsPlayerIds.isEmpty()){ //Esiste almeno un player crashato in game
+            handleClients();
+            stopAliveChecker(); //Fermo l' aliver checker globale SOLO nel caso in cui crash in game, perché
+            //se terminasse anche quando ci sono tutti i giocatori in lobby non controllerebbe più il ping degli altri attivi
+        }else{
+            if(!disconnectedClientsSessionIds.isEmpty()){
+                handleLobbyClients(disconnectedClientsSessionIds);
             }
         }
     }
