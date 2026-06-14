@@ -86,6 +86,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         });
     }
 
+    @Override
+    public void close() throws RemoteException {
+
+    }
+
     /*
      * Entry point logico comune.
      *
@@ -364,7 +369,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         } catch (Exception ignored) {
         }
 
-//        pingTimer = new Timer(true);
+//       pingTimer = new Timer(true);
         aliveCheckerStarted = false;
 
         System.out.println("[PING] Alive checker FERMATO");
@@ -389,7 +394,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         handleClientDisconnection(disconnectedClients);
     }
 
-    private void handleClientDisconnection(List<VirtualView> disconnectedClients) {
+    private void handleClientDisconnection(List<VirtualView> disconnectedClients){
         if (disconnectedClients == null || disconnectedClients.isEmpty()) {
             return;
         }
@@ -443,36 +448,37 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
             if (message != null) {
                 message.deliver(null, this);
-                broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
+                //broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
             }
 
             synchronized (gameClients) {
+                for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
+                    VirtualView gameClient = entry.getValue();
+                    try {
+                        gameClient.close();
+                    } catch (Exception ignored) {
+                    }
+                }
                 gameClients.clear();
             }
 
             synchronized (lobbyClients) {
+                for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
+                    VirtualView lobbyClient = entry.getValue();
+                    try {
+                        lobbyClient.close();
+                    } catch (Exception ignored) {
+                    }
+                }
                 lobbyClients.clear();
             }
 
-            for (VirtualView client : disconnectedClients) {
-                try {
-                    client.close();
-                } catch (Exception ignored) {
-                }
-            }
+
         }
 
 
         if (!sessionIds.isEmpty()) {
             System.out.println("[SERVER_APP] Uno o più client si sono disconessi dalla lobby ");
-
-//            for (String sessionId : sessionIds) {
-//                try {
-//                    sendToSession(sessionId, new QuitLobbyMessage());
-//                } catch (Exception ignored) {
-//                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
-//                }
-//            }
 
             synchronized (lobbyClients) {
                 for (String sessionId : sessionIds) {
@@ -480,13 +486,12 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
 
-            for (VirtualView client : disconnectedClients) {
-                try {
-                    client.close();
-                } catch (Exception ignored) {
-                }
+        }
+        for (VirtualView client : disconnectedClients) {
+            try {
+                client.close();
+            } catch (Exception ignored) {
             }
-
         }
     }
 

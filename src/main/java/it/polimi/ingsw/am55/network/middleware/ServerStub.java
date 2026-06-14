@@ -59,11 +59,11 @@ public class ServerStub implements VirtualServer, AutoCloseable {
                     }
 
                 } catch (Exception e) {
-                    if (running) {
-                        System.out.println("[SERVER_STUB] Listener terminato: " + e.getMessage());
-                    }
-                    closeQuietly();
-                    break;
+//                    if (running) {
+//                        System.out.println("[SERVER_STUB] Listener terminato: " + e.getMessage());
+//                    }
+//                    closeQuietly();
+//                    break;
                 }
             }
         });

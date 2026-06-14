@@ -14,4 +14,6 @@ import java.rmi.RemoteException;
 public interface VirtualServer extends Remote {
 
     void receiveCommand(ServerCommand command, VirtualView sender) throws RemoteException;
+
+    void close() throws RemoteException;
 }
