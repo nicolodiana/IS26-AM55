@@ -86,6 +86,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         });
     }
 
+    @Override
+    public void close() throws RemoteException {
+
+    }
+
     /*
      * Entry point logico comune.
      *
@@ -336,7 +341,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         }
     }
 
-    private synchronized void startAliveChecker() {
+    private void startAliveChecker() {
         if (aliveCheckerStarted) {
             return;
         }
@@ -358,14 +363,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         System.out.println("[PING] Alive checker AVVIATO");
     }
 
-    private synchronized void stopAliveChecker() {
+    private void stopAliveChecker() {
         try {
             pingTimer.cancel();
         } catch (Exception ignored) {
         }
 
-//        pingTimer = new Timer(true);
-//        aliveCheckerStarted = false;
+//       pingTimer = new Timer(true);
+        aliveCheckerStarted = false;
 
         System.out.println("[PING] Alive checker FERMATO");
     }
@@ -389,16 +394,17 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         handleClientDisconnection(disconnectedClients);
     }
 
-    private void handleClientDisconnection(List<VirtualView> disconnectedClients) {
+    private void handleClientDisconnection(List<VirtualView> disconnectedClients){
         if (disconnectedClients == null || disconnectedClients.isEmpty()) {
             return;
         }
-
         synchronized (lastPingByClient) {
             for (VirtualView client : disconnectedClients) {
                 lastPingByClient.remove(client);
             }
         }
+
+
         List<String> disconnectedPlayersId = new ArrayList<>();
 
         synchronized (gameClients) {
@@ -410,30 +416,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
         }
-
-        if (!disconnectedPlayersId.isEmpty()) {
-            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
-
-            MessageToClient message;
-
-            synchronized (gameLock) {
-                message = controller.handleGameCrashed();
-            }
-            synchronized (gameClients) {
-                for(String playerId : disconnectedPlayersId) {
-                    gameClients.remove(playerId);
-                }
-            }
-            if (message != null && !gameClients.isEmpty()) {
-                message.deliver(null, this);
-                synchronized (gameClients) {
-                    gameClients.clear();
-                }
-            }
-            stopAliveChecker();
-
-        }
-
         List<String> sessionIds = new ArrayList<>();
 
         synchronized (lobbyClients) {
@@ -445,37 +427,72 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
         }
+        if (!disconnectedPlayersId.isEmpty()) {
+            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
+            stopAliveChecker();
+            synchronized (gameClients) {
+                for(String disconnectedPlayer : disconnectedPlayersId) {
+                    gameClients.remove(disconnectedPlayer);
+                }
+            }
+            synchronized (lobbyClients) {
+                for(String sessionId : sessionIds) {
+                    lobbyClients.remove(sessionId);
+                }
+            }
+            MessageToClient message;
+
+            synchronized (gameLock) {
+                message = controller.handleGameCrashed();
+            }
+
+            if (message != null) {
+                message.deliver(null, this);
+                //broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
+            }
+
+            synchronized (gameClients) {
+                for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
+                    VirtualView gameClient = entry.getValue();
+                    try {
+                        gameClient.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                gameClients.clear();
+            }
+
+            synchronized (lobbyClients) {
+                for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
+                    VirtualView lobbyClient = entry.getValue();
+                    try {
+                        lobbyClient.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                lobbyClients.clear();
+            }
+
+
+        }
+
 
         if (!sessionIds.isEmpty()) {
-            System.out.println("[SERVER_APP] Client disconnessi in lobby: " + sessionIds);
+            System.out.println("[SERVER_APP] Uno o più client si sono disconessi dalla lobby ");
 
             synchronized (lobbyClients) {
                 for (String sessionId : sessionIds) {
                     lobbyClients.remove(sessionId);
                 }
-                System.out.println("[SERVER_APP] Lobby aggiornta: " + lobbyClients);
             }
 
-//            for (String sessionId : sessionIds) {
-//                try {
-//                    sendToSession(sessionId, new QuitLobbyMessage());
-//                } catch (Exception ignored) {
-//                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
-//                }
-//            }
-
-
-//            for (VirtualView client : disconnectedClients) {
-//                try {
-//                    client.close();
-//                } catch (Exception ignored) {
-//                }
-//            }
-
-            return;
         }
-
-
+        for (VirtualView client : disconnectedClients) {
+            try {
+                client.close();
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     private void broadcastLobbyStatus() {

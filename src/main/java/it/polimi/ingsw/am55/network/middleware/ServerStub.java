@@ -59,12 +59,11 @@ public class ServerStub implements VirtualServer, AutoCloseable {
                     }
 
                 } catch (Exception e) {
-                    if (running) {
-                        System.out.println("[SERVER_STUB] Listener terminato: " + e.getMessage());
-                    }
-
-                    closeQuietly();
-                    break;
+//                    if (running) {
+//                        System.out.println("[SERVER_STUB] Listener terminato: " + e.getMessage());
+//                    }
+//                    closeQuietly();
+//                    break;
                 }
             }
         });
@@ -80,7 +79,9 @@ public class ServerStub implements VirtualServer, AutoCloseable {
 
     private void closeQuietly() {
         running = false;
-
+        try{
+            listenerThread.interrupt();
+        }catch(Exception ignored){}
         try {
             input.close();
         } catch (Exception ignored) {

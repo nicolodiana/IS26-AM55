@@ -48,7 +48,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         this.playerId = null;
 
         this.pingLock = new Object();
-//        this.lastPingFromServer = System.currentTimeMillis();
+        this.lastPingFromServer = System.currentTimeMillis();
 
         this.pingTimer = new Timer(true); //Deamon perché sono thread di supporto che permettono alla JVM di terminare anche se essi stanno
         //ancora in esecuzione
@@ -107,7 +107,6 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         pingStarted = true;
 
         startAliveChecker();
-        aliveCheckerStarted = true;
 
         pingTimer.schedule(new TimerTask() {
             @Override
@@ -128,6 +127,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     }
 
     private void startAliveChecker() {
+        aliveCheckerStarted = true;
         aliveCheckerTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -138,7 +138,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 }
 
                 if (elapsed > SERVER_TIMEOUT_MS) {
-                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+                    System.out.println("[CLIENT_IMPL] Server non raggiungibile ( per server down o per io client down) : chiudo il client.");
                     closeConnection();
 //                    missedPongs++;
 //                    System.out.println("[CLIENT_IMPL] pong mancato " + missedPongs + "/3, elapsed " + elapsed);
@@ -172,27 +172,36 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     public void pongFromSever() {
         synchronized (pingLock) {
             lastPingFromServer = System.currentTimeMillis();
-            this.missedPongs = 0;
+            //this.missedPongs = 0;
         }
     }
 
     @Override
     public void closeConnection() {
-        try {
-            close();
-        } catch (Exception ignored) {
-        }
+        stopPing();
+        System.out.println("[CLIENT_IMPL] Ping del client fermato");
+        try{
+            server.close();
+        }catch(Exception e){}
+        System.out.println("[CLIENT_IMPL] Chiudo il client.");
+        System.exit(0);
     }
 
     @Override
     public void close() throws RemoteException {
-        stopPing();
-        //Io, oggetto remoto client, non voglio più ricevere chiamate RMI.
-        try {
-            UnicastRemoteObject.unexportObject(this, true);
-        } catch (Exception ignored) {
-        }
-
-        System.out.println("[CLIENT_IMPL] Client chiuso per " + sessionId);
+//        stopPing();
+//        if (server instanceof AutoCloseable) {
+//            try {
+//                ((AutoCloseable) server).close();
+//            } catch (Exception ignored) {
+//            }
+//        }
+//        //Io, oggetto remoto client, non voglio più ricevere chiamate RMI.
+//        try {
+//            UnicastRemoteObject.unexportObject(this, true);
+//        } catch (Exception ignored) {
+//        }
+//
+//        System.out.println("[CLIENT_IMPL] Client chiuso per " + sessionId);
     }
 }
