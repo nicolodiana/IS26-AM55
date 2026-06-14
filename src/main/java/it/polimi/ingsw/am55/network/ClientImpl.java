@@ -99,28 +99,19 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     @Override
     public void startPing() {
-        System.out.println("[CLIENT_IMPL] Ping inviato da " + sessionId + " thread=" + Thread.currentThread().getName());
-        if (pingStarted) {
-            return;
-        }
-
+        if (pingStarted) return;
         pingStarted = true;
 
+        // FIX Bug #6: startAliveChecker chiamata solo qui, non anche dentro la TimerTask
         startAliveChecker();
 
         pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 try {
-                    if (!aliveCheckerStarted) {
-                        aliveCheckerStarted = true;
-                        startAliveChecker();
-                    }
-
                     sendCommand(new PingCommand());
-
                 } catch (Exception e) {
-//                    System.out.println("[CLIENT_IMPL] Invio ping fallito: " + e.getMessage());
+                    // ping fallito, il server-side timeout gestirà la disconnessione
                 }
             }
         }, 0, PING_INTERVAL_MS);
