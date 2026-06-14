@@ -416,14 +416,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
         }
-        List<String> sessionIds = new ArrayList<>();
+        List<String> sessionDisconnectedIds = new ArrayList<>();
 
         synchronized (lobbyClients) {
             for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
                 VirtualView lobbyClient = entry.getValue();
 
                 if (disconnectedClients.contains(lobbyClient)) {
-                    sessionIds.add(entry.getKey());
+                    sessionDisconnectedIds.add(entry.getKey());
                 }
             }
         }
@@ -436,7 +436,8 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
             synchronized (lobbyClients) {
-                for(String sessionId : sessionIds) {
+                System.out.println("[SERVER_APP] lobby pre-rimozione: "+lobbyClients);
+                for(String sessionId : sessionDisconnectedIds) {
                     lobbyClients.remove(sessionId);
                 }
             }
@@ -448,7 +449,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
             if (message != null) {
                 message.deliver(null, this);
-                //broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
+                broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
             }
 
             synchronized (gameClients) {
@@ -467,23 +468,28 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                     VirtualView lobbyClient = entry.getValue();
                     try {
                         lobbyClient.close();
+                        
                     } catch (Exception ignored) {
                     }
                 }
                 lobbyClients.clear();
+                System.out.println("[SERVER_APP] lobby aggioranta post rimozione: "+lobbyClients);
             }
+            return;
 
 
         }
 
 
-        if (!sessionIds.isEmpty()) {
-            System.out.println("[SERVER_APP] Uno o più client si sono disconessi dalla lobby ");
+        if (!sessionDisconnectedIds.isEmpty()) {
+            System.out.println("[SERVER_APP] client disconnessi in lobby " + sessionDisconnectedIds );
 
             synchronized (lobbyClients) {
-                for (String sessionId : sessionIds) {
+                System.out.println("[SERVER_APP] lobby pre-rimozione: "+lobbyClients);
+                for (String sessionId : sessionDisconnectedIds) {
                     lobbyClients.remove(sessionId);
                 }
+                System.out.println("[SERVER_APP] lobby aggioranta post rimozione: "+lobbyClients);
             }
 
         }

@@ -3,7 +3,10 @@ package it.polimi.ingsw.am55;
 import it.polimi.ingsw.am55.network.ServerApplication;
 import it.polimi.ingsw.am55.network.SocketServer;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
+import java.net.URL;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.ExportException;
@@ -14,12 +17,28 @@ public class Server {
     private static final int DEFAULT_SOCKET_PORT = 1235;
     private static final String RMI_SERVER_NAME = "GameServer";
 
+    private static String getPublicIp() {
+        try {
+            URL url = new URL("https://api.ipify.org");
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(url.openStream())
+            );
+            return reader.readLine();
+        } catch (Exception e) {
+            return "non rilevabile";
+        }
+    }
+
     public static void main(String[] args) {
         try {
-            String hostIp = InetAddress.getLocalHost().getHostAddress();
-            System.setProperty("java.rmi.server.hostname", hostIp);
+            String privateIp = InetAddress.getLocalHost().getHostAddress();
+            String publicIp = getPublicIp();
 
-            System.out.println("Server IP: " + hostIp);
+            System.setProperty("java.rmi.server.hostname", privateIp);
+
+            System.out.println("Server IP privato: " + privateIp);
+            System.out.println("Server IP pubblico: " + publicIp);
+            //System.setProperty("java.rmi.server.hostname", publicIp);
 
             ServerApplication serverApplication = new ServerApplication();
 
