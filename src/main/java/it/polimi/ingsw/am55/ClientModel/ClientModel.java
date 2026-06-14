@@ -222,8 +222,8 @@ public class ClientModel {
         gameView.placeTotem(playerId, index);
     }
 
-    public void pickCard(String playerId, int index) {
-        gameView.pickCard(playerId, index);
+    public void pickCard(String playerId, int index, int newFood, int newPp) {
+        gameView.pickCard(playerId, index, newFood,  newPp);
     }
 
     public void setCurrentPlayer(String playerd) {

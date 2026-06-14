@@ -47,7 +47,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      * e chiama direttamente executeCommand(...).
      */
     private final ExecutorService rmiExecutor;
-    private final ExecutorService pingExecutor;
 
     private Timer pingTimer;
     private boolean aliveCheckerStarted;
@@ -64,8 +63,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         this.pingTimer = new Timer(true);
         this.aliveCheckerStarted = false;
 
-        this.rmiExecutor = Executors.newSingleThreadExecutor();
-        this.pingExecutor = Executors.newSingleThreadExecutor();
+        this.rmiExecutor = Executors.newCachedThreadPool();
         this.playerIdBySession = new HashMap<>();
 
         System.out.println("[SERVER_APP] ServerApplication creata.");
@@ -81,8 +79,8 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      */
     @Override
     public void receiveCommand(ServerCommand command, VirtualView sender) throws RemoteException {
-        ExecutorService executor = command instanceof PingCommand ? pingExecutor : rmiExecutor;
-        executor.submit(() -> {
+
+        rmiExecutor.submit(() -> {
             try {
                 executeCommand(command, sender);
             } catch (Exception e) {
@@ -723,7 +721,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
     public void shutdown() {
         try {
             rmiExecutor.shutdownNow();
-            pingExecutor.shutdownNow();
         } catch (Exception ignored) {
         }
 
