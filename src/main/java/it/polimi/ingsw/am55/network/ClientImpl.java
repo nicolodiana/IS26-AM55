@@ -172,7 +172,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     public void pongFromSever() {
         synchronized (pingLock) {
             lastPingFromServer = System.currentTimeMillis();
-            this.missedPongs = 0;
+            //this.missedPongs = 0;
         }
     }
 
@@ -187,6 +187,12 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     @Override
     public void close() throws RemoteException {
         stopPing();
+        if (server instanceof AutoCloseable) {
+            try {
+                ((AutoCloseable) server).close();
+            } catch (Exception ignored) {
+            }
+        }
         //Io, oggetto remoto client, non voglio più ricevere chiamate RMI.
         try {
             UnicastRemoteObject.unexportObject(this, true);

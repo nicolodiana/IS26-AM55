@@ -336,7 +336,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         }
     }
 
-    private synchronized void startAliveChecker() {
+    private void startAliveChecker() {
         if (aliveCheckerStarted) {
             return;
         }
@@ -358,14 +358,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         System.out.println("[PING] Alive checker AVVIATO");
     }
 
-    private synchronized void stopAliveChecker() {
+    private void stopAliveChecker() {
         try {
             pingTimer.cancel();
         } catch (Exception ignored) {
         }
 
 //        pingTimer = new Timer(true);
-//        aliveCheckerStarted = false;
+        aliveCheckerStarted = false;
 
         System.out.println("[PING] Alive checker FERMATO");
     }
@@ -393,7 +393,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         if (disconnectedClients == null || disconnectedClients.isEmpty()) {
             return;
         }
-
         synchronized (lastPingByClient) {
             for (VirtualView client : disconnectedClients) {
                 lastPingByClient.remove(client);
@@ -412,36 +411,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
         }
-
-        if (!disconnectedPlayersId.isEmpty()) {
-            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
-
-            MessageToClient message;
-
-            synchronized (gameLock) {
-                message = controller.handleGameCrashed();
-            }
-
-            if (message != null) {
-                message.deliver(null, this);
-            }
-
-            stopAliveChecker();
-
-            synchronized (gameClients) {
-                for (String playerId : disconnectedPlayersId) {
-                    gameClients.remove(playerId);
-                }
-            }
-
-            for (VirtualView client : disconnectedClients) {
-                try {
-                    client.close();
-                } catch (Exception ignored) {
-                }
-            }
-        }
-
         List<String> sessionIds = new ArrayList<>();
 
         synchronized (lobbyClients) {
@@ -453,17 +422,57 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 }
             }
         }
+        if (!disconnectedPlayersId.isEmpty()) {
+            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
+            stopAliveChecker();
+            synchronized (gameClients) {
+                for(String disconnectedPlayer : disconnectedPlayersId) {
+                    gameClients.remove(disconnectedPlayer);
+                }
+            }
+            synchronized (lobbyClients) {
+                for(String sessionId : sessionIds) {
+                    lobbyClients.remove(sessionId);
+                }
+            }
+            MessageToClient message;
+
+            synchronized (gameLock) {
+                message = controller.handleGameCrashed();
+            }
+
+            if (message != null) {
+                message.deliver(null, this);
+                broadcastToLobby(new QuitLobbyMessage("Un player è crashato in game, partita chiusa"));
+            }
+
+            synchronized (gameClients) {
+                gameClients.clear();
+            }
+
+            synchronized (lobbyClients) {
+                lobbyClients.clear();
+            }
+
+            for (VirtualView client : disconnectedClients) {
+                try {
+                    client.close();
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
 
         if (!sessionIds.isEmpty()) {
             System.out.println("[SERVER_APP] Uno o più client si sono disconessi dalla lobby ");
 
-            for (String sessionId : sessionIds) {
-                try {
-                    sendToSession(sessionId, new QuitLobbyMessage());
-                } catch (Exception ignored) {
-                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
-                }
-            }
+//            for (String sessionId : sessionIds) {
+//                try {
+//                    sendToSession(sessionId, new QuitLobbyMessage());
+//                } catch (Exception ignored) {
+//                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
+//                }
+//            }
 
             synchronized (lobbyClients) {
                 for (String sessionId : sessionIds) {
