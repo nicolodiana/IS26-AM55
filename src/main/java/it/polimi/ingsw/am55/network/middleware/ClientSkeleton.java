@@ -53,14 +53,14 @@ public class ClientSkeleton implements VirtualView {
                     }
 
                 } catch (IOException | ClassNotFoundException e) {
-                    if (running) {
-                        System.out.println("[CLIENT_SKELETON] Client socket disconnesso: " + e.getMessage());
-                    }
-
-                    try {
-                        close();
-                    } catch (Exception ignored) {
-                    }
+//                    if (running) {
+//                        System.out.println("[CLIENT_SKELETON] Client socket disconnesso: " + e.getMessage());
+//                    }
+//
+//                    try {
+//                        close();
+//                    } catch (Exception ignored) {
+//                    }
 
                     break;
 
