@@ -20,7 +20,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     private static final long serialVersionUID = 1L;
 
     private static final long PING_INTERVAL_MS = 1500;
-    private static final long SERVER_TIMEOUT_MS = 8000;
+    private static final long SERVER_TIMEOUT_MS = 30_000;
 
     private final VirtualServer server;
     private final ClientModel model;
@@ -33,6 +33,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     private Timer pingTimer;
     private Timer aliveCheckerTimer;
+    private int missedPongs = 0;
 
     private volatile boolean pingStarted;
     private volatile boolean aliveCheckerStarted;
@@ -65,11 +66,14 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     }
 
     public void sendCommand(ServerCommand command) throws RemoteException {
-        server.receiveCommand(command, this);
+        VirtualView stub = (VirtualView) UnicastRemoteObject.toStub(this);
+        server.receiveCommand(command, stub);
     }
 
     @Override
     public void onMessage(MessageToClient message) throws RemoteException {
+        System.out.println("[CLIENT_IMPL] Ricevuto messaggio: " + message.getClass().getSimpleName());
+
         try {
             if (message.shouldUpdateModel()) {
                 synchronized (model) {
@@ -81,6 +85,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
         } catch (Exception e) {
             System.out.println("[CLIENT_IMPL] Errore gestione messaggio: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -96,23 +101,21 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     @Override
     public void startPing() {
+        System.out.println("[CLIENT_IMPL] Ping inviato da " + sessionId + " thread=" + Thread.currentThread().getName());
         if (pingStarted) {
             return;
         }
 
         pingStarted = true;
+        aliveCheckerStarted = true;
+
+        startAliveChecker();
 
         pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
                 try {
-                    if (!aliveCheckerStarted) {
-                        aliveCheckerStarted = true;
-                        startAliveChecker();
-                    }
-
-                    sendCommand(new PingCommand());
-
+                    sendCommand(new PingCommand(sessionId, playerId));
                 } catch (Exception e) {
                     System.out.println("[CLIENT_IMPL] Invio ping fallito: " + e.getMessage());
                 }
@@ -131,8 +134,15 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 }
 
                 if (elapsed > SERVER_TIMEOUT_MS) {
-                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
-                    closeConnection();
+//                    System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+//                    closeConnection();
+                    missedPongs++;
+                    System.out.println("[CLIENT_IMPL] pong mancato " + missedPongs + "/3, elapsed " + elapsed);
+
+                    if (missedPongs >= 3) {
+                        System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
+                        closeConnection();
+                    }
                 }
             }
         }, PING_INTERVAL_MS, PING_INTERVAL_MS);
@@ -152,12 +162,16 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
             aliveCheckerTimer.cancel();
         } catch (Exception ignored) {
         }
+
+        pingTimer = new Timer(true);
+        aliveCheckerTimer = new Timer(true);
     }
 
     @Override
     public void pongFromSever() {
         synchronized (pingLock) {
             lastPingFromServer = System.currentTimeMillis();
+            this.missedPongs = 0;
         }
     }
 
@@ -173,18 +187,18 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     public void close() throws RemoteException {
         stopPing();
 
-        if (server instanceof AutoCloseable) {
+        /*if (server instanceof AutoCloseable) {
             try {
                 ((AutoCloseable) server).close();
             } catch (Exception ignored) {
             }
-        }
+        }*/
 
         try {
             UnicastRemoteObject.unexportObject(this, true);
         } catch (Exception ignored) {
         }
 
-        System.out.println("[CLIENT_IMPL] Client chiuso.");
+        System.out.println("[CLIENT_IMPL] Client chiuso per " + sessionId);
     }
 }

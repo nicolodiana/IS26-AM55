@@ -12,7 +12,7 @@ public class BiddingTicketView implements Serializable {
     private final int chooseUpperCard;
     private final int numPlayer;
     private final char trailPlacement;
-    private final PlayerView player;
+    private PlayerView player;
 
     public BiddingTicketView(BiddingTicket ticket) {
         this.foodBonus = ticket.getFoodBonus();
@@ -67,5 +67,9 @@ public class BiddingTicketView implements Serializable {
                 " | upper=" + chooseUpperCard +
                 " | lower=" + chooseLowerCard +
                 " | player=" + nickname;
+    }
+
+    public void setPlayer(PlayerView player) {
+        this.player = player;
     }
 }

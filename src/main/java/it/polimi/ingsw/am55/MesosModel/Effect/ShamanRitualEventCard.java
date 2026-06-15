@@ -11,9 +11,9 @@ import java.util.Map;
 
 // Evento Rituale Sciamanico
 public class ShamanRitualEventCard extends EventCard {
-    private int maxPP;
-    private int minPP;
-    private Map<String, Integer> effectToPP = new HashMap<>();
+    private final int maxPP;
+    private final int minPP;
+    private final Map<String, Integer> effectToPP = new HashMap<>();
 
     public ShamanRitualEventCard(int id, int era,int maxPP, int minPP) {
         super(id,era);
@@ -27,7 +27,7 @@ public class ShamanRitualEventCard extends EventCard {
             return;
         }
 
-        // Calcolo una sola volta il massimo e il minimo numero di stelle tra tutti i player
+        // calculate the max and min starts one time
         int maxStars = players.get(0).countShamanStars();
         int minStars = players.get(0).countShamanStars();
 
@@ -43,20 +43,22 @@ public class ShamanRitualEventCard extends EventCard {
             }
         }
 
-        // Applico gli effetti a tutti i player
+        // Apply the effect to all players
         for (Player p : players) {
             int stars = p.countShamanStars();
 
-            // Chi ha il massimo guadagna PP
-            // Se ha BUILDING7 il guadagno raddoppia
+            /** the player with the max number of stars gain PP
+             * if he has also building 7 the pp gained doubles
+             */
             if (stars == maxStars) {
                 int gain = p.hasBuilding(BuildingType.BUILDING7) ? maxPP * 2 : maxPP;
                 p.addPP(gain);
                 effectToPP.put(p.getNickname(), gain);
             }
 
-            // Chi ha il minimo perde PP
-            // Se ha BUILDING3 la perdita viene annullata
+            /** the player with the minimum number of stars lose PP
+             * but if he has building 3 he loses 0 PP
+             */
             if (stars == minStars) {
                 if (!p.hasBuilding(BuildingType.BUILDING3)) {
                     p.payPP(minPP);
@@ -65,6 +67,7 @@ public class ShamanRitualEventCard extends EventCard {
             }
         }
     }
+
     public int getOrder(){
         return 2;
     }
@@ -72,6 +75,6 @@ public class ShamanRitualEventCard extends EventCard {
     public ShamanRitualEventView toView() { return new ShamanRitualEventView(getId(), this.era, this.maxPP, this.minPP); }
 
     public ResolveShamanRitualView toViewResolve() {
-        return new ResolveShamanRitualView(effectToPP, "SHAMAN RITUAL"); }
-
+        return new ResolveShamanRitualView(effectToPP, "SHAMAN RITUAL");
+    }
 }

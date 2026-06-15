@@ -14,12 +14,12 @@ import java.util.Map;
 //evento pitture rupestri
 
 public class PaintingsEventCard extends EventCard {
-    private int upperPP;
-    private int lowerPP;
-    private int upperNumberOfArtist;
-    private int lowerNumberOfArtist;
-    private Map<String, Integer> effectToFood = new HashMap<>();
-    private Map<String, Integer> effectToPP = new HashMap<>();
+    private final int upperPP;
+    private final int lowerPP;
+    private final int upperNumberOfArtist;
+    private final int lowerNumberOfArtist;
+    private final Map<String, Integer> effectToFood = new HashMap<>();
+    private final Map<String, Integer> effectToPP = new HashMap<>();
 
 
     public PaintingsEventCard(int id, int era, int upperPP, int lowerPP, int upperNumberOfArtist, int lowerNumberOfArtist) {

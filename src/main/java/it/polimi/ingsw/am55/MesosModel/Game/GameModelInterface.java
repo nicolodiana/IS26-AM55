@@ -4,6 +4,7 @@ import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 
@@ -106,7 +107,7 @@ public interface GameModelInterface {
      * of food. Only the players with the highest food among them remain winners.
      * @return map that cointains players winner with points
      */
-    public EndGameResultView endGame();
+    EndGameResultView endGame();
 
     List<ResolveEventView> eventResolve();
 
@@ -120,4 +121,8 @@ public interface GameModelInterface {
     GameState getState();
 
     List<Player> getPlayers();
+
+    //PlayerView getSinglePlayer(String nickname);
+    int getPlayerPoints(String nickname);
+    int getPlayerFood(String nickname);
 }

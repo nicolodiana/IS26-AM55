@@ -227,13 +227,7 @@ public class Player {
 
     public void addTribeCard(BuildingCard card) {
 
-            int builderDiscount = 0;
-            //calcolo costo degli sconti in base ai costruttori che ho
-            for (Builder b : builderList) {
-                builderDiscount += b.getPickbuildingdiscount();
-            }
-
-            int buildingCost = card.getFoodCost() - builderDiscount;
+            int buildingCost = card.getFoodCost() - totalBuildingDiscount();
             buildingCost = Math.max(0, buildingCost); //se lo sconto è maggiore del costo dovuto, setto un minimo di 0
 
 
@@ -315,6 +309,16 @@ public class Player {
         for (BuildingCard card : this.buildings) { list.add(card.toView()); }
 
         return list;
+    }
+
+    public int totalBuildingDiscount() {
+        int builderDiscount = 0;
+
+        for (Builder b : builderList) {
+            builderDiscount += b.getPickbuildingdiscount();
+        }
+
+        return builderDiscount;
     }
 }
 

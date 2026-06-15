@@ -8,6 +8,7 @@ import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.message.PongMessage;
 import it.polimi.ingsw.am55.message.QuitLobbyMessage;
 import it.polimi.ingsw.am55.message.StartPingMessage;
+import it.polimi.ingsw.am55.network.command.PingCommand;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
@@ -27,13 +28,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
     private static final long serialVersionUID = 1L;
 
-    private static final long PING_TIMEOUT_MS = 6_000;
+    private static final long PING_TIMEOUT_MS = 30_000;
 
     private final GameController controller;
 
     private final Map<String, VirtualView> gameClients;
     private final Map<String, VirtualView> lobbyClients;
     private final Map<VirtualView, Long> lastPingByClient;
+    private final Map<String, String> playerIdBySession;
 
     private final Object gameLock = new Object();
 
@@ -62,6 +64,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         this.aliveCheckerStarted = false;
 
         this.rmiExecutor = Executors.newCachedThreadPool();
+        this.playerIdBySession = new HashMap<>();
 
         System.out.println("[SERVER_APP] ServerApplication creata.");
     }
@@ -76,6 +79,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      */
     @Override
     public void receiveCommand(ServerCommand command, VirtualView sender) throws RemoteException {
+
         rmiExecutor.submit(() -> {
             try {
                 executeCommand(command, sender);
@@ -96,11 +100,15 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      *      ClientSkeleton legge command da input stream -> executeCommand(...)
      */
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
+        if (sender != null) {
+            synchronized (lastPingByClient) {
+                lastPingByClient.put(sender, System.currentTimeMillis());
+            }
+        }
         System.out.println("[SERVER_APP] Esecuzione command: "
                 + command.getClass().getSimpleName()
                 + ", sender = "
                 + (sender == null ? "null" : sender.getClass().getSimpleName()));
-
         if (command.requiresLock()) {
             synchronized (gameLock) {
                 command.execute(this, sender);
@@ -150,11 +158,18 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
     private void completeConnectionSetup(String playerId, String sessionId, MessageToClient message) throws Exception {
         VirtualView client;
 
+        System.out.println("[PING] ricevuto. sessionId=" + sessionId
+                + ", playerId=" + playerId
+                + ", lobby=" + lobbyClients.keySet()
+                + ", game=" + gameClients.keySet()
+                + ", playerIdBySession=" + playerIdBySession);
+
         synchronized (lobbyClients) {
             client = lobbyClients.get(sessionId);
         }
 
         if (client == null) {
+
             System.out.println("[SERVER_APP] Sessione lobby non trovata: " + sessionId);
             return;
         }
@@ -168,7 +183,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             lobbyClients.remove(sessionId);
         }
 
-        client.setPlayerId(playerId);
+        synchronized (playerIdBySession) {
+            playerIdBySession.put(sessionId, playerId);
+            System.out.println("[SERVER_APP] playerIdBySession aggiornato = " + playerIdBySession);
+        }
+        //client.setPlayerId(playerId);
 
         synchronized (gameClients) {
             gameClients.put(playerId, client);
@@ -291,7 +310,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         System.out.println("[SERVER_APP] Client rimosso dalla lobby. SessionId = " + sessionId);
     }
 
-    public void ping(VirtualView sender) throws Exception {
+    public void ping(String sessionId, String playerId, VirtualView sender) throws Exception {
         if (sender == null) {
             return;
         }
@@ -300,18 +319,70 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             lastPingByClient.put(sender, System.currentTimeMillis());
         }
 
+        System.out.println("[PING] ricevuto. sessionId=" + sessionId
+            + ", playerId=" + playerId
+            + ", lobby=" + lobbyClients.keySet()
+            + ", game=" + gameClients.keySet()
+            + ", playerIdBySession=" + playerIdBySession);
+
+        /**
+         * Handles the lobby -> game transition.
+         * During this phase the client may still send PingCommand with a null
+         * playerId while sessionId is no longer in the lobby.
+         * Recovering the playerId from the sessionId allows the server to send
+         * the PongMessage correctly and prevents false disconnections
+        */
+        if (playerId == null && sessionId != null) {
+            synchronized (playerIdBySession) {
+                playerId = playerIdBySession.get(sessionId);
+            }
+        }
+
+        System.out.println("[PING] dopo recovery playerId=" + playerId);
+
+
+        if (playerId != null) {
+            synchronized (gameClients) {
+                if (gameClients.containsKey(playerId)) {
+                    System.out.println("[PING] mando Pong a game playerId=" + playerId);
+                    sendTo(playerId, new PongMessage());
+                    return;
+                }
+            }
+        }
+
+        if (sessionId != null) {
+            synchronized (lobbyClients) {
+                if (lobbyClients.containsKey(sessionId)) {
+                    System.out.println("[PING] mando Pong a lobby sessionId=" + sessionId);
+                    sendToSession(sessionId, new PongMessage());
+                    return;
+                }
+            }
+        }
+
+
         pong(sender);
     }
 
     private void pong(VirtualView sender) throws Exception {
         synchronized (gameClients) {
-            String playerId = sender.getPlayerId();
+            /*String playerId = sender.getPlayerId();
 
             if (playerId != null && gameClients.containsKey(playerId)) {
                 sendTo(playerId, new PongMessage());
                 System.out.println("[SERVER_APP] PongMessage game client " + playerId);
                 return;
+            }*/
+            for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
+                if (entry.getValue().equals(sender)) {
+                    sendTo(entry.getKey(), new PongMessage());
+                    System.out.println("[SERVER_APP] PongMessage game client ");
+                    return;
+                }
             }
+
+            System.out.println("[SERVER_APP] Pong ignorato: sender non trovato");
         }
 
         synchronized (lobbyClients) {
@@ -336,9 +407,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                checkPingTimeouts();
+                try {
+                    checkPingTimeouts();
+                } catch (Exception e) {
+                    System.out.println("[PING] Error alive checker: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
-        }, 0, 10_000);
+        }, 10_000, 5_000);
 
         System.out.println("[PING] Alive checker AVVIATO");
     }
@@ -356,22 +432,24 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
     }
 
     private void checkPingTimeouts() {
-        List<VirtualView> disconnectedClients = new ArrayList<>();
-        long now = System.currentTimeMillis();
+        synchronized (gameLock) {
+            List<VirtualView> disconnectedClients = new ArrayList<>();
+            long now = System.currentTimeMillis();
 
-        synchronized (lastPingByClient) {
-            for (Map.Entry<VirtualView, Long> entry : lastPingByClient.entrySet()) {
-                VirtualView client = entry.getKey();
-                long lastPing = entry.getValue();
-                long elapsed = now - lastPing;
+            synchronized (lastPingByClient) {
+                for (Map.Entry<VirtualView, Long> entry : lastPingByClient.entrySet()) {
+                    VirtualView client = entry.getKey();
+                    long lastPing = entry.getValue();
+                    long elapsed = now - lastPing;
 
-                if (elapsed > PING_TIMEOUT_MS) {
-                    disconnectedClients.add(client);
+                    if (elapsed > PING_TIMEOUT_MS) {
+                        disconnectedClients.add(client);
+                    }
                 }
             }
-        }
 
-        handleClientDisconnection(disconnectedClients);
+            handleClientDisconnection(disconnectedClients);
+        }
     }
 
     private void handleClientDisconnection(List<VirtualView> disconnectedClients) {
@@ -383,40 +461,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             for (VirtualView client : disconnectedClients) {
                 lastPingByClient.remove(client);
             }
-        }
-        List<String> disconnectedPlayersId = new ArrayList<>();
-
-        synchronized (gameClients) {
-            for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
-                VirtualView gameClient = entry.getValue();
-
-                if (disconnectedClients.contains(gameClient)) {
-                    disconnectedPlayersId.add(entry.getKey());
-                }
-            }
-        }
-
-        if (!disconnectedPlayersId.isEmpty()) {
-            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
-
-            MessageToClient message;
-
-            synchronized (gameLock) {
-                message = controller.handleGameCrashed();
-            }
-            synchronized (gameClients) {
-                for(String playerId : disconnectedPlayersId) {
-                    gameClients.remove(playerId);
-                }
-            }
-            if (message != null && !gameClients.isEmpty()) {
-                message.deliver(null, this);
-                synchronized (gameClients) {
-                    gameClients.clear();
-                }
-            }
-            stopAliveChecker();
-
         }
 
         List<String> sessionIds = new ArrayList<>();
@@ -434,33 +478,71 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         if (!sessionIds.isEmpty()) {
             System.out.println("[SERVER_APP] Client disconnessi in lobby: " + sessionIds);
 
+            for (String sessionId : sessionIds) {
+                try {
+                    sendToSession(sessionId, new QuitLobbyMessage());
+                } catch (Exception ignored) {
+                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
+                }
+            }
+
             synchronized (lobbyClients) {
                 for (String sessionId : sessionIds) {
                     lobbyClients.remove(sessionId);
                 }
-                System.out.println("[SERVER_APP] Lobby aggiornta: " + lobbyClients);
             }
 
-//            for (String sessionId : sessionIds) {
-//                try {
-//                    sendToSession(sessionId, new QuitLobbyMessage());
-//                } catch (Exception ignored) {
-//                    System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
-//                }
-//            }
-
-
-//            for (VirtualView client : disconnectedClients) {
-//                try {
-//                    client.close();
-//                } catch (Exception ignored) {
-//                }
-//            }
+            for (VirtualView client : disconnectedClients) {
+                try {
+                    client.close();
+                } catch (Exception ignored) {
+                }
+            }
 
             return;
         }
 
+        List<String> disconnectedPlayersId = new ArrayList<>();
 
+        synchronized (gameClients) {
+            for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
+                VirtualView gameClient = entry.getValue();
+
+                if (disconnectedClients.contains(gameClient)) {
+                    disconnectedPlayersId.add(entry.getKey());
+                }
+            }
+        }
+
+        if (!disconnectedPlayersId.isEmpty()) {
+            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
+
+            synchronized (gameClients) {
+                for (String playerId : disconnectedPlayersId) {
+                    gameClients.remove(playerId);
+                }
+            }
+
+            for (VirtualView client : disconnectedClients) {
+                try {
+                    client.close();
+                } catch (Exception ignored) {
+                }
+            }
+
+            MessageToClient message;
+
+            synchronized (gameLock) {
+                message = controller.handleGameCrashed();
+            }
+
+            if (message != null) {
+                message.deliver(null, this);
+            }
+
+            stopAliveChecker();
+
+        }
     }
 
     private void broadcastLobbyStatus() {
