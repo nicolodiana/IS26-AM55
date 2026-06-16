@@ -1,107 +1,148 @@
 package it.polimi.ingsw.am55.network;
 
 import it.polimi.ingsw.am55.controller.GameController;
-import it.polimi.ingsw.am55.message.*;
+import it.polimi.ingsw.am55.message.GameCrashedBroadcast;
+import it.polimi.ingsw.am55.message.LobbyStatusMessage;
+import it.polimi.ingsw.am55.message.MessageDelivery;
+import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.message.PongMessage;
+import it.polimi.ingsw.am55.message.QuitLobbyMessage;
+import it.polimi.ingsw.am55.message.StartPingMessage;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
 
-import java.util.*;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class ServerApplication implements VirtualServer, MessageDelivery {
+public class ServerApplication extends UnicastRemoteObject implements VirtualServer, MessageDelivery {
 
-    private final GameController controller;
-    //mappa per gestire i client uniti in partita a seguito di una create o join game
-    private final Map<String, VirtualView> gameClients;
-    //mappa per gestire i client connessi con il server e ai quali viene mostrata lobby (pre create o join)
-    private final Map<String, VirtualView> lobbyClients;
-    private final Map<VirtualView,Long> lastPingByClient;
-    private Timer pingTimer;
+    private static final long serialVersionUID = 1L;
+
     private static final long PING_TIMEOUT_MS = 6_000;
 
-    private boolean aliveCheckerStarted=false;
-    //private final ScheduledExecutorService aliveChecker = Executors.newSingleThreadScheduledExecutor();
-    /*
-     * Lock dedicato alla logica di gioco.
-     * Così evitiamo che due thread RMI/socket entrino insieme nel GameController.
-     */
+    private final GameController controller;
+
+    private final Map<String, VirtualView> gameClients;
+    private final Map<String, VirtualView> lobbyClients;
+    private final Map<VirtualView, Long> lastPingByClient;
+
     private final Object gameLock = new Object();
 
-    public ServerApplication() {
+    /*
+     * Executor usato SOLO per RMI.
+     *
+     * RMI entra da receiveCommand(...), che sottomette il command a questo executor.
+     * Socket invece NON entra da receiveCommand(...): il ClientSkeleton legge dallo stream
+     * e chiama direttamente executeCommand(...).
+     */
+    private final ExecutorService rmiExecutor;
+
+    private Timer pingTimer;
+    private boolean aliveCheckerStarted;
+
+    public ServerApplication() throws RemoteException {
+        super();
+
         this.controller = new GameController();
+
         this.lobbyClients = new HashMap<>();
         this.gameClients = new HashMap<>();
         this.lastPingByClient = new HashMap<>();
+
         this.pingTimer = new Timer(true);
+        this.aliveCheckerStarted = false;
+
+        this.rmiExecutor = Executors.newCachedThreadPool();
+
         System.out.println("[SERVER_APP] ServerApplication creata.");
     }
-    public void registerLobbyClient(String sessionId, VirtualView client) throws Exception {
-        synchronized (lobbyClients) {
-            lobbyClients.put(sessionId, client);
-        }
-        //Appena il client si collega devo salvarmi l' istante in cui si è connesso
-        synchronized (lastPingByClient) {
-            lastPingByClient.put(client, System.currentTimeMillis());
-        }
-        //Una volta che il client si è collegato gli notifico di iniziare a mandare il ping verso il server
-        sendToSession(sessionId,new StartPingMessage());
-        startAliveChecker();
 
-        //client.onMessage(new LobbyStatusMessage(controller.getLobbyView()));
+    /*
+     * Entry point RMI.
+     *
+     * ClientImpl RMI chiama:
+     *      server.receiveCommand(command, this)
+     *
+     * Qui rendiamo asincrona la chiamata RMI, come richiesto dal prof.
+     */
+    @Override
+    public void receiveCommand(ServerCommand command, VirtualView sender) throws RemoteException {
+        rmiExecutor.submit(() -> {
+            try {
+                executeCommand(command, sender);
+            } catch (Exception e) {
+                System.out.println("[SERVER_APP] Errore executeCommand da RMI: " + e.getMessage());
+                e.printStackTrace();
+            }
+        });
     }
-//    public void registerClient(String playerId,VirtualView client) { ??FORSE IL PING VA SPOSTATO IN REGISTER LOBBY??
-//        synchronized (gameClients) {
-//            gameClients.put(playerId, client);
-//            System.out.println("[SERVER_APP] Registrato client: " + playerId);
-//            System.out.println("[SERVER_APP] Client registrati: " + gameClients.keySet());
-//        }
-//        //Perché devo registrare l'istante in cui il client si collega al server per la prima volta, per ragioni di ping
-//        synchronized (lastPingByClient) {
-//          lastPingByClient.put(client, System.currentTimeMillis());
-//        }
-//        startAliveChecker();
-//    }
 
+    @Override
+    public void close() throws RemoteException {
+
+    }
+
+    /*
+     * Entry point logico comune.
+     *
+     * RMI:
+     *      receiveCommand(...) -> executor -> executeCommand(...)
+     *
+     * Socket:
+     *      ClientSkeleton legge command da input stream -> executeCommand(...)
+     */
     public void executeCommand(ServerCommand command, VirtualView sender) throws Exception {
+//        if (sender != null) {
+//            synchronized (lastPingByClient) {
+//                lastPingByClient.put(sender, System.currentTimeMillis());
+//            }
+//        }
         System.out.println("[SERVER_APP] Esecuzione command: "
                 + command.getClass().getSimpleName()
                 + ", sender = "
                 + (sender == null ? "null" : sender.getClass().getSimpleName()));
 
-        /*
-         * Tutti i command passano da qui.
-         * Il lock garantisce che il GameController venga modificato da un solo thread alla volta.
-         */
-        if(command.requiresLock()){
+        if (command.requiresLock()) {
             synchronized (gameLock) {
                 command.execute(this, sender);
             }
-        }else{
+        } else {
             command.execute(this, sender);
         }
 
         System.out.println("[SERVER_APP] Command completato: "
                 + command.getClass().getSimpleName());
     }
-    private void pong(VirtualView sender) throws Exception {
-        synchronized (gameClients) {
-            if (sender.getPlayerId() != null && gameClients.containsKey(sender.getPlayerId())) {
-                sendTo(sender.getPlayerId(), new PongMessage());
-                System.out.println("[SERVER_APP] PongMessage game client "+ sender.getPlayerId());
-                return;
-            }
+
+    public void registerLobbyClient(String sessionId, VirtualView client) throws Exception {
+        if (sessionId == null || client == null) {
+            System.out.println("[SERVER_APP] registerLobbyClient ignorato: sessionId/client null.");
+            return;
         }
+
         synchronized (lobbyClients) {
-            for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
-                if (entry.getValue().equals(sender)) {
-                    sendToSession(entry.getKey(), new PongMessage());
-                    System.out.println("[SERVER_APP] PongMessage lobby client "+sender.getPlayerId());
-                    return;
-                }
-            }
+            lobbyClients.put(sessionId, client);
         }
+
+        synchronized (lastPingByClient) {
+            lastPingByClient.put(client, System.currentTimeMillis());
+        }
+
+        sendToSession(sessionId, new StartPingMessage());
+        startAliveChecker();
+
+        System.out.println("[SERVER_APP] Client registrato in lobby. SessionId = " + sessionId);
     }
-    @Override
+
     public void createGame(String playerId, String totemColor, int numPlayers, String sessionId) throws Exception {
         MessageToClient message =
                 controller.createGame(playerId, totemColor, numPlayers);
@@ -109,15 +150,20 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         completeConnectionSetup(playerId, sessionId, message);
     }
 
-    @Override
     public void joinGame(String playerId, String totemColor, String sessionId) throws Exception {
         MessageToClient message =
                 controller.joinGame(playerId, totemColor);
 
         completeConnectionSetup(playerId, sessionId, message);
     }
+
     private void completeConnectionSetup(String playerId, String sessionId, MessageToClient message) throws Exception {
         VirtualView client;
+
+        System.out.println("[PING] ricevuto. sessionId=" + sessionId
+                + ", playerId=" + playerId
+                + ", lobby=" + lobbyClients.keySet()
+                + ", game=" + gameClients.keySet());
 
         synchronized (lobbyClients) {
             client = lobbyClients.get(sessionId);
@@ -128,38 +174,28 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             return;
         }
 
-        // QUI gestisci nickname/totem duplicato , connectionsetupsuccesful è false nel caso in cui si sia generata un eccezione lato model e catturata dal game controller
         if (!message.isConnectionSetupSuccessful()) {
-            sendToSession(sessionId, message); // mando errore al client tramite sessionId
-            return;                    // NON registro in game
+            sendToSession(sessionId, message);
+            return;
         }
-        //altrimenti lo tolgo dai lobby e gli mando il waiting message
 
         synchronized (lobbyClients) {
             lobbyClients.remove(sessionId);
         }
 
         client.setPlayerId(playerId);
-//in alternativa usare direttamente Register Client se si vogliono inserire anche metodi di ping
+
         synchronized (gameClients) {
             gameClients.put(playerId, client);
         }
 
+        System.out.println("[SERVER_APP] Client spostato da lobby a game: " + playerId);
+
         message.deliver(playerId, this);
-        //però comunque notifico tutti gli altri in lobby delle scelte rimanenti disponibili (creategame o totem rimasti )
-        /*
-         * La lobby è passiva: non modifica il model e non esegue azioni di gioco.
-         * Riceve solo uno snapshot leggero dello stato attuale tramite LobbyView.
-         *
-         * Per questo motivo la LobbyStatusMessage viene creata qui nella
-         * ServerApplication: è un messaggio di routing/networking destinato
-         * ai client connessi ma non ancora entrati in partita.
-         */
+
         broadcastLobbyStatus();
     }
 
-
-    @Override
     public void placeTotem(String playerId, int index) throws Exception {
         System.out.println("[SERVER_APP] placeTotem chiamato da: "
                 + playerId
@@ -174,7 +210,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         message.deliver(playerId, this);
     }
 
-    @Override
     public void pickCard(String playerId, int cardId) throws Exception {
         System.out.println("[SERVER_APP] pickCard chiamato da: "
                 + playerId
@@ -189,7 +224,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         message.deliver(playerId, this);
     }
 
-    @Override
     public void pickSpecial(String playerId, int cardId) throws Exception {
         System.out.println("[SERVER_APP] pickSpecial chiamato da: "
                 + playerId
@@ -204,98 +238,140 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         message.deliver(playerId, this);
     }
 
-    @Override
     public void quitGame(String playerId) throws Exception {
         System.out.println("[SERVER_APP] quitGame chiamato da: " + playerId);
-        //Dichiaro la partita in stato di ENDED
+
         MessageToClient message = controller.quitGame(playerId);
 
-        //Tutti i players sono notificati del cambiamento di stato del model
         message.deliver(playerId, this);
+
         System.out.println("[SERVER_APP] Broadcast di quit completato.");
 
-        //Smetto di tenere attivo l' aliverchecker
-        pingTimer.cancel();
-        aliveCheckerStarted=false;
+        stopAliveChecker();
 
-        //Tutti i player devono uscire dalla partita
-        synchronized (gameClients){
-            for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
-                VirtualView gameClient = entry.getValue();
-                gameClient.close();
+        synchronized (gameClients) {
+            for (VirtualView gameClient : gameClients.values()) {
+                try {
+                    gameClient.close();
+                } catch (Exception ignored) {
+                }
             }
+
             gameClients.clear();
-            System.out.println("[SERVER_APP] Game client map svuotata "+ gameClients);
+            System.out.println("[SERVER_APP] Game client map svuotata " + gameClients);
         }
-        synchronized (lastPingByClient){
+
+        synchronized (lobbyClients) {
+            for (VirtualView lobbyClient : lobbyClients.values()) {
+                try {
+                    lobbyClient.close();
+                } catch (Exception ignored) {
+                }
+            }
+
+            lobbyClients.clear();
+            System.out.println("[SERVER_APP] Lobby client map svuotata " + lobbyClients);
+        }
+
+        synchronized (lastPingByClient) {
             lastPingByClient.clear();
-            System.out.println("[SERVER_APP] Ping  map svuotata "+ lastPingByClient);
+            System.out.println("[SERVER_APP] Ping map svuotata " + lastPingByClient);
         }
     }
 
-
-//    @Override
-//    public void closeConnection(String playerId) throws Exception {
-//        System.out.println("[SERVER_APP] Sto scollegando "+ playerId);
-//        VirtualView sender;
-//        synchronized (gameClients) {
-//            sender = gameClients.get(playerId);
-//            gameClients.remove(playerId);
-//        }
-//        synchronized (lastPingByClient) {
-//            lastPingByClient.remove(sender);
-//        }
-//        if (sender != null) {
-//            sender.close();
-//        }
-//    }
-
-    @Override
     public void quitLobby(String sessionId) throws Exception {
         VirtualView sender;
-        //Non bisogna fare operazioni sul model, perché la partita non è stata ancora avviata
+
         MessageToClient message = new QuitLobbyMessage();
         message.deliver(sessionId, this);
 
-        //Elimino solo il client che ha richiesto di disconnettersi e chiudo direttamente la
-        synchronized (lobbyClients){
+        synchronized (lobbyClients) {
             sender = lobbyClients.get(sessionId);
             lobbyClients.remove(sessionId);
-            if(sender != null){
-                sender.close();
+        }
+
+        synchronized (lastPingByClient) {
+            if (sender != null) {
+                lastPingByClient.remove(sender);
             }
         }
-        synchronized (lastPingByClient){
-            lastPingByClient.remove(sender);
+
+        if (sender != null) {
+            try {
+                sender.close();
+            } catch (Exception ignored) {
+            }
         }
+
+        System.out.println("[SERVER_APP] Client rimosso dalla lobby. SessionId = " + sessionId);
     }
 
-    //Il metodo ha la responsabilità di salvare l' u
-    @Override
     public void ping(VirtualView sender) throws Exception {
         if (sender == null) {
             return;
         }
-        //Aggiorno l' ultimo ping del client
+
         synchronized (lastPingByClient) {
             lastPingByClient.put(sender, System.currentTimeMillis());
         }
+
         pong(sender);
     }
-    private synchronized void startAliveChecker() {
-        if (aliveCheckerStarted) { //Deve avviarsi una sola volta il checker
+
+    private void pong(VirtualView sender) throws Exception {
+        synchronized (gameClients) {
+            String playerId = sender.getPlayerId();
+
+            if (playerId != null && gameClients.containsKey(playerId)) {
+                sendTo(playerId, new PongMessage());
+                System.out.println("[SERVER_APP] PongMessage game client " + playerId);
+                return;
+            }
+        }
+
+        synchronized (lobbyClients) {
+            for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
+                if (entry.getValue().equals(sender)) {
+                    sendToSession(entry.getKey(), new PongMessage());
+                    System.out.println("[SERVER_APP] PongMessage lobby client "
+                            + sender.getClass().getSimpleName());
+                    return;
+                }
+            }
+        }
+    }
+
+    private void startAliveChecker() {
+        if (aliveCheckerStarted) {
             return;
         }
+
         aliveCheckerStarted = true;
 
         pingTimer.schedule(new TimerTask() {
             @Override
             public void run() {
-                checkPingTimeouts();
+                try {
+                    checkPingTimeouts();
+                } catch (Exception e) {
+                    System.out.println("[PING] Error alive checker: " + e.getMessage());
+                    e.printStackTrace();
+                }
             }
-        }, 0, 10000);
+        }, 0, 1500);
 
         System.out.println("[PING] Alive checker AVVIATO");
+    }
+
+    private void stopAliveChecker() {
+        try {
+            pingTimer.cancel();
+        } catch (Exception ignored) {}
+
+        pingTimer = new Timer(true); // FIX: ricrea il timer per uso futuro
+        aliveCheckerStarted = false;
+
+        System.out.println("[PING] Alive checker FERMATO");
     }
 
     private void checkPingTimeouts() {
@@ -306,7 +382,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             for (Map.Entry<VirtualView, Long> entry : lastPingByClient.entrySet()) {
                 VirtualView client = entry.getKey();
                 long lastPing = entry.getValue();
-
                 long elapsed = now - lastPing;
 
                 if (elapsed > PING_TIMEOUT_MS) {
@@ -315,113 +390,95 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             }
         }
 
-//        for (VirtualView disconnectedClient : disconnectedClients) {
-//            handleClientDisconnection(disconnectedClient);
-//        }
-        handleClientDisconnection(disconnectedClients);
+        if(!disconnectedClients.isEmpty()) {handleClientDisconnection(disconnectedClients);}
     }
-    private void handleClientDisconnection(List<VirtualView> disconnectedClients) {
-        if (disconnectedClients == null) {
-            return;
-        }
 
+    private void handleClientDisconnection(List<VirtualView> disconnectedClients) {
+        if (disconnectedClients == null || disconnectedClients.isEmpty()) return;
+
+        // 1. Rimuovi subito da lastPingByClient per evitare re-trigger
         synchronized (lastPingByClient) {
-            for(VirtualView client : disconnectedClients){
+            for (VirtualView client : disconnectedClients) {
                 lastPingByClient.remove(client);
             }
         }
 
-
-        List<String> sessionIds = new ArrayList<>();
-
-        synchronized (lobbyClients) {
-            for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
-                VirtualView lobbyClient = entry.getValue();
-
-                if (disconnectedClients.contains(lobbyClient)) {
-                    sessionIds.add( entry.getKey());
-                }
-            }
-        }
-
-        if (!sessionIds.isEmpty()) {
-            System.out.println("[SERVER_APP] Client disconnesso in lobby: ");
-
-            try {
-                for (String sessionId : sessionIds) {
-                    sendToSession(sessionId,new QuitLobbyMessage());
-                }
-            } catch (Exception e) {
-                System.out.println("[SERVER_APP] Impossibile inviare QuitLobbyMessage al client lobby disconnesso.");
-            }
-            synchronized (lobbyClients){
-                for(String sessionId : sessionIds){
-                    lobbyClients.remove(sessionId);
-                }
-            }
-            try {
-                for(VirtualView client : disconnectedClients){
-                    client.close();
-                }
-            } catch (Exception e) {
-            }
-            return;
-        }
-
-
         List<String> disconnectedPlayersId = new ArrayList<>();
+        List<String> sessionDisconnectedIds = new ArrayList<>();
 
         synchronized (gameClients) {
             for (Map.Entry<String, VirtualView> entry : gameClients.entrySet()) {
-                VirtualView gameClient = entry.getValue();
-
-                if (disconnectedClients.contains(gameClient)) {
+                if (disconnectedClients.contains(entry.getValue())) {
                     disconnectedPlayersId.add(entry.getKey());
                 }
             }
         }
 
-//        if (disconnectedPlayerId == null) {
-//            System.out.println("[SERVER_APP] Client disconnesso ma non presente né in lobby né in game.");
-//
-//            try {
-//                disconnectedClient.close();
-//            } catch (Exception ignored) {
-//            }
-//
-//            return;
-//        }
-        if(!disconnectedPlayersId.isEmpty()){
-            System.out.println("[SERVER_APP] Client disconnesso in game: " + disconnectedPlayersId);
+        synchronized (lobbyClients) {
+            for (Map.Entry<String, VirtualView> entry : lobbyClients.entrySet()) {
+                if (disconnectedClients.contains(entry.getValue())) {
+                    sessionDisconnectedIds.add(entry.getKey());
+                }
+            }
+        }
 
+        if (!disconnectedPlayersId.isEmpty()) {
+            // Un giocatore in game è crashato → partita terminata
+            System.out.println("[SERVER_APP] Client disconnessi in game: " + disconnectedPlayersId);
+
+            // Rimuovi il crashato da gameClients
+            synchronized (gameClients) {
+                for (String id : disconnectedPlayersId) gameClients.remove(id);
+            }
+            synchronized (lobbyClients) {
+                for (String sid : sessionDisconnectedIds) lobbyClients.remove(sid);
+            }
+
+            // Notifica crash agli altri
             MessageToClient message;
-
             synchronized (gameLock) {
                 message = controller.handleGameCrashed();
             }
-
             if (message != null) {
                 message.deliver(null, this);
             }
 
-            pingTimer.cancel();
-            aliveCheckerStarted = false;
-
+            // Chiudi i client rimasti (gli altri player e lobby)
             synchronized (gameClients) {
-                for(String playerId :  disconnectedPlayersId){
-                    gameClients.remove(playerId);
+                for (VirtualView v : gameClients.values()) {
+                    try { v.close(); } catch (Exception ignored) {}
                 }
+                gameClients.clear();
+            }
+            synchronized (lobbyClients) {
+                for (VirtualView v : lobbyClients.values()) {
+                    try { v.close(); } catch (Exception ignored) {}
+                }
+                lobbyClients.clear();
             }
 
-            try {
-                for(VirtualView client : disconnectedClients){
-                    client.close();
-                }
-            } catch (Exception ignored) {
+            // BUG #1 FIX: chiudi anche i ClientSkeleton dei client crashati
+            for (VirtualView crashed : disconnectedClients) {
+                try { crashed.close(); } catch (Exception ignored) {}
+            }
+
+            // BUG #4 FIX: stoppa il checker PER ULTIMO
+            stopAliveChecker();
+            return;
+        }
+
+        if (!sessionDisconnectedIds.isEmpty()) {
+            System.out.println("[SERVER_APP] Client disconnessi in lobby: " + sessionDisconnectedIds);
+            synchronized (lobbyClients) {
+                for (String sid : sessionDisconnectedIds) lobbyClients.remove(sid);
             }
         }
-    }
 
+        // BUG #1 FIX: chiudi i socket dei crashati
+        for (VirtualView client : disconnectedClients) {
+            try { client.close(); } catch (Exception ignored) {}
+        }
+    }
 
     private void broadcastLobbyStatus() {
         MessageToClient lobbyMessage =
@@ -429,6 +486,7 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
 
         broadcastToLobby(lobbyMessage);
     }
+
     @Override
     public void sendToSession(String sessionId, MessageToClient message) {
         VirtualView client;
@@ -445,10 +503,17 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         try {
             client.onMessage(message);
         } catch (Exception e) {
+            System.out.println("[SERVER_APP] Client lobby non raggiungibile: " + sessionId
+                    + ", errore: " + e.getMessage());
+
             synchronized (lobbyClients) {
                 if (lobbyClients.get(sessionId) == client) {
                     lobbyClients.remove(sessionId);
                 }
+            }
+
+            synchronized (lastPingByClient) {
+                lastPingByClient.remove(client);
             }
 
             try {
@@ -457,6 +522,8 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             }
         }
     }
+
+    @Override
     public void broadcastToLobby(MessageToClient message) {
         Map<String, VirtualView> copy;
 
@@ -471,10 +538,24 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
             try {
                 client.onMessage(message);
             } catch (Exception e) {
+                System.out.println("[SERVER_APP] Client lobby non raggiungibile durante broadcast: "
+                        + sessionId
+                        + ", errore: "
+                        + e.getMessage());
+
                 synchronized (lobbyClients) {
                     if (lobbyClients.get(sessionId) == client) {
                         lobbyClients.remove(sessionId);
                     }
+                }
+
+                synchronized (lastPingByClient) {
+                    lastPingByClient.remove(client);
+                }
+
+                try {
+                    client.close();
+                } catch (Exception ignored) {
                 }
             }
         }
@@ -532,9 +613,6 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
         synchronized (gameClients) {
             copy = new HashMap<>(gameClients);
         }
-//        synchronized (controller){
-//            copy.entrySet().removeIf(entry -> !controller.isInGame(entry.getKey()));
-//        }
 
         System.out.println("[SERVER_APP] broadcast "
                 + message.getClass().getSimpleName()
@@ -566,13 +644,21 @@ public class ServerApplication implements VirtualServer, MessageDelivery {
                 synchronized (lastPingByClient) {
                     lastPingByClient.remove(client);
                 }
-                //Il client non è raggiungibile perché già stato chiuso
-                //Il metodo solleva l' eccezione ma è ignorata perché già chiuso
+
                 try {
                     client.close();
                 } catch (Exception ignored) {
                 }
             }
         }
+    }
+
+    public void shutdown() {
+        try {
+            rmiExecutor.shutdownNow();
+        } catch (Exception ignored) {
+        }
+
+        stopAliveChecker();
     }
 }

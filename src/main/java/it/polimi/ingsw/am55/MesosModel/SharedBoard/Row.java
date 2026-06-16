@@ -11,9 +11,9 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Row {
-    private List<CharacterCard> characterCardsList;
-    private List<EventCard> eventCardsList;
-    private BuildingDeck buildingCardsList;
+    private final List<CharacterCard> characterCardsList;
+    private final List<EventCard> eventCardsList;
+    private final BuildingDeck buildingCardsList;
 
     public Row(){
         characterCardsList = new ArrayList<>();

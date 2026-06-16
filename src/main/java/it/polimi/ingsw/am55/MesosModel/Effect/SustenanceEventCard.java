@@ -10,38 +10,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Evento Sostentamento:
-// - ogni personaggio della tribù costa 1 cibo
-// - gli edifici NON contano
-// - ogni Collector sconta 3 cibi sul totale
-// - se il giocatore non riesce a pagare tutto, perde numPP
-//   per ogni personaggio rimasto non sfamato
+// Sustenance Event:
+// - each character in the tribe costs 1 food
+// - buildings do NOT count
+// - each Collector discounts 3 food from the total
+// - if the player fails to pay everything, he loses numPP
+// for each character left unfed
 public class SustenanceEventCard extends EventCard {
-    private Map<String, Integer> effectToFood = new HashMap<>();
-    private Map<String, Integer> effectToPP = new HashMap<>();
-    // Numero di punti prestigio persi per ogni personaggio non sfamato
-    private int numPP;
+    private final Map<String, Integer> effectToFood = new HashMap<>();
+    private final Map<String, Integer> effectToPP = new HashMap<>();
+    // Number of PP lost for each unfed character
+    private final int numPP;
 
-    // Costruttore dell'evento: inizializza la penalità in PP
+    // Event constructor: initializes the PP penalty
     public SustenanceEventCard(int id, int era, int numPP) {
         super(id,era);
         this.numPP = numPP;
-
     }
 
     @Override
     public void activateEvent(List<Player> players) {
-        // Scorro tutti i giocatori coinvolti nell'evento
+        // I scroll through all the players involved in the event
         for (Player p : players) {
 
-            // 1) Calcolo quanti personaggi ha il giocatore.
-            // playerDeckSize() nel tuo Player conta solo le carte personaggio
+            //1) It calculates how many characters the player has.
+            // playerDeckSize() in your Player only counts the character cards
             // (shaman, hunter, artist, inventor, builder, collector),
-            // quindi è giusto per il costo base del sostentamento.
+            // so it's accurate for the base cost of sustenance.
             int totalCharacters = p.playerDeckSize();
 
-            // 2) Calcolo lo sconto totale dato dai Collector.
-            // Ogni Collector sconta 3 cibi.
+            // 2) It calculates the total discount given by the Collector.
+            // Every Collector's discount is 3 food.
             int collectorDiscount = p.countByType(CharacterType.COLLECTOR) * 3;
 
             // 3) Eventuale bonus/sconto dato dall'edificio 2.

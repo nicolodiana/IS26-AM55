@@ -1,13 +1,11 @@
-package it.polimi.ingsw.am55.network.socket.server;
+package it.polimi.ingsw.am55.network;
 
-import it.polimi.ingsw.am55.network.ServerApplication;
+import it.polimi.ingsw.am55.network.middleware.ClientSkeleton;
 
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SocketServer {
 
@@ -28,13 +26,11 @@ public class SocketServer {
             System.out.println("[SOCKET_SERVER] Nuovo client si è connesso: " + clientSocket.getInetAddress());
 
             ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+            out.flush();
 
             ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
 
-
-            //Viene creato l' handler che si occuperà di gestire il singolo client, perché
-            //il metodo readObject è bloccante quindi andrebbe a bloccare il processo principale
-            SocketClientHandler handler = new SocketClientHandler(clientSocket, in, out, serverApplication);
+            new ClientSkeleton(clientSocket, in, out, serverApplication);
         }
     }
 }

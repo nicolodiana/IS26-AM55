@@ -217,4 +217,20 @@ public class ClientModel {
             this.lobbyView = lobbyView;
         }
     }
+
+    public void placeTotem(String playerId, int index) {
+        gameView.placeTotem(playerId, index);
     }
+
+    public void pickCard(String playerId, int index) {
+        gameView.pickCard(playerId, index);
+    }
+
+    public void setCurrentPlayer(String playerd) {
+        this.gameView.setCurrentPlayer(playerd);
+    }
+
+    public void setCurrentGameState(GameState state) {
+        this.gameView.setState(state);
+    }
+}

@@ -1,21 +1,28 @@
 package it.polimi.ingsw.am55.controller;
 
-import it.polimi.ingsw.am55.network.ClientCommands;
+import it.polimi.ingsw.am55.network.ClientImpl;
+import it.polimi.ingsw.am55.network.command.CreateGameCommand;
+import it.polimi.ingsw.am55.network.command.JoinGameCommand;
+import it.polimi.ingsw.am55.network.command.PickCardCommand;
+import it.polimi.ingsw.am55.network.command.PickSpecialCommand;
+import it.polimi.ingsw.am55.network.command.PlaceTotemCommand;
+import it.polimi.ingsw.am55.network.command.QuitGameCommand;
+import it.polimi.ingsw.am55.network.command.QuitLobbyCommand;
 
 public class ClientController implements UserActionHandler {
-/*il riferimento che ha il controller è un riferimento generico ClientCommands, poi in base alla tecnologia scelta l'override eseguira
-i metodi di socket o di RMI
- */
-    private final ClientCommands client;
 
-    public ClientController(ClientCommands client) {
+    private final ClientImpl client;
+
+    public ClientController(ClientImpl client) {
         this.client = client;
     }
 
     @Override
     public void onCreateGameSelected(String playerId, String totemColor, int numPlayers) {
         try {
-            client.createGame(playerId, totemColor, numPlayers);
+            client.sendCommand(
+                    new CreateGameCommand(playerId, totemColor, numPlayers, client.getSessionId())
+            );
         } catch (Exception e) {
             System.err.println("Errore durante createGame: " + e.getMessage());
         }
@@ -24,16 +31,18 @@ i metodi di socket o di RMI
     @Override
     public void onJoinGameSelected(String playerId, String totemColor) {
         try {
-            client.joinGame(playerId, totemColor);
+            client.sendCommand(
+                    new JoinGameCommand(playerId, totemColor, client.getSessionId())
+            );
         } catch (Exception e) {
             System.err.println("Errore durante joinGame: " + e.getMessage());
         }
     }
 
     @Override
-    public void onPlaceTotemSelected(String playerId,int index) {
+    public void onPlaceTotemSelected(String playerId, int index) {
         try {
-            client.placeTotem(playerId,index);
+            client.sendCommand(new PlaceTotemCommand(playerId, index));
         } catch (Exception e) {
             System.err.println("Errore durante placeTotem: " + e.getMessage());
         }
@@ -41,27 +50,26 @@ i metodi di socket o di RMI
 
     @Override
     public void onQuitGameSelected(String playerId) {
-        try{
-            client.quitGame(playerId);
-        }catch(Exception e){
+        try {
+            client.sendCommand(new QuitGameCommand(playerId));
+        } catch (Exception e) {
             System.err.println("Errore durante quitGame: " + e.getMessage());
         }
     }
 
     @Override
     public void onQuitSelectedLobby() {
-        try{
-            client.quitLobby();
-        }catch(Exception e){
-            System.err.println("Errore durante quitGame: " + e.getMessage());
+        try {
+            client.sendCommand(new QuitLobbyCommand(client.getSessionId()));
+        } catch (Exception e) {
+            System.err.println("Errore durante quitLobby: " + e.getMessage());
         }
     }
-
 
     @Override
     public void onPickCardSelected(String playerId, int cardId) {
         try {
-            client.pickCard(playerId, cardId);
+            client.sendCommand(new PickCardCommand(playerId, cardId));
         } catch (Exception e) {
             System.err.println("Errore durante pickCard: " + e.getMessage());
         }
@@ -70,12 +78,9 @@ i metodi di socket o di RMI
     @Override
     public void onPickSpecialSelected(String playerId, int cardId) {
         try {
-            client.pickSpecial(playerId, cardId);
+            client.sendCommand(new PickSpecialCommand(playerId, cardId));
         } catch (Exception e) {
             System.err.println("Errore durante pickSpecial: " + e.getMessage());
         }
     }
-
-
-
 }

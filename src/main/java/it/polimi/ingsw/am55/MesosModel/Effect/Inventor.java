@@ -4,18 +4,15 @@ import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 public class Inventor extends CharacterCard {
-    private String iconInvention;
-    //final CharacterType type = CharacterType.INVENTOR;
+    private final String iconInvention;
 
     public void addToPlayer(Player player) {
-        //player.getInventorsList().add(this);
         player.addTribeCard(this);
     }
 
     public Inventor(String iconInvention, int id, int era) {
         super(id, era);
         this.iconInvention = iconInvention;
-        //this.era= era;
     }
 
     public String getIconInvention() {

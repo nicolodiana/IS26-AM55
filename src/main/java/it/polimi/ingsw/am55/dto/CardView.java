@@ -22,4 +22,6 @@ public class CardView implements Serializable {
     public int getEra() {
         return era;
     }
+
+    public void addToPlayer(PlayerView player) { }
 }

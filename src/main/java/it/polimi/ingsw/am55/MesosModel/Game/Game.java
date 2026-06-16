@@ -42,7 +42,7 @@ public class Game implements GameModelInterface{
     /**
      * The list of players participating in the game.
      */
-    private List<Player> players;
+    private final List<Player> players;
 
     /**
      * The player whose turn is currently active.
@@ -63,12 +63,12 @@ public class Game implements GameModelInterface{
      * A map storing the winners of the game.
      * The key represents the player's identifier or name, and the value represents their final score.
      */
-    private Map<String, Integer> winners;
+    private final Map<String, Integer> winners;
 
     /**
      * The total number of players participating in this game.
      */
-    private int numPlayers;
+    private final int numPlayers;
 
     /**
      * The current state or phase of the game (e.g., lobby, ongoing, finished).
@@ -109,7 +109,9 @@ public class Game implements GameModelInterface{
     public GameView toView() {
         return new GameView(this);
     }
+
     public LobbyView toLobbyView() {return new LobbyView(getGameState(), getPlayers());}
+
     public String addPlayer(String nickname, String totem)
             throws PlayerNumberOutOfRange, NicknameAlreadyUsed, TotemAlreadyUsed, WrongTotemColor {
 

@@ -6,7 +6,6 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 public class Builder extends CharacterCard {
     int numPP;
     int pickbuildingdiscount; //sconto che forniscono su ogni edificio
-    //final CharacterType type = CharacterType.BUILDER;
 
     public Builder(int id, int numPP, int pickbuildingdiscount, int era) {
         super(id, era);

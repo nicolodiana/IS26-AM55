@@ -20,6 +20,14 @@ public class BuildingCardView extends CardView {
         this.effectPP = effectPP;
     }
 
+    public int getFoodCost() {
+        return foodCost;
+    }
+
+    public BuildingType getType() {
+        return type;
+    }
+
     @Override
     public String toString() {
         return //type + " " +

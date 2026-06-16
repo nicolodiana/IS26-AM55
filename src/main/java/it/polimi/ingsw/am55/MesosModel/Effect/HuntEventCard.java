@@ -14,15 +14,18 @@ import java.util.Map;
 
 public class HuntEventCard extends EventCard {
     private final int numPP;
-    private Map<String, Integer> effectToFood = new HashMap<>();
-    private Map<String, Integer> effectToPP = new HashMap<>();
+    private final Map<String, Integer> effectToFood = new HashMap<>();
+    private final Map<String, Integer> effectToPP = new HashMap<>();
 
     public HuntEventCard(int id, int era, int numPP) {
         super(id, era);
         this.numPP = numPP;
     }
 
-    //evento caccia
+    /** Hunt Event:
+     * During this event you gain the food on this card for all the hunters a player has
+     * and can receive the bonus of building 8 if he also has that building
+     */
     public void activateEvent(List<Player> players) {
         for (Player p : players) {
             int numHunters = p.countByType(CharacterType.HUNTER);

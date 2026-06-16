@@ -33,7 +33,7 @@ public class QuitGameMessage extends MessageToClient{
 
     @Override
     public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
-        client.stopPing();
+        //client.stopPing();
         client.closeConnection();
     }
 }
