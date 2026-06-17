@@ -131,13 +131,6 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 if (elapsed > SERVER_TIMEOUT_MS) {
                     System.out.println("[CLIENT_IMPL] Server non raggiungibile ( per server down o per io client down) : chiudo il client.");
                     closeConnection();
-//                    missedPongs++;
-//                    System.out.println("[CLIENT_IMPL] pong mancato " + missedPongs + "/3, elapsed " + elapsed);
-//
-//                    if (missedPongs >= 3) {
-//                        System.out.println("[CLIENT_IMPL] Server non raggiungibile: chiudo il client.");
-//                        closeConnection();
-//                    }
                 }
             }
         }, PING_INTERVAL_MS, PING_INTERVAL_MS);
@@ -169,30 +162,24 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
 
     @Override
     public void closeConnection() {
-        stopPing();
-        System.out.println("[CLIENT_IMPL] Ping del client fermato");
-        try{
-            server.close();
-        }catch(Exception e){}
-        System.out.println("[CLIENT_IMPL] Chiudo il client.");
-        System.exit(0);
+        new Thread(()->{
+            stopPing();
+            System.out.println("[CLIENT_IMPL] Ping del client fermato");
+            try{
+                server.close();
+            }catch(Exception e){}
+            System.out.println("[CLIENT_IMPL] Chiudo il client.");
+            System.exit(0);
+        }).start();
     }
 
     @Override
     public void close() throws RemoteException {
 //        stopPing();
-//        if (server instanceof AutoCloseable) {
-//            try {
-//                ((AutoCloseable) server).close();
-//            } catch (Exception ignored) {
-//            }
-//        }
-//        //Io, oggetto remoto client, non voglio più ricevere chiamate RMI.
 //        try {
 //            UnicastRemoteObject.unexportObject(this, true);
-//        } catch (Exception ignored) {
-//        }
-//
-//        System.out.println("[CLIENT_IMPL] Client chiuso per " + sessionId);
+//        } catch (Exception ignored) {}
     }
+
+
 }

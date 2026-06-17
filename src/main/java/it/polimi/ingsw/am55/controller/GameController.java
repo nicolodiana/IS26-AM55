@@ -239,7 +239,10 @@ public class GameController {
     public MessageToClient handleGameCrashed(){
 
         gameModel.handleGameCrashed();
-        return new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        MessageToClient message =  new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        gameModel = null;
+        this.numPlayers = 0;
+        return message;
 
     }
     public MessageToClient quitGame(String playerId){
@@ -250,24 +253,15 @@ public class GameController {
         try {
             gameModel.quitGame();
 
-            return new QuitGameMessage(gameModel.toView(),
+            MessageToClient message = new QuitGameMessage(gameModel.toView(),
                     "PLAYER  " + playerId + " è uscito. ");
+            gameModel=null;
+            this.numPlayers = 0;
+            return message;
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
     }
-
-    public boolean isInGame(String playerId){
-        if (gameModel.isInGame(playerId)) {
-            return true;
-        }
-        return false;
-    }
-
-
-
-
-
 }
 
