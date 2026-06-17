@@ -92,10 +92,11 @@ public class GameView implements Serializable {
         board.getBiddingTrail().get(index).setPlayer(player);
     }
 
-    public void pickCard(String playerId, int cardId) {
+    public void pickCard(String playerId, int cardId, int newFood, int newPp) {
         CardView card = this.board.searchCard(cardId);
-
-        getPlayer(playerId).pickCard(card);
+        PlayerView player = getPlayer(playerId);
+        player.pickCard(card);
+        player.setPointsAndFood(newFood, newPp);
     }
 
     public void setCurrentPlayer(String currentPlayer) {
