@@ -408,7 +408,7 @@ public class Game implements GameModelInterface{
         } else {
             BuildingCard buildingCard = sharedBoard.getBuildingCardByIndex(cardSearchResult);
 
-            if (currentPlayer.getNumFoods() < buildingCard.getFoodCost()) {
+            if (currentPlayer.getNumFoods() < (buildingCard.getFoodCost() - currentPlayer.totalBuildingDiscount())) {
                 throw new CannotAffordBuildingException("You can't afford this Building card");
             }
 
@@ -744,5 +744,25 @@ public class Game implements GameModelInterface{
     public GameState getState() {
         return getGameState();
     }
+
+    public Player getSinglePlayer(String nickname) {
+        for (Player p : this.players) {
+            if (p.getNickname().equals(nickname)) {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    public int getPlayerPoints(String nickname) {
+        return getSinglePlayer(nickname).getNumPP();
+    }
+
+    public int getPlayerFood(String nickname) {
+        return getSinglePlayer(nickname).getNumFoods();
+    }
+
+
 
 }

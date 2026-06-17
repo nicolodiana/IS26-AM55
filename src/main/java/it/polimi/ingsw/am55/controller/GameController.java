@@ -5,6 +5,7 @@ import it.polimi.ingsw.am55.MesosModel.Game.Game;
 import it.polimi.ingsw.am55.MesosModel.Game.GameModelInterface;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.LobbyView;
+import it.polimi.ingsw.am55.dto.PlayerView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import it.polimi.ingsw.am55.dto.resolveEvents.ResolveEventView;
 import it.polimi.ingsw.am55.message.*;
@@ -79,6 +80,8 @@ public class GameController {
 
         try {
             gameModel.pickCard(cardId, playerId);
+            int newPp = gameModel.getPlayerPoints(playerId);
+            int newFood = gameModel.getPlayerFood(playerId);
             //GameView viewAfterPick = gameModel.toView();
             /*
              * CASO 1:
@@ -92,7 +95,7 @@ public class GameController {
 //                        viewAfterPick,
 //                        "pick done"
 //                ));
-                messages.add(new PickCardMessage(playerId, cardId, gameModel.getCurrentPlayer(), gameModel.getGameState()));
+                messages.add(new PickCardMessage(playerId, cardId, newFood, newPp, gameModel.getCurrentPlayer(), gameModel.getGameState()));
 
                 List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
                 GameView viewAfterResolve = gameModel.toView();
@@ -137,7 +140,7 @@ public class GameController {
              * CASO 3:
              * Pick normale (non ultimo player, ricevo subito board aggiornata)
              */
-            return new PickCardMessage(playerId, cardId, gameModel.getCurrentPlayer(), gameModel.getGameState());
+            return new PickCardMessage(playerId, cardId, newFood, newPp, gameModel.getCurrentPlayer(), gameModel.getGameState());
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
@@ -171,8 +174,10 @@ public class GameController {
 
         try {
             gameModel.pickSpecial(cardId, playerId);
+            int newPp = gameModel.getPlayerPoints(playerId);
+            int newFood = gameModel.getPlayerFood(playerId);
 
-            GameView viewAfterPickSpecial = gameModel.toView();
+            //GameView viewAfterPickSpecial = gameModel.toView();
 
             /*
              * CASO 1:
@@ -181,11 +186,12 @@ public class GameController {
              */
             if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
                 List<MessageToClient> messages = new ArrayList<>();
-
-                messages.add(new UpdateViewMessage(
-                        viewAfterPickSpecial,
-                        "pick special done"
-                ));
+//
+//                messages.add(new UpdateViewMessage(
+//                        viewAfterPickSpecial,
+//                        "pick special done"
+//                ));
+                messages.add(new PickCardMessage(playerId, cardId, newFood, newPp, gameModel.getCurrentPlayer(), gameModel.getGameState()));
 
                 List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
                 GameView viewAfterResolve = gameModel.toView();
@@ -239,7 +245,10 @@ public class GameController {
     public MessageToClient handleGameCrashed(){
 
         gameModel.handleGameCrashed();
-        return new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        MessageToClient message =  new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        gameModel = null;
+        this.numPlayers = 0;
+        return message;
 
     }
     public MessageToClient quitGame(String playerId){
@@ -250,24 +259,15 @@ public class GameController {
         try {
             gameModel.quitGame();
 
-            return new QuitGameMessage(gameModel.toView(),
+            MessageToClient message = new QuitGameMessage(gameModel.toView(),
                     "PLAYER  " + playerId + " è uscito. ");
+            gameModel=null;
+            this.numPlayers = 0;
+            return message;
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
     }
-
-    public boolean isInGame(String playerId){
-        if (gameModel.isInGame(playerId)) {
-            return true;
-        }
-        return false;
-    }
-
-
-
-
-
 }
 

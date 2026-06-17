@@ -6,14 +6,18 @@ import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 public class PickCardMessage extends  MessageToClient {
     private final int cardId;
     private final String playerId;
+    private int newFood;
+    private int newPp;
     private final String currentPlayer;
     private final String message;
     public GameState state;
 
 
-    public PickCardMessage(String playerId, int cardId, String currentPlayer, GameState state) {
+    public PickCardMessage(String playerId, int cardId, int newFood, int newPp, String currentPlayer, GameState state) {
         this.playerId = playerId;
         this.cardId = cardId;
+        this.newFood = newFood;
+        this.newPp = newPp;
         this.currentPlayer = currentPlayer;
         this.state = state;
         message = "pick done";
@@ -28,7 +32,7 @@ public class PickCardMessage extends  MessageToClient {
         model.setLastMessageUpdatedGameView(true);
         model.setCurrentPlayer(this.currentPlayer);
         model.setCurrentGameState(this.state);
-        model.pickCard(this.playerId, this.cardId);
+        model.pickCard(this.playerId, this.cardId, this.newFood, this.newPp);
     }
 
     @Override

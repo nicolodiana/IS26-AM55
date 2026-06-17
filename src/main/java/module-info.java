@@ -3,6 +3,7 @@ module it.polimi.ingsw.am55 {
     requires javafx.controls;
     requires javafx.fxml;
     requires org.controlsfx.controls;
+    requires java.sql;
 
     exports it.polimi.ingsw.am55;
 
