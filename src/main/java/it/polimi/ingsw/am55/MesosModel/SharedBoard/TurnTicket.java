@@ -127,34 +127,35 @@ public class TurnTicket {
         }
     }
 
+    /**
+     *
+     * @return the first player on turn ticket
+     */
     public Player getFirstPlayerFirstPhase(){
         return turnOrder.get(0);
     }
 
     /**
      * Adds a player to the turn order.
-     * The player is inserted into the first available {@code null} position found in the list.
+     * The player is inserted into the first available  position found in the list.
      *
      * @param player the {@link Player} to add
      */
     public void addPlayer(Player player) {
-        for (int i = 0; i < turnOrder.size(); i++) {
-            if (turnOrder.get(i) == null) {
-                turnOrder.set(i, player);
-                return;
-            }
-        }
+        turnOrder.add(player);
+//        for (int i = 0; i < turnOrder.size(); i++) {
+//
+//            if (turnOrder.get(i) == null) {
+//                turnOrder.set(i, player);
+//                return;
+//            }
+//        }
     }
 
     /**
-     * Removes the first valid player found in the turn order.
-     * The first non-{@code null} player in the sequence is replaced with {@code null}.
+     * Removes all players from the turn order ticket
      */
     public void removePlayerFromTurnTicket() {
-        for (int i = 0; i < turnOrder.size(); i++) {
-            if (turnOrder.get(i) != null) {
-                turnOrder.set(i, null);
-            }
-        }
+        turnOrder.clear();
     }
 }

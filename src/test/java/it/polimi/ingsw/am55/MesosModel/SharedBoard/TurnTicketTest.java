@@ -157,17 +157,34 @@ class TurnTicketTest {
 
     /**
      * Verifies the manual removal and addition methods of a player to the TurnTicket.
-     * Expected result: Removal sets the first slot to null, while subsequent addition
+     * Expected result: clear all players from turn ticket, while subsequent addition
      * repositions the player in the first available slot.
      */
     @Test
-    void testAddAndRemovePlayer() {
+    void testRemovePlayer() {
         turnTicket.initTurnTicket(List.of(p1, p2));
 
 
         turnTicket.removePlayerFromTurnTicket();
 
+        assertTrue(turnTicket.getTurnOrder().isEmpty());
 
-        assertTrue(turnTicket.getTurnOrder().stream().allMatch(Objects::isNull));
+        turnTicket.addPlayer(p1);
+        assertTrue(turnTicket.getTurnOrder().contains(p1) && turnTicket.getTurnOrder().size() == 1);
+    }
+    /**
+     * Verifies the manual  addition methods of a player to the TurnTicket.
+     * Add a player on turn ticket.
+     */
+    @Test
+    void testAdd() {
+        turnTicket.initTurnTicket(List.of(p1, p2));
+
+        Player p3 = new Player("Player3", "red");
+
+        turnTicket.addPlayer(p3);
+        assertTrue(turnTicket.getTurnOrder().contains(p1) &&  turnTicket.getTurnOrder().contains(p2));
+        assertTrue(turnTicket.getTurnOrder().contains(p3) && turnTicket.getTurnOrder().size() == 3);
+        assertEquals(turnTicket.getTurnOrder().get(2), p3);
     }
 }

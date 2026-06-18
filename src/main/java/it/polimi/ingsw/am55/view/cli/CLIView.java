@@ -28,7 +28,8 @@ public class CLIView implements ClientModelObserver {
     private final CLIRenderHelper cliRenderHelper;
     private final ClientActionResolver actionResolver;
     private final ScheduledExecutorService scheduler;
-
+    private final Object inputLock;
+    private final Object consoleLock;
     private UserActionHandler actionHandler;
     private volatile GameView currentGameView;
     private volatile String currentInfoMessage;
@@ -50,10 +51,12 @@ public class CLIView implements ClientModelObserver {
             return thread;
         });
 
+        this.inputLock = new Object();
+        this.consoleLock = new Object();
         this.currentGameView = null;
         this.currentInfoMessage = null;
         this.currentErrorMessage = null;
-        this.waitingServerResponse = false;
+        stopWaitingServerResponseAndWakeInput();
         this.inLobby = true;
         this.currentLobbyView = null;
         this.id = null;
@@ -62,27 +65,102 @@ public class CLIView implements ClientModelObserver {
     public void setActionHandler(UserActionHandler actionHandler) {
         this.actionHandler = actionHandler;
     }
-//inizializzazione cli, avrà un thread separato costantemente attivo a ricevere input
+    //inizializzazione cli, avrà un thread separato costantemente attivo a ricevere input
     //la scelta di metterlo separato è stata fatta per evitare di tenere occupato il thread principale che sarebbe quello degli aggiornamenti
     public void start() {
-        System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
-        printLobbyHelp();
+        synchronized (consoleLock) {
+            System.out.println(ConsoleColor.CYAN_BOLD + "Client CLI avviato." + ConsoleColor.RESET);
+            printLobbyHelp();
+        }
 
-        Thread inputThread = new Thread(this::inputLoop);
+        Thread inputThread = new Thread(()->
+        {
+            try{
+                inputLoop();
+            }catch(Exception e){
+
+            }
+        });
         inputThread.setName("CLI-Input-Thread");
         inputThread.start();
     }
 
-    private void inputLoop() {
+    private void inputLoop() throws InterruptedException {
         while (true) {
-            System.out.print("> ");
+            printPrompt();
             String line = input.nextLine().trim();
 
             if (line.isEmpty()) {
                 continue;
             }
-//ogni comando dell'utente passa su handleCommand
-            handleCommand(line);
+
+            // Ogni comando dell'utente passa su handleCommand.
+            // Il lock evita che un aggiornamento asincrono del server scriva
+            // in mezzo all'output prodotto dal comando locale.
+            synchronized (consoleLock) {
+                handleCommand(line);
+            }
+
+            // Dopo la gestione del comando, il thread di input resta in attesa
+            // solo se il comando ha effettivamente inviato una richiesta al server.
+            waitServerResponseIfNeeded();
+
+        }
+    }
+
+    private void printPrompt() {
+        synchronized (consoleLock) {// Poiché il thread di input e il thread che aggiorna la grafica
+            //dopo aver ricevuto risposta dal server usano entrambi la console, bisogna sincronizzarli
+            printPromptUnsafe();
+        }
+    }
+
+    private void printPromptUnsafe() {
+        System.out.print("> ");
+        System.out.flush();
+    }
+
+    private void clearConsole() {
+        // 3J prova a cancellare anche lo scrollback; 2J cancella lo schermo; H torna in alto a sinistra.
+        System.out.print("\033[3J\033[H\033[2J");
+        System.out.flush();
+    }
+
+    private void redrawConsole(Runnable renderer) {
+        synchronized (consoleLock) {
+            boolean inputThreadIsAlreadyWaitingOnNextLine = !waitingServerResponse;
+
+            clearConsole();
+            renderer.run();
+
+            // Se il thread input era bloccato su Scanner.nextLine(), il vecchio prompt è stato cancellato
+            // dalla clearConsole(), quindi lo ristampiamo.
+            // Se invece siamo in attesa della risposta server, il prompt sarà stampato dal prossimo ciclo
+            // dell'input thread dopo stopWaitingServerResponseAndWakeInput().
+            if (inputThreadIsAlreadyWaitingOnNextLine) {
+                printPromptUnsafe();
+            }
+        }
+    }
+
+    private void startWaitingServerResponse() {
+        synchronized (inputLock) {
+            waitingServerResponse = true;
+        }
+    }
+
+    private void stopWaitingServerResponseAndWakeInput() {
+        synchronized (inputLock) {
+            waitingServerResponse = false;
+            inputLock.notifyAll();
+        }
+    }
+
+    private void waitServerResponseIfNeeded() throws InterruptedException {
+        synchronized (inputLock) {
+            while (waitingServerResponse) {
+                inputLock.wait();
+            }
         }
     }
 
@@ -101,6 +179,7 @@ public class CLIView implements ClientModelObserver {
 
         if (command.equals("help")) {
             printHelp();
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -114,6 +193,10 @@ public class CLIView implements ClientModelObserver {
         if (command.equals("myhand") || command.equals("hand")) {
             handleHandCommand(action, parts);
             printExpectedAction();
+
+            // myhand/hand non passa dalla rete: non arriverà onModelChanged.
+            // Quindi sblocco esplicitamente il thread di input.
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -132,20 +215,39 @@ public class CLIView implements ClientModelObserver {
 
         switch (action) {
             case LOBBY -> handleLobbyCommand(command, parts);
-            case WAITING_TO_START -> showMessage("sono thread input: fermo in attesa di inizio partita");
+            case WAITING_TO_START -> {
+                showMessage("sono thread input: fermo in attesa di inizio partita");
+                stopWaitingServerResponseAndWakeInput();
+            }
             case PLACE_TOTEM -> handlePlaceTotemCommand(command, parts);
             case PICK_CARD -> handlePickCardCommand(command, parts);
             case PICK_SPECIAL -> handlePickSpecialCommand(command, parts);
-            case WAITING_FOR_TURN -> showWaitingForTurnMessage();
-            case RESOLVE_EVENTS -> showMessage("La partita sta risolvendo gli eventi. Attendi il prossimo aggiornamento.");
-            case END_GAME -> showMessage("La partita è terminata. Usa refresh per ristampare il risultato.");
-            case CRASHED -> showError("La partita è in stato CRASHED. Non ci sono comandi disponibili.");
-            case WAITING_FOR_STATE -> showMessage("Nessuna azione disponibile: attendi un aggiornamento dello stato.");
+            case WAITING_FOR_TURN -> {
+                showWaitingForTurnMessage();
+                stopWaitingServerResponseAndWakeInput();
+            }
+            case RESOLVE_EVENTS -> {
+                showMessage("La partita sta risolvendo gli eventi. Attendi il prossimo aggiornamento.");
+                stopWaitingServerResponseAndWakeInput();
+            }
+            case END_GAME -> {
+                showMessage("La partita è terminata. Usa refresh per ristampare il risultato.");
+                stopWaitingServerResponseAndWakeInput();
+            }
+            case CRASHED -> {
+                showError("La partita è in stato CRASHED. Non ci sono comandi disponibili.");
+                stopWaitingServerResponseAndWakeInput();
+            }
+            case WAITING_FOR_STATE -> {
+                showMessage("Nessuna azione disponibile: attendi un aggiornamento dello stato.");
+                stopWaitingServerResponseAndWakeInput();
+            }
         }
     }
     private void handleHandCommand(ClientAction currentState, String[] parts) {
         if (parts.length > 2) {
             showError("Uso corretto: myhand oppure myhand <nickname>");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -158,6 +260,7 @@ public class CLIView implements ClientModelObserver {
                 if (currentLobbyView != null && currentLobbyView.getGameState() != null) {
                     showError("Una partita è già stata creata. Usa join.");
                     printLobbyHelp();
+                    stopWaitingServerResponseAndWakeInput();
                     return;
                 }
                 handleCreateCommand(parts);
@@ -166,12 +269,14 @@ public class CLIView implements ClientModelObserver {
                 if (currentLobbyView == null || currentLobbyView.getGameState() == null) {
                     showError("Nessuna partita creata. Usa create.");
                     printLobbyHelp();
+                    stopWaitingServerResponseAndWakeInput();
                     return;
                 }
 
                 if (currentLobbyView.getGameState() != GameState.CREATED) {
                     showError("La partita non accetta nuovi giocatori.");
                     printLobbyHelp();
+                    stopWaitingServerResponseAndWakeInput();
                     return;
                 }
                 handleJoinCommand(parts);
@@ -179,6 +284,7 @@ public class CLIView implements ClientModelObserver {
             default -> {
                 showError("Comando non valido in lobby.");
                 printLobbyHelp();
+                stopWaitingServerResponseAndWakeInput();
             }
         }
     }
@@ -186,6 +292,7 @@ public class CLIView implements ClientModelObserver {
     private void handleCreateCommand(String[] parts) {
         if (parts.length != 4) {
             showError("Uso corretto: create <nickname> <totemColor> <numPlayers>");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -195,6 +302,7 @@ public class CLIView implements ClientModelObserver {
         Integer numPlayers = parseInt(parts[3]);
         if (numPlayers == null) {
             showError("Il numero di giocatori deve essere un intero.");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -204,6 +312,7 @@ public class CLIView implements ClientModelObserver {
     private void handleJoinCommand(String[] parts) {
         if (parts.length != 3) {
             showError("Uso corretto: join <nickname> <totemColor>");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -216,17 +325,20 @@ public class CLIView implements ClientModelObserver {
     private void handlePlaceTotemCommand(String command, String[] parts) {
         if (!command.equals("placetotem")) {
             printExpectedAction();
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
         if (parts.length != 2) {
             showError("Uso corretto: placeTotem <index>");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
         Integer index = parseInt(parts[1]);
         if (index == null) {
             showError("L'indice deve essere un numero intero.");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -236,17 +348,20 @@ public class CLIView implements ClientModelObserver {
     private void handlePickCardCommand(String command, String[] parts) {
         if (!command.equals("pickcard")) {
             printExpectedAction();
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
         if (parts.length != 2) {
             showError("Uso corretto: pickCard <cardId>");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
         Integer cardId = parseInt(parts[1]);
         if (cardId == null) {
             showError("Il cardId deve essere un numero intero.");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -256,17 +371,20 @@ public class CLIView implements ClientModelObserver {
     private void handlePickSpecialCommand(String command, String[] parts) {
         if (!command.equals("pick")) {
             printExpectedAction();
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
         if (parts.length != 2) {
             showError("Uso corretto: pick <cardId>");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
         Integer cardId = parseInt(parts[1]);
         if (cardId == null) {
             showError("Il cardId deve essere un numero intero.");
+            stopWaitingServerResponseAndWakeInput();
             return;
         }
 
@@ -280,8 +398,14 @@ public class CLIView implements ClientModelObserver {
         }
 
         this.id = playerId.trim();
-        this.waitingServerResponse = true;
-        actionHandler.onCreateGameSelected(this.id, totemColor, numPlayers);
+        startWaitingServerResponse();
+
+        try {
+            actionHandler.onCreateGameSelected(this.id, totemColor, numPlayers);
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando create: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
+        }
     }
 
     public void askJoinGame(String playerId, String totemColor) {
@@ -290,8 +414,14 @@ public class CLIView implements ClientModelObserver {
         }
 
         this.id = playerId.trim();
-        this.waitingServerResponse = true;
-        actionHandler.onJoinGameSelected(this.id, totemColor);
+        startWaitingServerResponse();
+
+        try {
+            actionHandler.onJoinGameSelected(this.id, totemColor);
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando join: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
+        }
     }
 
     public void askPlaceTotem(int index) {
@@ -299,8 +429,14 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        this.waitingServerResponse = true;
-        actionHandler.onPlaceTotemSelected(this.id,index);
+        startWaitingServerResponse();
+
+        try {
+            actionHandler.onPlaceTotemSelected(this.id, index);
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando placeTotem: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
+        }
     }
 
     public void askPickCard(int cardId) {
@@ -308,8 +444,14 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        this.waitingServerResponse = true;
-        actionHandler.onPickCardSelected(this.id, cardId);
+        startWaitingServerResponse();
+
+        try {
+            actionHandler.onPickCardSelected(this.id, cardId);
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando pickCard: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
+        }
     }
 
     public void askPickSpecial(int cardId) {
@@ -317,124 +459,159 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
-        this.waitingServerResponse = true;
-        actionHandler.onPickSpecialSelected(this.id, cardId);
+        startWaitingServerResponse();
+
+        try {
+            actionHandler.onPickSpecialSelected(this.id, cardId);
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando pick: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
+        }
     }
-    public void askQuitLobby(){
-        if (actionHandler != null) {
-            this.waitingServerResponse = true;
-            showMessage("Richiesta di uscita inviata al server...");
+
+    public void askQuitLobby() {
+        if (actionHandler == null) {
+            showError("ActionHandler non configurato: impossibile inviare quit.");
+            stopWaitingServerResponseAndWakeInput();
+            return;
+        }
+
+        startWaitingServerResponse();
+        showMessage("Richiesta di uscita inviata al server...");
+
+        try {
             actionHandler.onQuitSelectedLobby();
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando quit lobby: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
         }
     }
+
     public void askQuitGame(String playerId) {
-        if (actionHandler != null && playerId != null) {
-            this.waitingServerResponse = true;
-            showMessage("Richiesta di uscita inviata al server...");
+        if (actionHandler == null || playerId == null) {
+            showError("Impossibile inviare quit game: ActionHandler o playerId non disponibile.");
+            stopWaitingServerResponseAndWakeInput();
+            return;
+        }
+
+        startWaitingServerResponse();
+        showMessage("Richiesta di uscita inviata al server...");
+
+        try {
             actionHandler.onQuitGameSelected(playerId.trim());
+        } catch (Exception e) {
+            showError("Errore durante l'invio del comando quit game: " + e.getMessage());
+            stopWaitingServerResponseAndWakeInput();
         }
     }
+
     // Qui la view decide solo cosa mostrare dopo un aggiornamento del ClientModel.
     private volatile boolean pendingEventResolutionDelay = false;
 
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        this.waitingServerResponse = false;
+        try {
 
-        this.currentErrorMessage = updatedModel.getLastError();
-        this.currentInfoMessage = updatedModel.getStateRequest();
-        this.currentGameView = updatedModel.getGameView();
+            this.currentErrorMessage = updatedModel.getLastError();
+            this.currentInfoMessage = updatedModel.getStateRequest();
+            this.currentGameView = updatedModel.getGameView();
 
-        this.inLobby = updatedModel.isInLobby();
-        this.currentLobbyView = updatedModel.getLobbyView();
+            this.inLobby = updatedModel.isInLobby();
+            this.currentLobbyView = updatedModel.getLobbyView();
 
-        EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
-        boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
+            EndGameResultView endGameResultView = updatedModel.getEndGameResultView();
+            boolean gameViewUpdated = updatedModel.isLastMessageUpdatedGameView();
 
-        ClientAction action = actionResolver.resolve(currentGameView, id, inLobby);
+            ClientAction action = actionResolver.resolve(currentGameView, id, inLobby);
 
-        System.out.println();
-        //post messaggio di errore dal server e in lobby (nickname duplicato, totem errato o non presente, rimando i comandi lobby perche devo rimanere in interfaccia lobby (perche essendo ancora in lobby lo swtich andra a fare print lobby help)
-        //post  messaggio di errore quando non sono in lobby, mostro l'interfaccia game mode con prossimo comando                //post  messaggio di errore quando non sono in lobby, mostro l'interfaccia game mode con prossimo comando
-        if (currentErrorMessage != null) {
-            showError(currentErrorMessage);
-            printExpectedAction();
-            return;
-        }
-        //gestisco aggiornamenti real time lobby rimandandogli l'interfaccia lobby aggiornata
-        //qualcuno ha creato una partita
-        //qualcuno ha scelto un totem
-        //qualcuno è entrato in partita
-        if (inLobby) {
-            if (currentInfoMessage != null) {
-                showMessage(currentInfoMessage);
+            // Da qui in poi ogni aggiornamento server viene renderizzato come una schermata completa:
+            // non accodiamo blocchi sotto al prompt, ma puliamo la console e ridisegniamo lo stato corrente.
+            if (currentErrorMessage != null) {
+                redrawConsole(() -> {
+                    showError(currentErrorMessage);
+                    printExpectedAction();
+                });
+                return;
             }
 
-            printExpectedAction();
-            return;
-        }
-//tutti questi controlli vengono fatti invece per stati riguardanti i client in game
-        if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
-            showMessage("Inizia la risoluzione degli eventi...");
-            pendingEventResolutionDelay = true;
-            return;
-        }
-
-        if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
-            showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita");
-            pendingEventResolutionDelay = true;
-            return;
-        }
-
-        if (currentInfoMessage != null) {
-            if (!pendingEventResolutionDelay) {
-                showMessage(currentInfoMessage);
+            if (inLobby) {
+                redrawConsole(() -> {
+                    if (currentInfoMessage != null) {
+                        showMessage(currentInfoMessage);
+                    }
+                    printExpectedAction();
+                });
+                return;
             }
-        }
 
-        if (gameViewUpdated && currentGameView != null) {
-            if (pendingEventResolutionDelay) {
+            if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
+                pendingEventResolutionDelay = true;
+                redrawConsole(() -> showMessage("Inizia la risoluzione degli eventi..."));
+                return;
+            }
+
+            if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
+                pendingEventResolutionDelay = true;
+                redrawConsole(() -> showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita"));
+                return;
+            }
+
+            if (gameViewUpdated && currentGameView != null && pendingEventResolutionDelay) {
                 pendingEventResolutionDelay = false;
 
                 final GameView snapshot = currentGameView;
                 final String infoSnapshot = currentInfoMessage;
 
-                scheduler.schedule(() -> {
-                    showMessage(infoSnapshot);
+                scheduler.schedule(() -> redrawConsole(() -> {
+                    if (infoSnapshot != null) {
+                        showMessage(infoSnapshot);
+                    }
                     renderGame(snapshot);
                     printExpectedAction();
-                }, 4, TimeUnit.SECONDS);
+                }), 4, TimeUnit.SECONDS);
 
                 return;
             }
 
-            renderGame(currentGameView);
+            if (endGameResultView != null) {
+                final String infoSnapshot = currentInfoMessage;
+
+                scheduler.schedule(() -> redrawConsole(() -> {
+                    if (infoSnapshot != null) {
+                        showMessage(infoSnapshot);
+                    }
+                    printEndGameResult(endGameResultView);
+                }), 4, TimeUnit.SECONDS);
+
+                return;
+            }
+
+            redrawConsole(() -> {
+                if (currentInfoMessage != null) {
+                    showMessage(currentInfoMessage);
+                }
+
+                if (gameViewUpdated && currentGameView != null) {
+                    renderGame(currentGameView);
+                }
+
+                if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
+                    showMessage("Chiusura connessioni in corso...");
+                    model.removeObserver(this);
+                    return;
+                }
+
+                if (updatedModel.isGameCrashed()) {
+                    showMessage("Partita terminata per crash di un client. Connessione in chiusura...");
+                    model.removeObserver(this);
+                    return;
+                }
+
+                printExpectedAction();
+            });
+        } finally {
+            stopWaitingServerResponseAndWakeInput();
         }
-
-        if (endGameResultView != null) {
-            final String infoSnapshot = currentInfoMessage;
-
-            scheduler.schedule(() -> {
-                showMessage(infoSnapshot);
-                printEndGameResult(endGameResultView);
-            }, 4, TimeUnit.SECONDS);
-
-            return;
-        }
-
-        if (currentGameView != null && action.equals(ClientAction.END_GAME)) {
-            showMessage("Chiusura connessioni in corso...");
-            model.removeObserver(this);
-            return;
-        }
-
-        if (updatedModel.isGameCrashed()) {
-            showMessage("Partita terminata per crash di un client. Connessione in chiusura...");
-            model.removeObserver(this);
-            return;
-        }
-
-        printExpectedAction();
     }
     // Equivalente testuale delle schermate/interazioni che la futura GUI mostrerà.
     private void printExpectedAction() {
@@ -573,11 +750,12 @@ public class CLIView implements ClientModelObserver {
         }
 
         showError("ActionHandler non configurato: impossibile inviare il comando.");
+        stopWaitingServerResponseAndWakeInput();
         return false;
     }
 
     private void scheduleExpectedActionPrint(int seconds) {
-        scheduler.schedule(this::printExpectedAction, seconds, TimeUnit.SECONDS);
+        scheduler.schedule(() -> redrawConsole(this::printExpectedAction), seconds, TimeUnit.SECONDS);
     }
 
     private Integer parseInt(String value) {

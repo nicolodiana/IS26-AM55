@@ -5,10 +5,11 @@ import it.polimi.ingsw.am55.network.ClientConnectionControl;
 
 public class QuitLobbyMessage extends MessageToClient{
     private String message;
+    private boolean broadcast;
 
-    public QuitLobbyMessage(){}
-    public QuitLobbyMessage(String message){
+    public QuitLobbyMessage(String message,boolean broadcast){
         this.message = message;
+        this.broadcast=broadcast;
     }
 
 
@@ -22,12 +23,15 @@ public class QuitLobbyMessage extends MessageToClient{
     }
     @Override
     public void deliver(String sessionId, MessageDelivery context) {
-        context.sendToSession(sessionId, this);
+        if(broadcast){
+            context.broadcastToLobby(this);
+        }else{
+            context.sendToSession(sessionId, this);
+        }
     }
 
     @Override
     public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
-        //client.stopPing();
         client.closeConnection();
     }
 
