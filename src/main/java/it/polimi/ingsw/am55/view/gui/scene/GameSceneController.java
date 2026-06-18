@@ -97,10 +97,6 @@ public class GameSceneController implements GenericSceneController {
         instructionLabel.setText("Attendi la risposta del server...");
     }
 
-    @FXML
-    private void onRefreshClick() {
-        guiView.refreshCurrentScene();
-    }
 
     @FXML
     private void onQuitClick() {

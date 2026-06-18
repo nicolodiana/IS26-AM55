@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameController {
-//Le eccezioni lanciate dal model vengono catturate dal Controller in un ERROR MESSAGE
+    //Le eccezioni lanciate dal model vengono catturate dal Controller in un ERROR MESSAGE
     private GameModelInterface gameModel;
     private int numPlayers;
 
@@ -25,6 +25,11 @@ public class GameController {
 
 
     public LobbyView getLobbyView() {
+        //se nessuno è entrato in partita non devo aggiornare lobby ma mandare quella base con tutte le opzioni)
+        if (gameModel == null) {
+            return new LobbyView(null, null);
+        }
+
         return new LobbyView(
                 gameModel.getState(),
                 gameModel.getPlayers()
@@ -125,15 +130,27 @@ public class GameController {
              * Fine ultimo round (sempre senza pickspecial) : devo risolvere l'end game.
              */
             if (gameModel.getGameState().equals(GameState.ENDGAMERESOLVE)) {
-                EndGameResultView endGameResult = gameModel.endGame();
+                List<MessageToClient> messages = new ArrayList<>();
 
+                messages.add(new PickCardMessage(
+                        playerId,
+                        cardId,
+                        newFood,
+                        newPp,
+                        gameModel.getCurrentPlayer(),
+                        gameModel.getGameState()
+                ));
+
+                EndGameResultView endGameResult = gameModel.endGame();
                 GameView finalGameView = gameModel.toView();
-                gameModel.getPlayers().getFirst().getNickname();
-                return new GameEndResolveMessage(
+
+                messages.add(new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
                         "Partita terminata."
-                );
+                ));
+
+                return new MultipleMessages(messages);
             }
 
             /*
@@ -221,15 +238,27 @@ public class GameController {
              * Dopo la pick special parte direttamente l'end game.
              */
             if (gameModel.getGameState().equals(GameState.ENDGAMERESOLVE)) {
-                EndGameResultView endGameResult = gameModel.endGame();
+                List<MessageToClient> messages = new ArrayList<>();
 
+                messages.add(new PickCardMessage(
+                        playerId,
+                        cardId,
+                        newFood,
+                        newPp,
+                        gameModel.getCurrentPlayer(),
+                        gameModel.getGameState()
+                ));
+
+                EndGameResultView endGameResult = gameModel.endGame();
                 GameView finalGameView = gameModel.toView();
 
-                return new GameEndResolveMessage(
+                messages.add(new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
                         "Partita terminata."
-                );
+                ));
+
+                return new MultipleMessages(messages);
             }
 
             /*

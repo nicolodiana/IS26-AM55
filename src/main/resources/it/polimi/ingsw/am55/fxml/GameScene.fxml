@@ -25,7 +25,6 @@
             <HBox alignment="CENTER_LEFT" spacing="16">
                 <Label text="AM55 - Board" styleClass="main-title-small" />
                 <Region HBox.hgrow="ALWAYS" />
-                <Button text="Refresh" onAction="#onRefreshClick" />
                 <Button text="Quit" onAction="#onQuitClick" styleClass="danger-button" />
             </HBox>
             <HBox spacing="18" alignment="CENTER_LEFT">

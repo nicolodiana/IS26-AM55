@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.network;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
+import it.polimi.ingsw.am55.message.ConnectionLostMessage;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.PingCommand;
@@ -118,7 +119,12 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
     }
 
     private void startAliveChecker() {
+        if (aliveCheckerStarted) {
+            return;
+        }
+
         aliveCheckerStarted = true;
+
         aliveCheckerTimer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -129,7 +135,12 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 }
 
                 if (elapsed > SERVER_TIMEOUT_MS) {
-                    System.out.println("[CLIENT_IMPL] Server non raggiungibile ( per server down o per io client down) : chiudo il client.");
+                    stopPing();
+
+                    model.update(new ConnectionLostMessage(
+                            "Connessione persa con il server."
+                    ));
+
                     closeConnection();
                 }
             }
@@ -169,7 +180,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 server.close();
             }catch(Exception e){}
             System.out.println("[CLIENT_IMPL] Chiudo il client.");
-            System.exit(0);
+            //System.exit(0);
         }).start();
     }
 

@@ -138,8 +138,16 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         synchronized (lastPingByClient) {
             lastPingByClient.put(client, System.currentTimeMillis());
         }
-
         sendToSession(sessionId, new StartPingMessage());
+
+        sendToSession(
+                sessionId,
+                new LobbyStatusMessage(
+                        controller.getLobbyView(),
+                        "Stato lobby sincronizzato."
+                )
+        );
+
         startAliveChecker();
 
         System.out.println("[SERVER_APP] Client registrato in lobby. SessionId = " + sessionId);
@@ -272,7 +280,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
     public void quitLobby(String sessionId) throws Exception {
         VirtualView sender;
 
-        MessageToClient message = new QuitLobbyMessage();
+        MessageToClient message = new QuitLobbyMessage("Uscito correttamente dal gioco");
         message.deliver(sessionId, this);
 
         synchronized (lobbyClients) {

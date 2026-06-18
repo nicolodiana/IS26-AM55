@@ -1,6 +1,9 @@
 .root-pane {
     -fx-font-family: "System";
-    -fx-background-color: linear-gradient(to bottom right, #f6efe2, #efe1c9);
+    -fx-background-image: url("../images/background/start-background.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
 }
 
 .header-pane {
@@ -153,4 +156,64 @@
 .transparent-scroll {
     -fx-background-color: transparent;
     -fx-background: transparent;
+}
+
+.start-root {
+    -fx-background-image: url("../images/background/start-background.png");
+    -fx-background-size: cover;
+    -fx-background-position: center center;
+    -fx-background-repeat: no-repeat;
+}
+
+.start-card {
+    -fx-background-color: rgba(20, 12, 8, 0.38);
+    -fx-background-radius: 26;
+    -fx-border-radius: 26;
+    -fx-border-color: rgba(255, 255, 255, 0.30);
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.65), 28, 0.35, 0, 8);
+}
+
+.start-title {
+    -fx-font-size: 72px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #fff3d0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.90), 7, 0.75, 4, 5);
+}
+
+.start-subtitle {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #fff8e7;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.85), 4, 0.65, 2, 2);
+}
+
+.start-button {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #3a1f10;
+    -fx-background-color: linear-gradient(to bottom, #ffe0a3, #d18a35);
+    -fx-background-radius: 12;
+    -fx-padding: 12 28 12 28;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.60), 8, 0.35, 2, 3);
+}
+
+.start-button:hover {
+    -fx-background-color: linear-gradient(to bottom, #fff0c0, #e29a43);
+}
+
+.quit-card {
+    -fx-background-color: rgba(20, 12, 8, 0.38);
+    -fx-background-radius: 26;
+    -fx-border-radius: 26;
+    -fx-border-color: rgba(255, 255, 255, 0.28);
+    -fx-border-width: 1.5;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.65), 28, 0.35, 0, 8);
+}
+
+.quit-message {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.95), 6, 0.75, 3, 4);
 }
