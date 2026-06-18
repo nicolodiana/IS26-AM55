@@ -6,14 +6,27 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Interfaccia che definisce i metodi che il client
- * può invocare sul server.
- * Rappresenta il contratto logico client -> server,
- * indipendente dalla tecnologia di comunicazione usata.
+ * Remote server interface exposed to clients.
+ * <p>
+ * It defines the logical client-server contract and remains independent from
+ * the concrete communication technology used by the application.
  */
 public interface VirtualServer extends Remote {
 
+    /**
+     * Receives a command sent by a client and forwards it to the server-side
+     * command execution flow.
+     *
+     * @param command command requested by the client
+     * @param sender client callback endpoint that sent the command
+     * @throws RemoteException if the remote invocation fails
+     */
     void receiveCommand(ServerCommand command, VirtualView sender) throws RemoteException;
 
+    /**
+     * Closes the remote server abstraction.
+     *
+     * @throws RemoteException if the remote close operation fails
+     */
     void close() throws RemoteException;
 }

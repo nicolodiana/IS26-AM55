@@ -11,7 +11,7 @@ import it.polimi.ingsw.am55.view.ClientModelObserver;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ClientModel {
+public class ClientModel implements  ClientModelUpdater {
     private boolean lastMessageUpdatedGameView;
     private final Object lock = new Object();
     private EndGameResultView endGameResultView=null;
@@ -39,7 +39,8 @@ public class ClientModel {
         this.gameCrashed = false;
     }
 
-    public void update(MessageToClient message) {
+    @Override
+    public void handleUpdate(MessageToClient message) {
         /*
          * message.update(this) modificherà il ClientModel
          * chiamando setGameView, setStateRequest, setLastError, ecc.
