@@ -15,6 +15,8 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Client-side remote endpoint used by both RMI and socket transports.
@@ -83,6 +85,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
      */
     private  Timer aliveCheckerTimer;
 
+    private ExecutorService rmiExecutor;
     /**
      * Flag that prevents multiple client heartbeat timers from being started.
      */
@@ -111,7 +114,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         this.pingTimer = new Timer(true); 
         
         this.aliveCheckerTimer = new Timer(true);
-
+        this.rmiExecutor = Executors.newCachedThreadPool();
         this.pingStarted = false;
     }
 
@@ -152,14 +155,18 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
      */
     @Override
     public void onMessage(MessageToClient message) throws RemoteException {
+        rmiExecutor.submit(()->executeUpdate(message));
+    }
+
+    public void executeUpdate(MessageToClient message){
         try {
             if (message.shouldUpdateModel()) {
                 synchronized (model) {
                     model.handleUpdate(message);
                 }
-            }else{
-                message.executeClientNetworkAction(this);
             }
+            message.executeClientNetworkAction(this);
+
         } catch (Exception e) {
             System.out.println("[CLIENT_IMPL] Error handle message: " + e.getMessage());
         }
@@ -266,7 +273,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
      */
     @Override
     public void closeConnection() {
-        new Thread(()->{
+
             stopPing();
             System.out.println("[CLIENT_IMPL] Client ping stopped");
             try{
@@ -274,7 +281,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
             }catch(Exception e){}
             System.out.println("[CLIENT_IMPL] I close the client.");
             System.exit(0);
-        }).start();
+
     }
 
     /**

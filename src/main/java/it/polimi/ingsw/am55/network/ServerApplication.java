@@ -211,6 +211,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             System.out.println("[SERVER_APP] unregisterLobbyClient ignored: sessionId is null.");
             return;
         }
+
         VirtualView sender;
         synchronized (lobbyClients) {
             sender = lobbyClients.get(sessionId);
@@ -221,8 +222,11 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
             if (sender != null) {
                 lastPingByClient.remove(sender);
             }
+            System.out.println("[SERVER_APP] Disconnected clients in lastPingByClient: " + lastPingByClient);
+            if(lastPingByClient.isEmpty()) {
+                stopAliveChecker();
+            }
         }
-
         if (sender != null) {
             try {
                 sender.close();
@@ -388,7 +392,6 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
 
         unregisterLobbyClient(sessionId);
 
-        System.out.println("[SERVER_APP] Client removed from lobby. SessionId = " + sessionId);
     }
     /**
      * Clears game and lobby network registries, closes known client endpoints, and resets heartbeat state.

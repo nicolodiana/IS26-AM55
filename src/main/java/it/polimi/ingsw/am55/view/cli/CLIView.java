@@ -881,19 +881,20 @@ public class CLIView implements ClientModelObserver {
                     + "========== CLASSIFICA GENERALE =========="
                     + ConsoleColor.RESET);
 
-            System.out.printf("%-8s %-25s %-8s %-8s%n",
-                    "Pos.", "Nickname", "PP", "Cibo");
+            System.out.printf("%-8s %-25s %-8s %-8s %-25s%n",
+                    "Pos.", "Nickname", "PP", "Cibo", "Data");
 
             for (LeaderBoardEntryView entry : result.getLeaderBoard()) {
                 if (entry == null) {
                     continue;
                 }
 
-                System.out.printf("%-8d %-25s %-8d %-8d%n",
+                System.out.printf("%-8d %-25s %-8d %-8d %-25s%n",
                         entry.getPosition(),
                         entry.getPlayerNickname(),
                         entry.getPrestigePoint(),
-                        entry.getFoodPoint());
+                        entry.getFoodPoint(),
+                        entry.getDate());
             }
 
             System.out.println(ConsoleColor.CYAN_BOLD

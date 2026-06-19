@@ -1,6 +1,7 @@
 package it.polimi.ingsw.am55.network.middleware;
 
 import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.network.ClientImpl;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;
@@ -86,7 +87,7 @@ public class ServerStub implements VirtualServer, AutoCloseable {
      *
      * @param realClient local client endpoint that must receive deserialized messages
      */
-    public void startListener(VirtualView realClient) {
+    public void startListener(ClientImpl realClient) {
         if (listenerThread != null && listenerThread.isAlive()) {
             return;
         }
@@ -96,7 +97,7 @@ public class ServerStub implements VirtualServer, AutoCloseable {
                     MessageToClient message = (MessageToClient) input.readObject();
 
                     if (message != null) {
-                        realClient.onMessage(message);
+                        realClient.executeUpdate(message);
                     }
 
                 } catch (Exception e) {
