@@ -5,6 +5,7 @@ import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.CardType;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.CannotPickEventCard;
 import it.polimi.ingsw.am55.dto.CardView;
+import it.polimi.ingsw.am55.MesosModel.Player.Player;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -197,5 +198,38 @@ public class Row {
         }
 
         return listOfViews;
+    }
+
+    /**
+     * Restituisce true se il giocatore può prendere legalmente almeno
+     * una carta da questa riga.
+     *
+     * Le carte Evento non vengono considerate perché non possono essere pescate.
+     */
+    public boolean hasSelectableCard(Player player) {
+        /*
+         * Qualsiasi Personaggio è sempre selezionabile:
+         * prenderlo non richiede Cibo.
+         */
+        if (!characterCardsList.isEmpty()) {
+            return true;
+        }
+
+        int buildingDiscount = player.totalBuildingDiscount();
+
+        /*
+         * Un Edificio è selezionabile soltanto quando il giocatore può
+         * pagarne il costo effettivo, considerando tutti gli sconti.
+         */
+        return buildingCardsList.getBuildingDeck()
+                .stream()
+                .anyMatch(buildingCard -> {
+                    int effectiveCost = Math.max(
+                            0,
+                            buildingCard.getFoodCost() - buildingDiscount
+                    );
+
+                    return effectiveCost <= player.getNumFoods();
+                });
     }
 }

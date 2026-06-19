@@ -233,33 +233,66 @@ public class Game implements GameModelInterface{
      * @throws BiddingTicketIsTaken if the indicated bidding ticket has already taken
      * @throws IndexOutOfBoundsException if the index is out of the range of bidding tickets
      */
-    public void placeTotem(int index, String id) throws BiddingTicketIsTaken,IndexOutOfBoundsException,IllegalArgumentException{
-        if(!this.state.equals(GameState.PLACETOTEM) || !currentPlayer.getNickname().equals(id)){
-            throw new IllegalStateException("You can't place your totem");
-        }
-        //check if the selected position is taken
-        //sharedBoard.getIsTaken(index);
-        //setupping in the selected position
+    public List<String> placeTotem(
+            int index,
+            String id
+    ) throws BiddingTicketIsTaken,
+            IndexOutOfBoundsException,
+            IllegalArgumentException {
 
-        //If the bidding ticket has already taken throws BiddingTicketIsTaken => getIsTaken isn't used
+        if (!this.state.equals(GameState.PLACETOTEM)
+                || !currentPlayer.getNickname().equals(id)) {
+
+            throw new IllegalStateException(
+                    "You can't place your totem"
+            );
+        }
+
         sharedBoard.setPlayer(index, currentPlayer);
 
-        System.out.println(currentPlayer.getNickname() + " Moved his Totem to the Bidding Trail");
+        System.out.println(
+                currentPlayer.getNickname()
+                        + " Moved his Totem to the Bidding Trail"
+        );
 
-        //get the next player
-        Optional<Player> nextPlayer = sharedBoard.getNextPlayerFirstPhase(currentPlayer);
+        Optional<Player> nextPlayer =
+                sharedBoard.getNextPlayerFirstPhase(currentPlayer);
 
-        if(nextPlayer.isEmpty()){
-            currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
+        /*
+         * Ci sono ancora giocatori che devono piazzare il Totem.
+         */
+        if (nextPlayer.isPresent()) {
+            currentPlayer = nextPlayer.get();
 
-            System.out.println("Second Phase starting\n" + "Now playing: " + currentPlayer.getNickname());
-            changeState(GameState.PICKCARD);
-            sharedBoard.removeAllPlayersFromTurnTicket();
-            return;
+            System.out.println(
+                    "Now playing: " + currentPlayer.getNickname()
+            );
+
+            return Collections.emptyList();
         }
-        currentPlayer = nextPlayer.get();
 
-        System.out.println("Now playing: " + currentPlayer.getNickname());
+        /*
+         * L'ultimo Totem è stato piazzato.
+         * Inizia la fase di pesca.
+         */
+        currentPlayer = sharedBoard.getFirstPlayerSecondPhase();
+
+        System.out.println(
+                "Second Phase starting\n"
+                        + "Now playing: "
+                        + currentPlayer.getNickname()
+        );
+
+        changeState(GameState.PICKCARD);
+        sharedBoard.removeAllPlayersFromTurnTicket();
+
+        /*
+         * Copre sia:
+         * - il caso del primo giocatore bloccato in PICKCARD;
+         * - il caso in cui, finita la PICKCARD, si entri in PICKSPECIAL
+         *   ma la special pick non sia effettuabile.
+         */
+        return advanceAutomaticallyUntilInputNeeded();
     }
 
     /**
@@ -277,55 +310,258 @@ public class Game implements GameModelInterface{
      * @throws CantPickFromRow if the player has already reached their limit for the row containing the card.
      * @throws CannotAffordBuildingException if the player lacks sufficient food to pay for a building card.
      */
-    public void pickCard(int id,String idPlayer){
-        if(!state.equals(GameState.PICKCARD) || !currentPlayer.getNickname().equals(idPlayer)){
-            throw new IllegalStateException("can't pick a card now");
-        }
-        if(id<1 || id > 120){ throw new IllegalArgumentException("Id is out of range");}
+    public List<String> pickCard(int id, String idPlayer) {
+        if (!state.equals(GameState.PICKCARD)
+                || !currentPlayer.getNickname().equals(idPlayer)) {
 
-        CardSearchResult cardSearchResult = new CardSearchResult();
+            throw new IllegalStateException(
+                    "can't pick a card now"
+            );
+        }
+
+        if (id < 1 || id > 120) {
+            throw new IllegalArgumentException(
+                    "Id is out of range"
+            );
+        }
+
+        CardSearchResult cardSearchResult =
+                new CardSearchResult();
 
         sharedBoard.findCard(id, cardSearchResult);
-        isCardPickRowValid(cardSearchResult);// This method compares how many cards you've already taken from that row with
-        // how many you're entitled to according to your position on the bidding trail
 
+        /*
+         * Controlla che la carta appartenga a una riga dalla quale
+         * il Bidding Ticket permette ancora di pescare.
+         */
+        isCardPickRowValid(cardSearchResult);
+
+        /*
+         * La carta viene ottenuta prima del controllo automatico,
+         * così eventuali effetti immediati vengono già applicati.
+         */
         obtainCard(cardSearchResult);
 
-        //updateRowCardSelected(cardSearchResult);// Add the cards selected by player
+        /*
+         * Può:
+         * - lasciare currentPlayer invariato se deve ancora pescare;
+         * - concludere il suo turno;
+         * - saltare uno o più giocatori consecutivi;
+         * - entrare in PICKSPECIAL;
+         * - saltare automaticamente la special pick se non effettuabile;
+         * - terminare l'intera fase di pesca.
+         */
+        return advanceAutomaticallyUntilInputNeeded();
+    }
 
-        //check Player's turn end, and place him on turn ticket
-        if  (currentPlayer.getUpperRowCardSelected() == sharedBoard.getChooseUpperCard(currentPlayer) &&
-                currentPlayer.getLowerRowCardSelected() == sharedBoard.getChooseLowerCard(currentPlayer)){
+   /**
+     * Verifica se il giocatore possiede ancora almeno una scelta valida
+     * tra le righe dalle quali deve ancora pescare.
+     */
+    private boolean hasRemainingSelectableCard(Player player) {
+        boolean needsUpperCard =
+                player.getUpperRowCardSelected()
+                        < sharedBoard.getChooseUpperCard(player);
 
-            //Moving player on turn ticket, give malus or bonus and reset the total number of cards selected
-            sharedBoard.movePlayerToTurnTicket(currentPlayer);
-            currentPlayer.clearRowCardsSelected();
+        boolean needsLowerCard =
+                player.getLowerRowCardSelected()
+                        < sharedBoard.getChooseLowerCard(player);
 
-            //Gets the next player
-            Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase();
+        boolean canPickUpper =
+                needsUpperCard
+                        && sharedBoard.hasSelectableCard(
+                        RowType.UPPER,
+                        player
+                );
 
-            //check if the PlayingPlayer is the last player of the round
-            if (nextPlayer.isEmpty()){
-                for(Player p:players){
-                    if(p.hasBuilding(BuildingType.BUILDING13)){
-                        /*
-                        per come è il gioco solo un player avrà la building 13
-                        essendo unica quindi appena lo trovo cambio stato e aggiorno lui
-                        come current player in modo che dalla view mi accorgo che devo fare
-                        una pick special ( la risoluz. eventi quindi in questo caso sarà
-                        posticipata e fatta dopo questa pick special )
-                         */
-                        changeState(GameState.PICKSPECIAL);
-                        currentPlayer = p;
-                        return;
-                    }
-                }
-                secondPartPick(); //nel caso in cui non c'è nessuno con pick special passo diretto ad event resolve
-            } else {
-                currentPlayer = nextPlayer.get(); //Switching current player
+        boolean canPickLower =
+                needsLowerCard
+                        && sharedBoard.hasSelectableCard(
+                        RowType.LOWER,
+                        player
+                );
+
+        return canPickUpper || canPickLower;
+    }
+
+    /**
+     * Conclude il turno di pesca del currentPlayer e passa:
+     * - al giocatore successivo;
+     * - alla PICKSPECIAL;
+     * - alla risoluzione degli eventi;
+     * - oppure alla risoluzione di fine partita.
+     */
+    private void completeCurrentPickTurn() {
+        /*
+         * Sposta il giocatore dal Bidding Trail al Turn Ticket
+         * e applica l'eventuale bonus o malus.
+         */
+        sharedBoard.movePlayerToTurnTicket(currentPlayer);
+
+        /*
+         * I contatori devono essere azzerati in preparazione
+         * del round successivo.
+         */
+        currentPlayer.clearRowCardsSelected();
+
+        Optional<Player> nextPlayer =
+                sharedBoard.nextPlayerSecondPhase();
+
+        /*
+         * Esiste ancora un giocatore sul Bidding Trail.
+         */
+        if (nextPlayer.isPresent()) {
+            currentPlayer = nextPlayer.get();
+            return;
+        }
+
+        /*
+         * Tutti i giocatori hanno concluso la fase standard.
+         * Controlla l'effetto dell'Edificio 13.
+         */
+        for (Player player : players) {
+            if (player.hasBuilding(BuildingType.BUILDING13)) {
+                changeState(GameState.PICKSPECIAL);
+                currentPlayer = player;
+                return;
             }
         }
+
+        /*
+         * Nessuna pick speciale: passa agli eventi o al fine partita.
+         */
+        secondPartPick();
     }
+
+    /**
+     * Avanza automaticamente attraverso tutti i giocatori che non possono
+     * effettuare nessuna delle pescate ancora richieste dal loro Bidding Ticket.
+     *
+     * Il ciclo termina quando:
+     * - trova un giocatore con almeno una carta selezionabile;
+     * - raggiunge il ticket A, che deve ottenere Cibo;
+     * - termina la fase PICKCARD.
+     *
+     * @return i nickname dei giocatori saltati, nello stesso ordine
+     *         in cui sono stati saltati
+     */
+    private List<String> advancePickPhaseUntilPlayable() {
+        List<String> skippedPlayers = new ArrayList<>();
+
+        while (state == GameState.PICKCARD
+                && currentPlayer != null) {
+
+            int requiredUpperCards =
+                    sharedBoard.getChooseUpperCard(currentPlayer);
+
+            int requiredLowerCards =
+                    sharedBoard.getChooseLowerCard(currentPlayer);
+
+            /*
+             * Il ticket A, presente nelle partite a 5 giocatori,
+             * non permette di pescare carte ma assegna 3 Cibi.
+             *
+             * Non deve essere considerato un giocatore bloccato:
+             * viene gestito da pickFood(...).
+             */
+            if (requiredUpperCards == 0
+                    && requiredLowerCards == 0) {
+
+                break;
+            }
+
+            boolean completedAllPicks =
+                    currentPlayer.getUpperRowCardSelected()
+                            >= requiredUpperCards
+                            &&
+                            currentPlayer.getLowerRowCardSelected()
+                                    >= requiredLowerCards;
+
+            /*
+             * Il giocatore ha completato normalmente tutte
+             * le pescate richieste dal suo ticket.
+             */
+            if (completedAllPicks) {
+                completeCurrentPickTurn();
+                continue;
+            }
+
+            /*
+             * Il giocatore non ha ancora completato le pescate,
+             * ma ha almeno una scelta valida.
+             *
+             * Il server deve quindi attendere la sua pickCard.
+             */
+            if (hasRemainingSelectableCard(currentPlayer)) {
+                break;
+            }
+
+            /*
+             * Il giocatore deve ancora pescare, ma nessuna delle
+             * carte presenti nelle righe consentite è selezionabile.
+             */
+            skippedPlayers.add(currentPlayer.getNickname());
+
+            completeCurrentPickTurn();
+        }
+
+        return skippedPlayers;
+    }
+
+    /**
+     * Se la partita è entrata in PICKSPECIAL, controlla se il currentPlayer
+     * può effettivamente prendere almeno una carta selezionabile dalla upper row.
+     *
+     * Se non può farlo, la pick special viene saltata automaticamente
+     * e la partita passa a EVENTRESOLVE o ENDGAMERESOLVE.
+     *
+     * @return i nickname dei giocatori saltati durante la fase PICKSPECIAL
+     */
+    private List<String> advanceSpecialPhaseUntilPlayable() {
+        List<String> skippedPlayers = new ArrayList<>();
+
+        while (state == GameState.PICKSPECIAL
+                && currentPlayer != null) {
+
+            /*
+             * Nella pick special si può prendere solo dalla upper row.
+             * Se esiste almeno una carta selezionabile, il server deve
+             * fermarsi e attendere la pickSpecial del giocatore.
+             */
+            if (sharedBoard.hasSelectableCard(RowType.UPPER, currentPlayer)) {
+                break;
+            }
+
+            /*
+             * Nessuna carta selezionabile in upper row:
+             * la pick special viene saltata automaticamente.
+             */
+            skippedPlayers.add(currentPlayer.getNickname());
+
+            secondPartPick();
+        }
+
+        return skippedPlayers;
+    }
+
+    /**
+     * Normalizza automaticamente lo stato del gioco dopo un'azione del player.
+     *
+     * 1) salta eventuali giocatori bloccati in PICKCARD;
+     * 2) se si entra in PICKSPECIAL, salta automaticamente la special pick
+     *    quando non esistono carte selezionabili nella upper row.
+     *
+     * @return i nickname di tutti i giocatori saltati automaticamente
+     */
+    private List<String> advanceAutomaticallyUntilInputNeeded() {
+        List<String> skippedPlayers = new ArrayList<>();
+
+        skippedPlayers.addAll(advancePickPhaseUntilPlayable());
+        skippedPlayers.addAll(advanceSpecialPhaseUntilPlayable());
+
+        return skippedPlayers;
+    }
+
     /**
      * Handles a special card pick triggered by specific game effects (e.g., Building 13).
      * This method bypasses the standard row limits but restricts the search to the
@@ -337,17 +573,31 @@ public class Game implements GameModelInterface{
      * @throws IllegalStateException if the game is not in the PICKSPECIAL state.
      * @throws IllegalArgumentException if the provided card ID is out of the valid range.
      */
-    public void pickSpecial(int id,String idPlayer){
-        if(!state.equals(GameState.PICKSPECIAL) || !currentPlayer.getNickname().equals(idPlayer)){
-            throw new IllegalStateException("Can't activate special Pick from building effect");
-        }
-        if(id<1 || id > 120){ throw new IllegalArgumentException("Id is out of range");}
+    public void pickSpecial(int id, String idPlayer) {
+        if (!state.equals(GameState.PICKSPECIAL)
+                || !currentPlayer.getNickname().equals(idPlayer)) {
 
-        CardSearchResult cardSearchResult = new CardSearchResult();
+            throw new IllegalStateException(
+                    "Can't activate special Pick from building effect"
+            );
+        }
+
+        if (id < 1 || id > 120) {
+            throw new IllegalArgumentException(
+                    "Id is out of range"
+            );
+        }
+
+        CardSearchResult cardSearchResult =
+                new CardSearchResult();
 
         sharedBoard.findCardUpperRow(id, cardSearchResult);
 
-        obtainCard(cardSearchResult,false); //perche non deve sporcare i contatori di lower/upper card selected usati per gestire i ticket
+        /*
+         * La special pick non deve sporcare i contatori
+         * upper/lower del ticket standard.
+         */
+        obtainCard(cardSearchResult, false);
 
         secondPartPick();
     }
@@ -381,7 +631,7 @@ public class Game implements GameModelInterface{
 
 
     private void secondPartPick() {
-        if (countRound == 2){
+        if (countRound >= 10){
             changeState(GameState.ENDGAMERESOLVE);
             return;
         }
@@ -465,27 +715,64 @@ public class Game implements GameModelInterface{
      * @throws IllegalCallerException  if invoked when there are more than 5 players in the game
      * or when the current player is not on the food card.
      * **/
-    public void pickFood(String id){
-        if(currentPlayer.getNickname().equals(id)){
-            //int playerPosition = sharedBoard.getPlayerPositionOnTrail(currentPlayer);
-            //If current player is on the first ticket, he will get food, else
-            // the methods will throw exception
-            if(players.size()==5){
-                currentPlayer.addFood(3);
-                sharedBoard.movePlayerToTurnTicket(currentPlayer);
-                Player p = currentPlayer;
-                Optional<Player> nextPlayer = sharedBoard.nextPlayerSecondPhase();
-                currentPlayer = nextPlayer.get();
-            }else{
-                throw new IllegalStateException("There aren't 5 players");
-            }
-        }else{
-            throw new IllegalStateException("The current player isn't on the first card");
+    public List<String> pickFood(String id) {
+        if (!state.equals(GameState.PICKCARD)
+                || currentPlayer == null
+                || !currentPlayer.getNickname().equals(id)) {
+
+            throw new IllegalStateException(
+                    "The current player cannot pick food now"
+            );
         }
 
-        System.out.println("Now playing: " + currentPlayer.getNickname());
+        if (players.size() != 5) {
+            throw new IllegalStateException(
+                    "There aren't 5 players"
+            );
+        }
 
+        /*
+         * Il ticket del Cibo deve avere entrambe le quantità
+         * di carte selezionabili uguali a zero.
+         */
+        if (sharedBoard.getChooseUpperCard(currentPlayer) != 0
+                || sharedBoard.getChooseLowerCard(currentPlayer) != 0) {
+
+            throw new IllegalStateException(
+                    "The current player isn't on the food bidding ticket"
+            );
+        }
+
+        currentPlayer.addFood(3);
+
+        /*
+         * Sposta il giocatore sul Turn Ticket e seleziona
+         * il prossimo giocatore / oppure chiude la fase.
+         */
+        completeCurrentPickTurn();
+
+        /*
+         * Copre:
+         * - eventuali skip in PICKCARD;
+         * - eventuale ingresso in PICKSPECIAL;
+         * - eventuale special pick non effettuabile.
+         */
+        List<String> skippedPlayers =
+                advanceAutomaticallyUntilInputNeeded();
+
+        if ((state == GameState.PICKCARD
+                || state == GameState.PICKSPECIAL)
+                && currentPlayer != null) {
+
+            System.out.println(
+                    "Now playing: "
+                            + currentPlayer.getNickname()
+            );
+        }
+
+        return skippedPlayers;
     }
+
     /**
      * Changes the game's state
      * **/

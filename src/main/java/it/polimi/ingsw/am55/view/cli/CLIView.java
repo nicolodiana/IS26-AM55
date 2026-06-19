@@ -395,13 +395,35 @@ public class CLIView implements ClientModelObserver {
         }
 //tutti questi controlli vengono fatti invece per stati riguardanti i client in game
         if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
+            /*
+             * Il messaggio che ha portato a EVENTRESOLVE potrebbe contenere
+             * uno o più giocatori saltati. Deve essere mostrato prima del
+             * messaggio generico relativo alla risoluzione degli eventi.
+             */
+            if (containsSkipNotification(currentInfoMessage)) {
+                showMessage(currentInfoMessage);
+            }
+
             showMessage("Inizia la risoluzione degli eventi...");
             pendingEventResolutionDelay = true;
             return;
         }
 
         if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
-            showMessage("La partita è terminata... qui di seguito il riepilogo di fine partita");
+            /*
+             * Anche l'ultimo giocatore dell'ultimo round potrebbe essere
+             * stato saltato. Il messaggio deve essere mostrato prima del
+             * riepilogo finale.
+             */
+            if (containsSkipNotification(currentInfoMessage)) {
+                showMessage(currentInfoMessage);
+            }
+
+            showMessage(
+                    "La partita è terminata... "
+                            + "qui di seguito il riepilogo di fine partita"
+            );
+
             pendingEventResolutionDelay = true;
             return;
         }
@@ -824,5 +846,10 @@ public class CLIView implements ClientModelObserver {
 
     public String getId() {
         return id;
+    }
+
+    private boolean containsSkipNotification(String message) {
+        return message != null
+                && message.contains("ha saltato il turno");
     }
 }

@@ -199,6 +199,17 @@ public class Board {
         return biddingTrail.getChooseLowerCard(player);
     }
 
+    /**
+     * Restituisce true se nella riga indicata esiste almeno una carta
+     * che il giocatore può prendere legalmente in questo momento.
+     */
+    public boolean hasSelectableCard(RowType rowType, Player player) {
+        return switch (rowType) {
+            case UPPER -> upperRow.hasSelectableCard(player);
+            case LOWER -> lowerRow.hasSelectableCard(player);
+        };
+    }
+
     public void findCardUpperRow(int id, CardSearchResult cardSearchResult) throws IllegalArgumentException{
         if (upperRow.findCard(id,cardSearchResult)) {
             cardSearchResult.setRowType(RowType.UPPER);

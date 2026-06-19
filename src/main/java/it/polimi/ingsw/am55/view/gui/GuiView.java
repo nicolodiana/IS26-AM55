@@ -33,17 +33,24 @@ public class GuiView implements ClientModelObserver {
     private volatile boolean inLobby = true;
     private volatile LobbyView currentLobbyView;
     private volatile boolean startGameRequested;
+    private volatile String pendingPhaseEndSkipMessage;
 
     public GuiView(ClientModel model) {
         this.model = Objects.requireNonNull(model, "model");
         this.actionResolver = new ClientActionResolver();
         this.startGameRequested = false;
+        this.pendingPhaseEndSkipMessage = null;
         this.commandExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread thread = new Thread(r);
             thread.setName("GUI-Command-Thread");
             thread.setDaemon(true);
             return thread;
         });
+    }
+
+    private boolean containsSkipNotification(String message) {
+        return message != null
+                && message.contains("ha saltato il turno");
     }
 
     public void setActionHandler(UserActionHandler actionHandler) {
@@ -73,67 +80,123 @@ public class GuiView implements ClientModelObserver {
 
     @Override
     public void onModelChanged(ClientModel updatedModel) {
-        Platform.runLater(() -> {
+        /*
+         * Acquisisce immediatamente una fotografia dei valori collegati
+         * allo specifico messaggio che ha provocato l'aggiornamento.
+         */
+        final String errorSnapshot =
+                updatedModel.getLastError();
 
+        final String infoSnapshot =
+                updatedModel.getStateRequest();
+
+        final GameView gameViewSnapshot =
+                updatedModel.getGameView();
+
+        final boolean inLobbySnapshot =
+                updatedModel.isInLobby();
+
+        final LobbyView lobbyViewSnapshot =
+                updatedModel.getLobbyView();
+
+        Platform.runLater(() -> {
             /*
-             * Stato PRECEDENTE della GuiView.
-             * Serve per capire se il QuitLobbyMessage che sta arrivando
-             * deriva da auto-quit perché la partita era già iniziata.
+             * Uno skip che conduce direttamente a EVENTRESOLVE o
+             * ENDGAMERESOLVE sarà immediatamente seguito da un secondo
+             * messaggio. Lo conserviamo per non farlo sparire dalla Label.
              */
+            String effectiveInfoMessage = infoSnapshot;
+
+            GameState snapshotState =
+                    gameViewSnapshot == null
+                            ? null
+                            : gameViewSnapshot.getState();
+
+            boolean skipAtEndOfPickPhase =
+                    containsSkipNotification(infoSnapshot)
+                            && (snapshotState == GameState.EVENTRESOLVE
+                            || snapshotState == GameState.ENDGAMERESOLVE);
+
+            if (skipAtEndOfPickPhase) {
+                pendingPhaseEndSkipMessage = infoSnapshot;
+
+            } else if (pendingPhaseEndSkipMessage != null) {
+                /*
+                 * È arrivato il messaggio immediatamente successivo:
+                 * risoluzione degli eventi oppure conclusione della partita.
+                 *
+                 * Uniamo il vecchio messaggio di skip con quello nuovo,
+                 * affinché lo skip resti visibile.
+                 */
+                if (effectiveInfoMessage == null
+                        || effectiveInfoMessage.isBlank()) {
+
+                    effectiveInfoMessage =
+                            pendingPhaseEndSkipMessage;
+
+                } else if (!containsSkipNotification(effectiveInfoMessage)) {
+                    effectiveInfoMessage =
+                            pendingPhaseEndSkipMessage
+                                    + System.lineSeparator()
+                                    + effectiveInfoMessage;
+                }
+
+                pendingPhaseEndSkipMessage = null;
+            }
+
             boolean wasInLobbyWithStartedGame =
                     inLobby
                             && currentLobbyView != null
                             && currentLobbyView.getGameState() != null
-                            && currentLobbyView.getGameState() != GameState.CREATED;
+                            && currentLobbyView.getGameState()
+                            != GameState.CREATED;
 
             waitingServerResponse = false;
 
-            currentErrorMessage = updatedModel.getLastError();
-            currentInfoMessage = updatedModel.getStateRequest();
-            currentGameView = updatedModel.getGameView();
-            inLobby = updatedModel.isInLobby();
-            currentLobbyView = updatedModel.getLobbyView();
+            currentErrorMessage = errorSnapshot;
+            currentInfoMessage = effectiveInfoMessage;
+            currentGameView = gameViewSnapshot;
+            inLobby = inLobbySnapshot;
+            currentLobbyView = lobbyViewSnapshot;
 
-            /*
-             * Caso importante:
-             * arriva il QuitLobbyMessage dopo che avevamo visto una lobby
-             * con partita già iniziata.
-             *
-             * Quindi NON torno in lobby.
-             * Mostro la QuitGameScene con il messaggio del quit + motivo.
-             */
             if (wasInLobbyWithStartedGame
                     && currentInfoMessage != null
-                    && currentInfoMessage.toLowerCase().contains("uscito correttamente")) {
+                    && currentInfoMessage
+                    .toLowerCase()
+                    .contains("uscito correttamente")) {
+
                 showTerminalMessage(
                         currentInfoMessage
-                                + "\nPerché la partita è già iniziata e non accetta altri giocatori."
+                                + "\nPerché la partita è già iniziata "
+                                + "e non accetta altri giocatori."
                 );
+
                 return;
             }
 
-            /*
-             * Se siamo già nella schermata terminale di quit/crash,
-             * non dobbiamo più ricalcolare lo stato e tornare in lobby.
-             */
-            if (SceneManager.getActiveController() instanceof QuitGameSceneController quit) {
-                if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
+            if (SceneManager.getActiveController()
+                    instanceof QuitGameSceneController quit) {
+
+                if (currentErrorMessage != null
+                        && !currentErrorMessage.isBlank()) {
+
                     quit.render(currentErrorMessage);
-                } else if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
+
+                } else if (currentInfoMessage != null
+                        && !currentInfoMessage.isBlank()) {
+
                     quit.render(currentInfoMessage);
                 }
 
                 return;
             }
 
-            /*
-             * StartScene:
-             * se non ho ancora premuto INIZIA GIOCO, non cambio scena.
-             */
             if (!startGameRequested && inLobby) {
-                if (SceneManager.getActiveController() instanceof StartSceneController start
+                if (SceneManager.getActiveController()
+                        instanceof StartSceneController start
                         && currentInfoMessage != null
                         && !currentInfoMessage.isBlank()) {
+
                     start.showMessage("CLICK BUTTON TO START  ");
                 }
 
@@ -144,6 +207,7 @@ public class GuiView implements ClientModelObserver {
             showPendingMessages();
         });
     }
+
     //per gestire caso mi provo ad unire con partita in corso
     private boolean isLobbyGameAlreadyStarted() {
         return currentLobbyView != null
