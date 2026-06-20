@@ -381,7 +381,7 @@ public class Game implements GameModelInterface{
 
 
     private void secondPartPick() {
-        if (countRound == 10){
+        if (countRound == 1){
             changeState(GameState.ENDGAMERESOLVE);
             return;
         }
@@ -698,20 +698,20 @@ public class Game implements GameModelInterface{
         /*
         *  4.Salvo i dati nella base di dati
         */
-        //RIATTIVO SOLO QUANDO HO DB LOCALE ALTRIMENTI DA PROBLEMI
-//        gameRepository = new DatabaseManger();
-//        gameRepository.registerGame(this.id,this.numPlayers);
-//        for(Player p: players){
-//            gameRepository.registerPlayer(this.id,p.getNickname(),p.getNumPP(),p.getNumFoods());
-//        }
-//        List<LeaderBoardEntryView> leaderBoard = gameRepository.getGeneralClassification(this.numPlayers);
+
+        gameRepository = new DatabaseManger();
+        gameRepository.registerGame(this.id,this.numPlayers);
+        for(Player p: players){
+            gameRepository.registerPlayer(this.id,p.getNickname(),p.getNumPP(),p.getNumFoods());
+        }
+        List<LeaderBoardEntryView> leaderBoard = gameRepository.getGeneralClassification(this.numPlayers);
 
         /*
          * 5. Cambio stato finale.
          */
         changeState(GameState.ENDED);
 
-        return new EndGameResultView(resolvedEvents, endGameEffects, winners);
+        return new EndGameResultView(resolvedEvents, endGameEffects, winners,leaderBoard);
     }
     /**
      * Transitions the game state to CRASHED.

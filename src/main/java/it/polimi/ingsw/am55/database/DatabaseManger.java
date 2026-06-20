@@ -113,7 +113,7 @@ public class DatabaseManger implements GameRepository {
                 ) AS rank_position,
                 p.nickname,
                 p.ppPoints AS final_prestige_points,
-                p.foodPoints AS remaining_food
+                p.foodPoints AS remaining_food,
                 g.date AS game_date
             FROM Player p
             JOIN Game g ON g.gameId = p.gameId

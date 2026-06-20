@@ -771,6 +771,33 @@ public class CLIView implements ClientModelObserver {
             System.out.println();
         }
 
+        if (result.getLeaderBoard() != null && !result.getLeaderBoard().isEmpty()) {
+            System.out.println(ConsoleColor.CYAN_BOLD
+                    + "========== CLASSIFICA GENERALE =========="
+                    + ConsoleColor.RESET);
+
+            System.out.printf("%-8s %-25s %-8s %-8s %-25s%n",
+                    "Pos.", "Nickname", "PP", "Cibo", "Data");
+
+            for (LeaderBoardEntryView entry : result.getLeaderBoard()) {
+                if (entry == null) {
+                    continue;
+                }
+
+                System.out.printf("%-8d %-25s %-8d %-8d %-25s%n",
+                        entry.getPosition(),
+                        entry.getPlayerNickname(),
+                        entry.getPrestigePoint(),
+                        entry.getFoodPoint(),
+                        entry.getDate());
+            }
+
+            System.out.println(ConsoleColor.CYAN_BOLD
+                    + "========================================="
+                    + ConsoleColor.RESET);
+            System.out.println();
+        }
+
         if (result.getWinners() != null && !result.getWinners().isEmpty()) {
             System.out.println(ConsoleColor.YELLOW_BOLD
                     + "========== VINCITORE/I =========="
