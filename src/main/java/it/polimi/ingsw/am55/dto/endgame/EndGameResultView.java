@@ -12,15 +12,15 @@ public class EndGameResultView implements Serializable {
     private final List<ResolveEventView> resolvedEvents;
     private final List<EndGameEffectView> endGameEffects;
     private final Map<String, Integer> winners;
-    private List<LeaderBoardEntryView> leaderBoard;
 
-    public EndGameResultView(List<ResolveEventView> resolvedEvents, List<EndGameEffectView> endGameEffects,
-            Map<String, Integer> winners,List<LeaderBoardEntryView> leaderBoard
+    public EndGameResultView(
+            List<ResolveEventView> resolvedEvents,
+            List<EndGameEffectView> endGameEffects,
+            Map<String, Integer> winners
     ) {
         this.resolvedEvents = resolvedEvents;
         this.endGameEffects = endGameEffects;
         this.winners = winners;
-        this.leaderBoard = leaderBoard;
     }
 
     public List<ResolveEventView> getResolvedEvents() {
@@ -33,9 +33,5 @@ public class EndGameResultView implements Serializable {
 
     public Map<String, Integer> getWinners() {
         return winners;
-    }
-
-    public List<LeaderBoardEntryView> getLeaderBoard() {
-        return leaderBoard;
     }
 }

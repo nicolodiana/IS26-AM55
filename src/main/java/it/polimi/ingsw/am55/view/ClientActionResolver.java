@@ -10,11 +10,19 @@ import it.polimi.ingsw.am55.dto.GameView;
  */
 public class ClientActionResolver {
 
-    public ClientAction resolve(GameView gameView, String myPlayerId, boolean inLobby) {
+    public ClientAction resolve(
+            GameView gameView,
+            String myPlayerId,
+            boolean inLobby,
+            boolean gameCrashed
+    ) {
+        if (gameCrashed) {
+            return ClientAction.CRASHED;
+        }
+
         if (inLobby) {
             return ClientAction.LOBBY;
         }
-
 
         if (gameView == null) {
             return ClientAction.WAITING_FOR_STATE;
@@ -30,7 +38,7 @@ public class ClientActionResolver {
             return ClientAction.WAITING_TO_START;
         }
 
-        if (state == GameState.ENDED){
+        if (state == GameState.ENDED) {
             return ClientAction.END_GAME;
         }
 
@@ -38,13 +46,11 @@ public class ClientActionResolver {
             return ClientAction.RESOLVE_EVENTS;
         }
 
-        if (state == GameState.ENDGAMERESOLVE ) {
+        if (state == GameState.ENDGAMERESOLVE) {
             return ClientAction.END_GAME_RESOLVE;
         }
 
-        if (state == GameState.CRASHED) {
-            return ClientAction.CRASHED;
-        }
+
 
         if (!isMyTurn(gameView, myPlayerId)) {
             return ClientAction.WAITING_FOR_TURN;

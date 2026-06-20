@@ -27,14 +27,19 @@ public class Client {
             String host = askHost(scanner, args);
             ConnectionTechnology technology = askTechnology(scanner);
             ViewMode viewMode = askViewMode(scanner);
-
             ClientModel model = new ClientModel();
+
+            /*
+             * Creo il client di rete, ma NON faccio ancora connect().
+             * La connect() manda RegisterLobbyCommand, quindi deve partire
+             * solo dopo che la view è già observer del model.
+             */
             ClientImpl client = createClient(technology, host, model);
             ClientController controller = new ClientController(client);
 
             switch (viewMode) {
-                case CLI -> startCli(model, controller);
-                case GUI -> startGui(model, controller);
+                case CLI -> startCli(model, controller, client);
+                case GUI -> startGui(model, controller, client);
                 default -> throw new IllegalArgumentException("View mode non supportata: " + viewMode);
             }
 
@@ -44,15 +49,34 @@ public class Client {
         }
     }
 
-    private static void startCli(ClientModel model, ClientController controller) {
+    private static void startCli(
+            ClientModel model,
+            ClientController controller,
+            ClientImpl client
+    ) throws Exception {
         CLIView view = new CLIView(model);
+
+        /*
+         * Observer registrato PRIMA della connect().
+         */
         model.addObserver(view);
+
         view.setActionHandler(controller);
         view.start();
+
+        /*
+         * Da qui parte RegisterLobbyCommand.
+         * Ora la CLI riceverà LobbyStatusMessage.
+         */
+        client.connect();
     }
 
-    private static void startGui(ClientModel model, ClientController controller) {
-        JavaFXGui.launchGui(model, controller);
+    private static void startGui(
+            ClientModel model,
+            ClientController controller,
+            ClientImpl client
+    ) {
+        JavaFXGui.launchGui(model, controller, client);
     }
 
     private static String askHost(Scanner scanner, String[] args) {
@@ -124,10 +148,7 @@ public class Client {
         Registry registry = LocateRegistry.getRegistry(host, RMI_PORT);
         VirtualServer server = (VirtualServer) registry.lookup(SERVER_NAME);
 
-        ClientImpl client = new ClientImpl(server, model);
-        client.connect();
-
-        return client;
+        return new ClientImpl(server, model);
     }
 
     private static ClientImpl createSocketClient(String host, ClientModel model) throws Exception {
@@ -136,8 +157,6 @@ public class Client {
         ClientImpl client = new ClientImpl(serverStub, model);
 
         serverStub.startListener(client);
-
-        client.connect();
 
         return client;
     }

@@ -1,7 +1,6 @@
 package it.polimi.ingsw.am55.network;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
-import it.polimi.ingsw.am55.ClientModel.ClientModelUpdater;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.PingCommand;
@@ -111,8 +110,8 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
         this.pingLock = new Object();
         this.lastPingFromServer = System.currentTimeMillis();
 
-        this.pingTimer = new Timer(true); 
-        
+        this.pingTimer = new Timer(true);
+
         this.aliveCheckerTimer = new Timer(true);
         this.rmiExecutor = Executors.newCachedThreadPool();
         this.pingStarted = false;

@@ -195,8 +195,16 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         synchronized (lastPingByClient) {
             lastPingByClient.put(client, System.currentTimeMillis());
         }
-
         sendToSession(sessionId, new StartPingMessage());
+
+        sendToSession(
+                sessionId,
+                new LobbyStatusMessage(
+                        controller.getLobbyView(),
+                        "Stato lobby sincronizzato."
+                )
+        );
+
         startAliveChecker();
 
         System.out.println("[SERVER_APP] Client registered in lobby. SessionId =" + sessionId);
@@ -404,6 +412,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 } catch (Exception ignored) {
                 }
             }
+
             gameClients.clear();
             System.out.println("[SERVER_APP] Game client map cleared " + gameClients);
         }
@@ -748,6 +757,20 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                     + " unreachable in sendTo: "
                     + e.getMessage());
 
+//            synchronized (gameClients) {
+//                if (gameClients.get(playerId) == client) {
+//                    gameClients.remove(playerId);
+//                }
+//            }
+//
+//            synchronized (lastPingByClient) {
+//                lastPingByClient.remove(client);
+//            }
+//
+//            try {
+//                client.close();
+//            } catch (Exception ignored) {
+//            }
         }
     }
 

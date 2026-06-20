@@ -43,6 +43,10 @@ public final class SceneManager {
         return mainStage;
     }
 
+    public static void showStartScene() {
+        changeRoot("/it/polimi/ingsw/am55/fxml/StartScene.fxml");
+    }
+
     public static void showLobbyScene() {
         changeRoot("/it/polimi/ingsw/am55/fxml/LobbyScene.fxml");
     }
