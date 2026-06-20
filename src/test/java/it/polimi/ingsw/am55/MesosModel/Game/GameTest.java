@@ -8,6 +8,8 @@ import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
 import it.polimi.ingsw.am55.MesosModel.Enum.GameState;
 import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.MesosModel.SharedBoard.Row;
+import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -623,6 +625,167 @@ class GameTest {
         assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(lowerCard.getId(), g.getCurrentPlayer()));
     }
 
+
+    // =========================
+    // automatic skip logic
+    // =========================
+
+    @Test
+    void testSelectableCardsUsedBySkipLogic() throws Exception {
+        Game game = createStartedGame(2);
+        clearRows(game);
+        Player player = game.getPlayers().getFirst();
+        Row upper = game.getSharedBoard().getUpperRow();
+        Row lower = game.getSharedBoard().getLowerRow();
+
+        upper.addEventCard(new HuntEventCard(90, 1, 1));
+        addBuilding(upper, 91, 4, BuildingType.BUILDING1);
+        lower.addCharacterCard(new Hunter(1, false, 1));
+
+        assertFalse(game.getSharedBoard().hasSelectableCard(
+                it.polimi.ingsw.am55.MesosModel.Enum.RowType.UPPER, player));
+        assertTrue(game.getSharedBoard().hasSelectableCard(
+                it.polimi.ingsw.am55.MesosModel.Enum.RowType.LOWER, player));
+
+        player.addFood(2);
+        assertTrue(upper.hasSelectableCard(player));
+
+        Row discountedRow = new Row();
+        Player discountedPlayer = new Player("discounted", "blue");
+        addBuilding(discountedRow, 92, 1, BuildingType.BUILDING1);
+        discountedPlayer.addTribeCard(new Builder(2, 0, 2, 1));
+        assertTrue(discountedRow.hasSelectableCard(discountedPlayer));
+    }
+
+    @Test
+    void testLastPlacementSkipsConsecutiveBlockedPlayers() throws Exception {
+        Game game = createStartedGame(3);
+        clearRows(game);
+        addBuilding(game.getSharedBoard().getLowerRow(), 91, 3, BuildingType.BUILDING1);
+
+        String first = game.getCurrentPlayer();
+        assertTrue(game.placeTotem(0, first).isEmpty());
+        String second = game.getCurrentPlayer();
+        assertTrue(game.placeTotem(1, second).isEmpty());
+        String third = game.getCurrentPlayer();
+
+        assertEquals(List.of(first, second), game.placeTotem(2, third));
+        assertEquals(third, game.getCurrentPlayer());
+        assertEquals(GameState.PICKCARD, game.getGameState());
+    }
+
+    @Test
+    void testPartialPickSkipsCurrentAndFollowingBlockedPlayer() throws Exception {
+        Game game = createStartedGame(2);
+        clearRows(game);
+        game.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(1, false, 1));
+        addBuilding(game.getSharedBoard().getUpperRow(), 91, 10, BuildingType.BUILDING1);
+
+        String first = game.getCurrentPlayer();
+        game.placeTotem(2, first);
+        String second = game.getCurrentPlayer();
+        game.placeTotem(3, second);
+
+        assertEquals(List.of(first, second), game.pickCard(1, first));
+        assertEquals(GameState.EVENTRESOLVE, game.getGameState());
+        assertEquals(1, playerByName(game, first).getHuntersList().size());
+        assertEquals(0, playerByName(game, first).getLowerRowCardSelected());
+    }
+
+    @Test
+    void testImmediateFoodEffectPreventsPrematureSkip() throws Exception {
+        Game game = createStartedGame(2);
+        clearRows(game);
+        game.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(1, true, 1));
+        addBuilding(game.getSharedBoard().getUpperRow(), 91, 3, BuildingType.BUILDING1);
+
+        String first = game.getCurrentPlayer();
+        game.placeTotem(2, first);
+        String second = game.getCurrentPlayer();
+        game.placeTotem(3, second);
+
+        assertTrue(game.pickCard(1, first).isEmpty());
+        assertEquals(first, game.getCurrentPlayer());
+        assertEquals(List.of(second), game.pickCard(91, first));
+        assertEquals(GameState.EVENTRESOLVE, game.getGameState());
+        assertTrue(playerByName(game, first).hasBuilding(BuildingType.BUILDING1));
+    }
+
+    @Test
+    void testSpecialPickRemainsAvailableAndDoesNotChangeCounters() throws Exception {
+        Game game = createStartedGame(2);
+        clearRows(game);
+        String owner = game.getCurrentPlayer();
+        Player ownerPlayer = playerByName(game, owner);
+        ownerPlayer.addTribeCard(building(116, 0, BuildingType.BUILDING13));
+        game.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(1, false, 1));
+        game.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(2, false, 1));
+        game.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(3, false, 1));
+
+        game.placeTotem(0, owner);
+        String other = game.getCurrentPlayer();
+        game.placeTotem(1, other);
+        assertTrue(game.pickCard(1, owner).isEmpty());
+        assertTrue(game.pickCard(2, other).isEmpty());
+        assertEquals(GameState.PICKSPECIAL, game.getGameState());
+
+        game.pickSpecial(3, owner);
+        assertEquals(GameState.EVENTRESOLVE, game.getGameState());
+        assertEquals(0, ownerPlayer.getUpperRowCardSelected());
+        assertEquals(0, ownerPlayer.getLowerRowCardSelected());
+    }
+
+    @Test
+    void testUnavailableSpecialPickIsSkippedAtFinalRound() throws Exception {
+        Game game = createStartedGame(2);
+        clearRows(game);
+        game.setCountRound(10);
+        String owner = game.getCurrentPlayer();
+        playerByName(game, owner).addTribeCard(building(116, 0, BuildingType.BUILDING13));
+        game.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(1, false, 1));
+        game.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(2, false, 1));
+
+        game.placeTotem(0, owner);
+        String other = game.getCurrentPlayer();
+        game.placeTotem(1, other);
+        game.pickCard(1, owner);
+
+        assertEquals(List.of(owner), game.pickCard(2, other));
+        assertEquals(GameState.ENDGAMERESOLVE, game.getGameState());
+    }
+
+    @Test
+    void testAllPlayersBlockedDuringInitialCheck() throws Exception {
+        Game game = createStartedGame(2);
+        clearRows(game);
+        String first = game.getCurrentPlayer();
+        game.placeTotem(0, first);
+        String second = game.getCurrentPlayer();
+
+        assertEquals(List.of(first, second), game.placeTotem(1, second));
+        assertEquals(GameState.EVENTRESOLVE, game.getGameState());
+    }
+
+    @Test
+    void testPickFoodThenSkipsOnlyBlockedFollowingPlayer() throws Exception {
+        Game game = createStartedGame(5);
+        clearRows(game);
+        game.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(1, false, 1));
+        String[] order = new String[5];
+
+        for (int i = 0; i < order.length; i++) {
+            order[i] = game.getCurrentPlayer();
+            assertTrue(game.placeTotem(i, order[i]).isEmpty());
+        }
+
+        Player foodPlayer = playerByName(game, order[0]);
+        int foodBefore = foodPlayer.getNumFoods();
+        assertEquals(List.of(order[1]), game.pickFood(order[0]));
+        assertEquals(order[2], game.getCurrentPlayer());
+        assertEquals(GameState.PICKCARD, game.getGameState());
+        assertTrue(foodPlayer.getNumFoods() >= foodBefore + 3);
+    }
+
     // =========================
     // endGame / effects
     // =========================
@@ -761,6 +924,49 @@ class GameTest {
         assertEquals(GameState.ENDED , game.getGameState());
     }
 
+    @Test
+    void getStateTest(){
+        GameState state = g.getState();
+        assertEquals(GameState.CREATED, state);
+    }
+
+    @Test
+    void getSinglePlayerTest(){
+        Player p1 = new Player("prova", "white");
+        Player p2 = new Player("prova2", "orange");
+        try {
+            g.addPlayer(p1.getNickname(), p1.getTotem());
+            g.addPlayer(p2.getNickname(), p2.getTotem());
+        } catch (PlayerNumberOutOfRange e) {}
+
+        assertEquals(p1.getTotem(), g.getSinglePlayer("prova").getTotem());
+    }
+
+    @Test
+    void getPlayerPoints_getPlayerFood_Test(){
+        try {
+            g.addPlayer("prova", "white");
+        } catch (PlayerNumberOutOfRange e) {}
+
+        g.getPlayers().get(0).addPP(20);
+        g.getPlayers().get(0).addFood(20);
+
+        assertEquals(20, g.getPlayerPoints("prova"));
+        assertEquals(20, g.getPlayerFood("prova"));
+    }
+
+    @Test
+    void toViewTest(){
+        GameView gv = g.toView();
+        assertEquals(g.getIdGame(), gv.getGameId());
+        assertEquals(g.getPlayers(), gv.getPlayers());
+        assertEquals(g.getCurrentPlayer(), gv.getCurrentPlayer());
+        assertEquals(g.getCountRound(), gv.getRound());
+    }
+
+
+
+
     // =========================
     // Helpers
     // =========================
@@ -821,6 +1027,38 @@ class GameTest {
                 .orElseThrow(() -> new AssertionError("Expected at least one character card in lower row"));
     }
 
+
+    private Game createStartedGame(int players) throws PlayerNumberOutOfRange {
+        Game game = new Game(players);
+        String[] names = {"p1", "p2", "p3", "p4", "p5"};
+        String[] colors = {"white", "blue", "orange", "purple", "yellow"};
+        for (int i = 0; i < players; i++) game.addPlayer(names[i], colors[i]);
+        return game;
+    }
+
+    private void clearRows(Game game) {
+        for (Row row : List.of(game.getSharedBoard().getUpperRow(),
+                game.getSharedBoard().getLowerRow())) {
+            row.clearRoundEnd();
+            row.clearBuildingCards();
+        }
+    }
+
+    private BuildingCard building(int id, int cost, BuildingType type) {
+        return new BuildingCard(id, 1, cost, 0, type, null, 0);
+    }
+
+    private void addBuilding(Row row, int id, int cost, BuildingType type) {
+        row.getBuildingCardsList().getBuildingDeck().add(building(id, cost, type));
+    }
+
+    private Player playerByName(Game game, String nickname) {
+        return game.getPlayers().stream()
+                .filter(player -> player.getNickname().equals(nickname))
+                .findFirst()
+                .orElseThrow();
+    }
+
     /**
      * Adds the same predefined tie-oriented card setup to the given player.
      *
@@ -835,4 +1073,6 @@ class GameTest {
         new Hunter(3, false, 1).addToPlayer(p);
         new Collector(12, 1).addToPlayer(p);
     }
+
+
 }

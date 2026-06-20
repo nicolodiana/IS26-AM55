@@ -3,6 +3,7 @@ import it.polimi.ingsw.am55.MesosModel.Cards.*;
 import it.polimi.ingsw.am55.MesosModel.Decks.BuildingDeck;
 import it.polimi.ingsw.am55.MesosModel.Enum.RowType;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.BoardView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -244,5 +245,22 @@ class BoardTest {
         for (int i = 0; i < events.size() - 1; i++) {
             assertTrue(comparator.compare(events.get(i), events.get(i + 1)) <= 0);
         }
+    }
+
+    @Test
+    void getPlayerPositionOnTrailTest(){
+        Player player = new Player("prova", "White");
+        board.setPlayer(0, player);
+
+        assertEquals(0, board.getPlayerPositionOnTrail(player));
+    }
+
+    @Test
+    void toViewTest(){
+        BoardView bv1 = board.toView();
+
+        assertEquals(board.getBiddingTrail().getTicketList().size(), bv1.getBiddingTrail().size() );
+        assertEquals(board.getPlayerOrder().getTurnOrder().size(), bv1.getTurnTicket().size() );
+
     }
 }

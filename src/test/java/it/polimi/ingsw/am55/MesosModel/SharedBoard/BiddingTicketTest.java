@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.MesosModel.SharedBoard;
 
 import it.polimi.ingsw.am55.MesosModel.Exceptions.BiddingTicketIsTaken;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
+import it.polimi.ingsw.am55.dto.BiddingTicketView;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,6 +72,18 @@ class BiddingTicketTest {
 
         t1.removePlayer();
         assertNull(t1.getPlayer());
+    }
+
+    @Test
+    public void toViewTest(){
+        BiddingTicket t1 = new BiddingTicket(3,0,0,2,'A');
+        BiddingTicketView v1 = t1.toView();
+        assertEquals(3,v1.getFoodBonus());
+        assertEquals(0, v1.getChooseLowerCard());
+        assertEquals(0, v1.getChooseUpperCard());
+        assertEquals(2, v1.getNumPlayer());
+        assertEquals('A', v1.getTrailPlacement());
+        assertNull(v1.getPlayer());
     }
 
 }

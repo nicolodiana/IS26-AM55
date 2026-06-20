@@ -247,4 +247,40 @@ public class RowTest {
             assertTrue(comparator.compare(events.get(i), events.get(i + 1)) <= 0);
         }
     }
+
+    @Test
+    void hasSelevtablecardsTest() {
+        Player p1 = new Player("p1", "White");
+
+        Row row = new Row();
+
+        PaintingsEventCard paintingsEventCard2 = new PaintingsEventCard(4, 3, 1,1,1,1);
+        SustenanceEventCard sustenance = new SustenanceEventCard(7, 2,1);
+
+        row.addEventCard(paintingsEventCard2);
+        row.addEventCard(sustenance);
+
+        assertFalse(row.hasSelectableCard(p1));
+
+        BuildingCard buildingCard = new BuildingCard(5,1,0,1,BuildingType.BUILDING1,CharacterType.BUILDER, 1);
+        List<BuildingCard> bcList = new ArrayList<>();
+        bcList.add(buildingCard);
+        row.getBuildingCardsList().setBuildingCardsList(bcList);
+
+        assertTrue(row.hasSelectableCard(p1));
+
+        row.removeBuildingCardByIndex(0);
+
+        row.addCharacterCard(new CharacterCard(1,1));
+        assertTrue(row.hasSelectableCard(p1));
+
+        row.removeCharacterCardByIndex(0);
+
+        BuildingCard bc1 = new BuildingCard(5,1,999,1,BuildingType.BUILDING1,CharacterType.BUILDER, 1);
+        bcList.clear();
+        bcList.add(bc1);
+        row.getBuildingCardsList().setBuildingCardsList(bcList);
+
+        assertFalse(row.hasSelectableCard(p1));
+    }
 }
