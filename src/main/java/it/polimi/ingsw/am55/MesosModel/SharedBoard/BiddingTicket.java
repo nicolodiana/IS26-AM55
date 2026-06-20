@@ -5,67 +5,59 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.BiddingTicketView;
 
 /**
- * The {@code BiddingTicket} class represents a ticket available during the bidding phase of the game.
- * It contains specific bonuses, rules for card selection, and placement information on the bidding trail.
- * It also keeps track of which player (if any) has currently claimed the ticket.
+ * Represents one offer space on the bidding trail.
+ *
+ * Each ticket specifies the action available to the player who places a
+ * totem on it: an optional food reward and the number of cards that may be
+ * taken from the upper and lower rows. A ticket also records the minimum
+ * number of players required for it to be included in a game and its
+ * left-to-right position on the trail.
+ *
+ * During the totem-placement phase, at most one {@link Player} may occupy a
+ * ticket. The ticket becomes available again when that player is removed.
  */
 public class BiddingTicket {
 
-    //private final int id;
     /**
-     * The amount of bonus food provided to the player who takes this ticket.
+     * Food reward printed on this offer space.
      */
     private final int foodBonus;
 
     /**
-     * The number of cards the player is allowed to choose from the lower section.
+     * Number of cards that may be taken from the lower row.
      */
     private final int chooseLowerCard;
 
     /**
-     * The number of cards the player is allowed to choose from the upper section.
+     * Number of cards that may be taken from the upper row.
      */
     private final int chooseUpperCard;
 
     /**
-     * The minimum or maximum threshold of players required for this ticket to be available.
-     * The bidding trial will select this ticket only if: {@code biddingTicket.numPlayer <= numberOfPlayer}.
+     * Minimum number of players required for this ticket to be used.
      */
     private final int numPlayer;
 
     /**
-     * The character representing the specific placement or position of this ticket on the trail.
+     * Letter identifying the ticket's position on the trail.
      */
     private final char trailPlacement;
 
     /**
-     * The player who has currently taken or claimed this bidding ticket.
-     * It is {@code null} if the ticket is still available.
+     * Player currently occupying the ticket, or {@code null} when it is free.
      */
     private Player player;
 
     /**
-     * Constructs a new {@code BiddingTicket} with the specified attributes.
-     * The ticket is initially unassigned (player is set to {@code null}).
+     * Creates an unoccupied bidding ticket.
      *
-     * @param foodBonus       the amount of bonus food provided by this ticket
-     * @param chooseLowerCard the number of lower cards the player can choose
-     * @param chooseUpperCard the number of upper cards the player can choose
-     * @param numPlayer       the player count parameter determining if this ticket is used in the game
-     * @param trailPlacement  the character indicating the ticket's placement on the trail
+     * @param foodBonus food reward associated with the ticket
+     * @param chooseLowerCard number of cards selectable from the lower row
+     * @param chooseUpperCard number of cards selectable from the upper row
+     * @param numPlayer minimum number of players required for this ticket
+     * @param trailPlacement letter identifying the ticket's trail position
      */
-    public BiddingTicket(int id, int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement) {
-        //this.id = id;
-        this.foodBonus = foodBonus;
-        this.chooseLowerCard = chooseLowerCard;
-        this.chooseUpperCard = chooseUpperCard;
-        this.numPlayer = numPlayer;
-        this.trailPlacement = trailPlacement;
-        this.player = null;
-    }
-
     public BiddingTicket(int foodBonus, int chooseLowerCard, int chooseUpperCard, int numPlayer, char trailPlacement) {
-        //this.id = 0;
         this.foodBonus = foodBonus;
         this.chooseLowerCard = chooseLowerCard;
         this.chooseUpperCard = chooseUpperCard;
@@ -75,66 +67,70 @@ public class BiddingTicket {
     }
 
     /**
-     * Gets the player who currently holds this bidding ticket.
+     * Returns the player currently occupying this ticket.
      *
-     * @return the {@link Player} holding the ticket, or {@code null} if it is available
+     * @return the occupying player, or {@code null} if the ticket is free
      */
     public Player getPlayer() {
         return player;
     }
 
     /**
-     * Gets the food bonus associated with this ticket.
+     * Returns the food reward printed on this ticket.
      *
-     * @return the amount of bonus food
+     * @return the food reward
      */
     public int getFoodBonus() {
         return foodBonus;
     }
 
     /**
-     * Gets the number of lower cards the holding player can choose.
+     * Returns how many cards the occupying player may take from the lower row.
      *
-     * @return the number of lower cards
+     * @return the lower-row card allowance
      */
     public int getChooseLowerCard() {
         return chooseLowerCard;
     }
 
     /**
-     * Gets the number of upper cards the holding player can choose.
+     * Returns how many cards the occupying player may take from the upper row.
      *
-     * @return the number of upper cards
+     * @return the upper-row card allowance
      */
     public int getChooseUpperCard() {
         return chooseUpperCard;
     }
 
     /**
-     * Gets the player count condition for this ticket.
+     * Returns the minimum player count required for this ticket to be active.
      *
-     * @return the number of players parameter
+     * @return the minimum number of players
      */
     public int getNumPlayer() {
         return numPlayer;
     }
 
     /**
-     * Gets the placement character of this ticket on the trail.
+     * Returns the letter used to order this ticket on the trail.
      *
-     * @return the trail placement character
+     * @return the trail-position letter
      */
     public char getTrailPlacement() {
         return trailPlacement;
     }
 
     /**
-     * Assigns this bidding ticket to a specified player.
+     * Occupies this ticket with the supplied player.
      *
-     * @param player the {@link Player} who is taking the ticket
-     * @throws BiddingTicketIsTaken if the ticket has already been claimed by a player
+     * The assignment succeeds only while the ticket is free. The method does
+     * not reject a {@code null} argument; assigning {@code null} leaves the
+     * ticket available.
+     *
+     * @param player player reference to assign to the ticket
+     * @throws BiddingTicketIsTaken if another player already occupies the ticket
      */
-    public void setPlayer(Player player) {
+    public void setPlayer(Player player) throws BiddingTicketIsTaken {
         if (this.player == null) {
             this.player = player;
         } else {
@@ -143,15 +139,16 @@ public class BiddingTicket {
     }
 
     /**
-     * Removes the current player from this ticket, making it available again.
+     * Releases this ticket by removing its current player reference.
      */
     public void removePlayer() {
         this.player = null;
     }
 
-    /*public int getId() {
-        return this.id;
-    }*/
-
+    /**
+     * Creates a serializable view of this ticket and its current occupant.
+     *
+     * @return a new view containing the ticket's current state
+     */
     public BiddingTicketView toView() { return new BiddingTicketView(this); }
 }

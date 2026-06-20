@@ -6,42 +6,49 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import java.util.*;
 
 /**
- * The {@code TurnTicket} class manages the turn order of the players in the game.
- * It is responsible for initializing the turn sequence, determining the next player,
- * and applying specific game effects (such as bonuses or maluses) based on a player's
- * position in the turn order.
+ * Models the turn-order track used during the totem-placement phase.
+ *
+ * <p>At game setup, the players are copied and shuffled to determine the first
+ * round's order. Once all totems have been placed, the occupied slots are
+ * cleared. Players are then inserted into the first free slot as they finish
+ * resolving their offer actions, thereby creating the order for the following
+ * round. The selected {@link TurnOrderEffect} applies the food bonuses and the
+ * final-position penalty printed on the track for the current player count.</p>
  */
 public class TurnTicket {
-    private int numplayerticket;
+
     /**
-     * The list representing the current turn order of the players.
+     * Number of players used to select the turn-order effect implementation.
+     */
+    private int numplayerticket;
+
+    /**
+     * Player references stored in current turn order; slots may contain {@code null}.
      */
     private List<Player> turnOrder;
 
     /**
-     * The effect applied to players based on the total number of players in the game.
-     * Polymorphism is used to apply the correct effect via dynamic binding.
+     * Strategy that applies position-dependent food bonuses and the last-slot penalty.
      */
     TurnOrderEffect effect;
 
     /**
-     * Random instance utilized for shuffling operations or random events.
+     * Random generator supplied through the test-oriented constructor.
+     *
      */
     private Random random;
 
     /**
-     * Default constructor.
-     * Initializes an empty turn order list.
+     * Creates an empty turn-order track.
      */
     public TurnTicket() {
         turnOrder = new ArrayList<Player>();
     }
 
     /**
-     * Constructor that accepts a specific {@link Random} instance.
-     * Initializes an empty turn order list and sets the custom random generator.
+     * Creates an empty turn-order track and stores a random generator.
      *
-     * @param random the {@link Random} instance to be used by this class
+     * @param random random generator to store in this object
      */
     public TurnTicket(Random random) {
         this.turnOrder = new ArrayList<Player>();
@@ -49,12 +56,15 @@ public class TurnTicket {
     }
 
     /**
-     * Initializes the turn ticket with a list of players.
-     * The method shuffles the provided players to create a random initial turn order
-     * and assigns the appropriate {@link TurnOrderEffect} based on the number of players.
+     * Initializes the track and randomizes the first-round player order.
      *
-     * @param players the list of players to be added to the turn sequence
-     * @throws IllegalArgumentException if the number of players is not between 2 and 5
+     * <p>A defensive copy of {@code players} is created and shuffled. The
+     * method then chooses the player-count-specific {@link TurnOrderEffect}
+     * used when players return to the track after resolving their offers.</p>
+     *
+     * @param players players participating in the game
+     * @throws IllegalArgumentException if the list size is not between two and five
+     * @throws NullPointerException if {@code players} is {@code null}
      */
     public void initTurnTicket(List<Player> players) {
         turnOrder = new ArrayList<>(players);
@@ -70,32 +80,34 @@ public class TurnTicket {
     }
 
     /**
-     * Gets the complete list representing the current turn order.
+     * Returns the live list representing the turn-order slots.
      *
-     * @return a {@code List<Player>} indicating the turn sequence
+     * @return the internal turn-order list
      */
     public List<Player> getTurnOrder() {
         return turnOrder;
     }
 
     /**
-     * Gets the player at the specified index in the turn order.
+     * Returns the player reference stored at a turn-order position.
      *
-     * @param index the position of the player to retrieve
-     * @return the {@link Player} at the given index
-     * @throws IndexOutOfBoundsException if the index is out of range
+     * @param index zero-based position in the turn-order list
+     * @return the player at the requested position, possibly {@code null}
+     * @throws IndexOutOfBoundsException if {@code index} is outside the list
      */
     public Player getTurnPlayer(int index) {
         return turnOrder.get(index);
     }
 
     /**
-     * Retrieves the player who plays immediately after the specified player during the first phase.
+     * Returns the player immediately following a player in first-phase order.
      *
-     * @param player the current {@link Player}
-     * @return an {@link Optional} containing the next {@link Player} if one exists,
-     * or an empty Optional if the specified player is the last in the turn order
-     * @throws IllegalArgumentException if the provided player is null
+     * <p>The supplied player is expected to be present in {@link #turnOrder}.
+     *
+     * @param player current player in the totem-placement order
+     * @return the following player, or an empty optional if {@code player} is in
+     *         the final slot
+     * @throws IllegalArgumentException if {@code player} is {@code null}
      */
     public Optional<Player> getNextPlayerFirstPhase(Player player) {
         if (player == null) {
@@ -111,11 +123,15 @@ public class TurnTicket {
     }
 
     /**
-     * Applies a bonus or a malus to the specified player based on their position in the turn order.
-     * The last player in the order receives a malus, while the others receive a food bonus
-     * depending on their specific position.
+     * Applies the effect associated with a player's new turn-order position.
      *
-     * @param player the {@link Player} receiving the malus or bonus
+     * <p>The player in the last slot pays one food, or loses two prestige points
+     * when no food is available. Every other position is delegated to the
+     * player-count-specific {@link TurnOrderEffect}, which grants the applicable
+     * food bonus. The track must have been initialized and the player is expected
+     * to be present in it.</p>
+     *
+     * @param player player whose position effect must be resolved
      */
     public void giveMalusOrBonus(Player player) {
         int playerPosition = this.turnOrder.indexOf(player);
@@ -127,15 +143,24 @@ public class TurnTicket {
         }
     }
 
+    /**
+     * Returns the player stored in the first turn-order slot.
+     *
+     * @return the first player, possibly {@code null} if the track has been cleared
+     * @throws IndexOutOfBoundsException if the turn-order list is empty
+     */
     public Player getFirstPlayerFirstPhase(){
         return turnOrder.get(0);
     }
 
     /**
-     * Adds a player to the turn order.
-     * The player is inserted into the first available {@code null} position found in the list.
+     * Inserts a player into the first available turn-order slot.
      *
-     * @param player the {@link Player} to add
+     * <p>An available slot is represented by {@code null}. If no such slot
+     * exists, the method leaves the list unchanged.</p>
+     *
+     * @param player player to insert; a {@code null} value leaves the selected
+     *        slot empty
      */
     public void addPlayer(Player player) {
         for (int i = 0; i < turnOrder.size(); i++) {
@@ -147,8 +172,10 @@ public class TurnTicket {
     }
 
     /**
-     * Removes the first valid player found in the turn order.
-     * The first non-{@code null} player in the sequence is replaced with {@code null}.
+     * Clears all occupied turn-order slots without changing the track size.
+     *
+     * <p>Every non-{@code null} entry is replaced with {@code null}, preparing
+     * the track to receive players in their second-phase completion order.</p>
      */
     public void removePlayerFromTurnTicket() {
         for (int i = 0; i < turnOrder.size(); i++) {

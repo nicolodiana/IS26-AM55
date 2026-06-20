@@ -11,44 +11,49 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * The {@code BiddingTrail} class manages the sequence of bidding tickets available in the game.
- * It is responsible for setting up the trail based on the number of players, keeping track of
- * player positions on the trail, and determining turn order for the second phase of the game.
+ * Manages the ordered offer spaces on which players place their totems.
+ *
+ * The active trail is built from the seven predefined tickets labelled
+ * {@code A} through {@code G}. Tickets whose minimum player requirement is not
+ * met are omitted, while the remaining tickets are kept in left-to-right
+ * alphabetical order. During card selection, the first occupied ticket from
+ * the left identifies the next player to act.
  */
 public class BiddingTrail {
+
+    /**
+     * Active tickets in their left-to-right trail order.
+     */
     private List<BiddingTicket> ticketList;
 
     /**
-     * Default constructor.
-     * Initializes an empty bidding trail.
+     * Creates a bidding trail with no active tickets.
      */
     public BiddingTrail() {
         ticketList = new ArrayList<BiddingTicket>();
     }
 
     /**
-     * Initializes the bidding trail by generating all possible tickets, filtering them
-     * based on the number of players, and sorting them according to their trail placement.
+     * Builds the active trail for the supplied player count.
      *
-     * @param numPlayers the total number of players in the game
+     * The method recreates all predefined tickets, retains those whose
+     * minimum player count is less than or equal to {@code numPlayers}, and
+     * orders them by their placement letter.
+     *
+     * @param numPlayers number of players in the game
      */
     public void initBiddingTrail(int numPlayers) {
         ticketList = setUpBiddingTrail(createAllBiddingTicket(), numPlayers);
     }
 
-    //TestHelper
-//    public List<BiddingTicket> getTicketList(){
-//        return ticketList;
-//    }
-
-    /*public List<BiddingTicket> getTicketList() {
-        return ticketList;
-    }*/
-
     /**
-     * Creates and returns a complete list of all possible bidding tickets in the game.
+     * Creates the complete set of offer tickets defined by the game rules.
      *
-     * @return a {@code List<BiddingTicket>} containing all predefined tickets
+     * The returned list contains tickets {@code A-G}, including their food
+     * rewards, upper-row allowances, lower-row allowances, and minimum player
+     * counts.
+     *
+     * @return a new mutable list containing every predefined ticket
      */
     private List<BiddingTicket> createAllBiddingTicket() {
         List<BiddingTicket> allBiddingTicket = new ArrayList<>();
@@ -64,33 +69,30 @@ public class BiddingTrail {
     }
 
     /**
-     * Filters and sorts the provided list of bidding tickets to set up the active trail.
-     * Tickets are filtered out if their required player count is greater than the actual
-     * number of players, and the remaining tickets are sorted alphabetically by their placement.
+     * Selects the tickets available for a game and orders them by placement.
      *
-     * @param allBiddingTicket the list of all available bidding tickets
-     * @param numPlayer        the current number of players in the game
-     * @return a filtered and sorted {@code List<BiddingTicket>} for the active trail
+     * @param allBiddingTicket complete collection of predefined tickets
+     * @param numPlayer number of players in the current game
+     * @return tickets whose minimum player count is satisfied, ordered from
+     *         {@code A} to {@code G}
      */
     private List<BiddingTicket> setUpBiddingTrail(List<BiddingTicket> allBiddingTicket, int numPlayer) {
-        // select only the biddinTicket needed and set them by TrailPlacement
         return allBiddingTicket.stream()
                 .filter(b -> b.getNumPlayer() <= numPlayer)
                 .sorted(Comparator.comparing(BiddingTicket::getTrailPlacement))
                 .toList();
     }
 
-    /*public void movePlayerToBiddingTrail(Player player, int index) {
-        ticketList.get(index).setPlayer(player);
-    }*/
-
     /**
-     * Determines the next player to take a turn during the second phase by looking ahead
-     * on the bidding trail from the current player's position.
+     * Finds the next player who must resolve an offer action.
      *
+     * The trail is scanned from left to right and the first occupied ticket
+     * is returned. In the normal game flow, the player who has just completed
+     * an action is removed before this method is called, so the result is the
+     * next remaining player.
      *
-     * @return an {@link Optional} containing the next {@link Player} on the trail,
-     * or an empty Optional if no subsequent players are found
+     * @return the first player still present on the trail, or an empty optional
+     *         if every ticket is free
      */
     public Optional<Player> nextPlayerSecondPhase() {
         for(BiddingTicket b : ticketList){
@@ -103,12 +105,12 @@ public class BiddingTrail {
     }
 
     /**
-     * Finds the index of the specified player on the active bidding trail.
+     * Returns the position of a player on the active trail.
      *
-     * @param player the {@link Player} to locate
-     * @return the integer index of the ticket held by the player
-     * @throws IllegalArgumentException if the provided player is null
-     * @throws PlayerNotOnTrail if the player is not currently holding any ticket on the trail
+     * @param player player whose occupied ticket must be located
+     * @return zero-based index of the ticket occupied by {@code player}
+     * @throws IllegalArgumentException if {@code player} is {@code null}
+     * @throws PlayerNotOnTrail if no ticket contains the supplied player reference
      */
     public int getPlayerPositionOnTrail(Player player) throws PlayerNotOnTrail {
         if (player == null) {
@@ -123,18 +125,11 @@ public class BiddingTrail {
         }
     }
 
-    /*public void clearBiddingTrail() {
-        for (BiddingTicket biddingTicket : ticketList) {
-            setIsTaken(ticketList.indexOf(biddingTicket), false);
-        }
-    }*/
-
     /**
-     * Finds the first player present on the bidding trail.
-     * This player will be the first to act during the second phase.
+     * Returns the player occupying the leftmost taken ticket.
      *
-     * @return the first {@link Player} found on the trail
-     * @throws IllegalStateException if the trail is empty or no players are on the trail
+     * @return the first player in second-phase order
+     * @throws IllegalStateException if no active ticket is occupied
      */
     public Player getFirstPlayerSecondPhase() {
         for (int i = 0; i < ticketList.size(); i++) {
@@ -146,17 +141,13 @@ public class BiddingTrail {
         throw new IllegalStateException("No player found");
     }
 
-    /*private void setIsTaken(int index, boolean taken) {
-        ticketList.get(index).setIsTaken(taken);
-    }*/
-
     /**
-     * Assigns a player to the bidding ticket at the specified index.
+     * Assigns a player to the ticket at the specified trail position.
      *
-     * @param index  the index of the ticket on the trail
-     * @param player the {@link Player} taking the ticket
-     * @throws BiddingTicketIsTaken  if the ticket at the specified index is already taken
-     * @throws IndexOutOfBoundsException if the index is outside the bounds of the trail
+     * @param index zero-based index of the ticket to occupy
+     * @param player player to place on the selected ticket
+     * @throws BiddingTicketIsTaken if the selected ticket is already occupied
+     * @throws IndexOutOfBoundsException if {@code index} is outside the active trail
      */
     public void setPlayer(int index, Player player) throws BiddingTicketIsTaken, IndexOutOfBoundsException {
         if (index < 0 || index > ticketList.size() - 1) {
@@ -166,18 +157,13 @@ public class BiddingTrail {
         }
     }
 
-    /*public int getFoodBonus(Player player){
-        int index = getPlayerPositionOnTrail(player);
-        return ticketList.get(index).getFoodBonus();
-    }*/
-
     /**
-     * Gets the number of upper cards the specified player is allowed to choose,
-     * based on their current ticket on the trail.
+     * Returns the upper-row allowance of the ticket occupied by a player.
      *
-     * @param player the {@link Player} whose ticket is being checked
-     * @return the number of upper cards allowed
-     * @throws PlayerNotOnTrail if the player is not on the trail
+     * @param player player whose ticket must be inspected
+     * @return number of cards the player may take from the upper row
+     * @throws IllegalArgumentException if {@code player} is {@code null}
+     * @throws PlayerNotOnTrail if the player does not occupy an active ticket
      */
     public int getChooseUpperCard(Player player) {
         int index = getPlayerPositionOnTrail(player);
@@ -185,12 +171,12 @@ public class BiddingTrail {
     }
 
     /**
-     * Gets the number of lower cards the specified player is allowed to choose,
-     * based on their current ticket on the trail.
+     * Returns the lower-row allowance of the ticket occupied by a player.
      *
-     * @param player the {@link Player} whose ticket is being checked
-     * @return the number of lower cards allowed
-     * @throws PlayerNotOnTrail if the player is not on the trail
+     * @param player player whose ticket must be inspected
+     * @return number of cards the player may take from the lower row
+     * @throws IllegalArgumentException if {@code player} is {@code null}
+     * @throws PlayerNotOnTrail if the player does not occupy an active ticket
      */
     public int getChooseLowerCard(Player player) {
         int index = getPlayerPositionOnTrail(player);
@@ -198,30 +184,29 @@ public class BiddingTrail {
     }
 
     /**
-     * Removes the specified player from their current bidding ticket, freeing it up.
+     * Releases the ticket currently occupied by the supplied player.
      *
-     * @param player the {@link Player} to remove from the trail
-     * @throws PlayerNotOnTrail if the player is not currently on the trail
+     * @param player player to remove from the trail
+     * @throws IllegalArgumentException if {@code player} is {@code null}
+     * @throws PlayerNotOnTrail if the player does not occupy an active ticket
      */
     public void removePlayer(Player player) {
         ticketList.get(getPlayerPositionOnTrail(player)).removePlayer();
     }
 
-    /*public List<Integer> getTicketIds() {
-        List<Integer> listOfIds = new ArrayList<>();
-
-        for (BiddingTicket ticket : this.ticketList) {
-            listOfIds.add(ticket.getId());
-        }
-
-        if (listOfIds != null) {
-            return listOfIds;
-        }
-        return null;
-    }*/
+    /**
+     * Removes every ticket from the active trail by clearing the internal list.
+     *
+     */
     public void removeAllPlayers() {
         ticketList.clear();
     }
+
+    /**
+     * Returns the internal list of active bidding tickets.
+     *
+     * @return the active tickets in trail order
+     */
     public List<BiddingTicket> getTicketList() {
         return ticketList;
     }
