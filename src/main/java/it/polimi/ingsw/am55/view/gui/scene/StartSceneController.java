@@ -38,6 +38,23 @@ public class StartSceneController implements GenericSceneController {
     }
 
     public void showMessage(String message) {
-        statusLabel.setText(message);
+        showStatus(message);
+    }
+
+    @Override
+    public void showStatus(String message) {
+        statusLabel.setText(message == null ? "" : message);
+    }
+
+    @Override
+    public void showError(String message) {
+        statusLabel.setText(message == null || message.isBlank() ? "" : "Errore: " + message);
+        startButton.setDisable(false);
+    }
+
+    @Override
+    public void lockInteractions(String message) {
+        startButton.setDisable(true);
+        showStatus(message);
     }
 }

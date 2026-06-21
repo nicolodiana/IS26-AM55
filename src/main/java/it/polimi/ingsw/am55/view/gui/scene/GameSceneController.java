@@ -76,18 +76,21 @@ public class GameSceneController implements GenericSceneController {
         updateInstruction(action, gameView, myPlayerId, locked);
     }
 
+    @Override
     public void showStatus(String message) {
         statusLabel.getStyleClass().removeAll("error-text", "info-text");
         statusLabel.getStyleClass().add("info-text");
         statusLabel.setText(message == null ? "" : message);
     }
 
+    @Override
     public void showError(String message) {
         statusLabel.getStyleClass().removeAll("error-text", "info-text");
         statusLabel.getStyleClass().add("error-text");
         statusLabel.setText(message == null ? "" : message);
     }
 
+    @Override
     public void lockInteractions(String message) {
         this.mode = GuiInteractionMode.LOCKED;
         disableChildrenClicks(biddingTrailBox);

@@ -1,6 +1,11 @@
 package it.polimi.ingsw.am55.dto.ClientCards;
 
 import it.polimi.ingsw.am55.dto.CardView;
+import it.polimi.ingsw.am55.view.cli.CliCardDetails;
+import it.polimi.ingsw.am55.view.cli.CliCardInfo;
+import it.polimi.ingsw.am55.view.cli.ConsoleColor;
+
+import java.util.List;
 
 public class PaintingsEventView extends CardView {
     private int upperPP;
@@ -24,5 +29,16 @@ public class PaintingsEventView extends CardView {
                 "\nLower PP: " + lowerPP +
                 "\nUpperNumberOfArtist: " + upperNumberOfArtist +
                 "\nLowerNumberOfArtist: " + lowerNumberOfArtist;
+    }
+
+    public CliCardInfo getCliCardInfo() {
+        return new CliCardInfo(
+                "EVENT",
+                ConsoleColor.RED_BOLD,
+                List.of(
+                        new CliCardDetails("Type", "Paintings Event"),
+                        new CliCardDetails("Info", this.toString())
+                )
+        );
     }
 }

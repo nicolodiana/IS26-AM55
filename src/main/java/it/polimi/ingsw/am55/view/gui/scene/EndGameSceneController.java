@@ -104,7 +104,18 @@ public class EndGameSceneController implements GenericSceneController {
         guiView.refreshCurrentScene();
     }
 
+    @Override
     public void showStatus(String message) {
         statusLabel.setText(message == null ? "" : message);
+    }
+
+    @Override
+    public void showError(String message) {
+        showStatus(message == null || message.isBlank() ? "" : "Errore: " + message);
+    }
+
+    @Override
+    public void lockInteractions(String message) {
+        // Schermata finale: non ci sono interazioni di gioco da bloccare.
     }
 }

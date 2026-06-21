@@ -21,6 +21,7 @@ public final class SceneManager {
     private static Scene activeScene;
     private static GenericSceneController activeController;
     private static String currentFxml;
+    private static GuiSceneType currentSceneType;
     private static GuiView guiView;
 
     private SceneManager() {
@@ -39,42 +40,55 @@ public final class SceneManager {
         return currentFxml;
     }
 
+    public static GuiSceneType getCurrentSceneType() {
+        return currentSceneType;
+    }
+
+    public static boolean isCurrentScene(GuiSceneType sceneType) {
+        return currentSceneType == sceneType;
+    }
+
     public static Stage getMainStage() {
         return mainStage;
     }
 
     public static void showStartScene() {
-        changeRoot("/it/polimi/ingsw/am55/fxml/StartScene.fxml");
+        changeRoot(GuiSceneType.START);
     }
 
     public static void showLobbyScene() {
-        changeRoot("/it/polimi/ingsw/am55/fxml/LobbyScene.fxml");
+        changeRoot(GuiSceneType.LOBBY);
     }
 
     public static void showGameScene() {
-        changeRoot("/it/polimi/ingsw/am55/fxml/GameScene.fxml");
+        changeRoot(GuiSceneType.GAME);
     }
 
     public static void showGameSceneIfNeeded() {
-        if (!"/it/polimi/ingsw/am55/fxml/GameScene.fxml".equals(currentFxml)) {
-            showGameScene();
-        }
+        showSceneIfNeeded(GuiSceneType.GAME);
     }
 
     public static void showLobbySceneIfNeeded() {
-        if (!"/it/polimi/ingsw/am55/fxml/LobbyScene.fxml".equals(currentFxml)) {
-            showLobbyScene();
-        }
+        showSceneIfNeeded(GuiSceneType.LOBBY);
     }
+
     public static void showQuitGameScene() {
-        changeRoot("/it/polimi/ingsw/am55/fxml/QuitGameScene.fxml");
+        changeRoot(GuiSceneType.QUIT_GAME);
     }
 
     public static void showEndGameScene() {
-        changeRoot("/it/polimi/ingsw/am55/fxml/EndGameScene.fxml");
+        changeRoot(GuiSceneType.END_GAME);
     }
 
-    private static void changeRoot(String fxmlPath) {
+    private static void showSceneIfNeeded(GuiSceneType sceneType) {
+        if (currentSceneType != sceneType) {
+            changeRoot(sceneType);
+        }
+    }
+
+    private static void changeRoot(GuiSceneType sceneType) {
+        String fxmlPath = sceneType.getFxmlPath();
+
         try {
             URL url = SceneManager.class.getResource(fxmlPath);
             if (url == null) {
@@ -94,6 +108,7 @@ public final class SceneManager {
             sceneController.setGuiView(guiView);
             activeController = sceneController;
             currentFxml = fxmlPath;
+            currentSceneType = sceneType;
 
             if (activeScene == null) {
                 activeScene = new Scene(root);

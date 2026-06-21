@@ -51,7 +51,7 @@ public class LobbySceneController implements GenericSceneController {
             return;
         }
 
-        lock("Creating the game");
+        lockInteractions("Creating the game");
         guiView.createGame(nickname, totem, numPlayers);
     }
 
@@ -63,7 +63,7 @@ public class LobbySceneController implements GenericSceneController {
         if (!validateNickname(nickname) || totem == null) {
             return;
         }
-        lock("Joining the game");
+        lockInteractions("Joining the game");
         guiView.joinGame(nickname, totem);
     }
 
@@ -199,12 +199,18 @@ public class LobbySceneController implements GenericSceneController {
     }
 
     public void showMessage(String message) {
+        showStatus(message);
+    }
+
+    @Override
+    public void showStatus(String message) {
         //setLocked(false);
         statusLabel.getStyleClass().removeAll("error-text", "info-text");
         statusLabel.getStyleClass().add("info-text");
         statusLabel.setText(message == null ? "" : message);
     }
 
+    @Override
     public void showError(String message) {
         setLocked(false);
         statusLabel.getStyleClass().removeAll("error-text", "info-text");
@@ -213,6 +219,11 @@ public class LobbySceneController implements GenericSceneController {
     }
 
     public void lock(String message) {
+        lockInteractions(message);
+    }
+
+    @Override
+    public void lockInteractions(String message) {
         setLocked(true);
         statusLabel.getStyleClass().removeAll("error-text", "info-text");
         statusLabel.getStyleClass().add("info-text");

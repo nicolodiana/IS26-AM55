@@ -29,22 +29,15 @@ public class DatabaseManger implements GameRepository {
      *
      */
     public DatabaseManger() {
-        System.out.println(">>> COSTRUTTORE DatabaseManger CHIAMATO");
-
         try {
-            conn = DriverManager.getConnection(
-                    "jdbc:mysql://127.0.0.1:3306/db_mesos?useSSL=false&serverTimezone=UTC",
-                    "root",
-                    "root"
-            );
-
-            System.out.println(">>> CONNESSIONE MYSQL OK: " + (conn != null));
-
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbmesos", "root", "root");
         } catch (SQLException e) {
-            System.err.println("[DATABASE] Impossibile collegarsi alla base di dati");
+            System.err.println("[DATABASE] Impossibile collegarsi alla base di dati: " + e.getMessage());
+            System.out.println("[ERRORE CONNESSIONE MYSQL]");
             e.printStackTrace();
         }
     }
+
     /**
      * Registers the final result of a player for a specific game.
      *
