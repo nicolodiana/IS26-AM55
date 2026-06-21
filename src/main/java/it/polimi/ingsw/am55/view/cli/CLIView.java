@@ -69,7 +69,7 @@ public class CLIView implements ClientModelObserver {
         //sincronizzo schermata lobby in base alle scelte gia fatte in precedenza da altri player (se esistono)
         //poi dopo on model changed del Lobby Status Message vedrò la schermata lobby coerente
         System.out.println(ConsoleColor.YELLOW_BOLD
-                + "Sincronizzazione lobby con il server..."
+                + "SYNCRONIZED LOBBY WITH SERVER STATE "
                 + ConsoleColor.RESET);
 
         Thread inputThread = new Thread(this::inputLoop);
