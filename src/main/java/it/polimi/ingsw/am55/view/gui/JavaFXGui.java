@@ -8,11 +8,11 @@ import javafx.application.Platform;
 import javafx.stage.Stage;
 
 /**
- * Entry point JavaFX della GUI.
- *
- * Importante: questa classe NON sceglie RMI/Socket e NON crea il client di rete.
- * Il Client.main crea già ClientModel, ClientCommands e ClientController; poi passa
- * model + actionHandler + client alla GUI tramite launchGui(...).
+ * JavaFX application entry point for the GUI client.
+ * <p>
+ * Network objects are created by the regular client bootstrap. This class only
+ * receives them through {@link #launchGui(ClientModel, UserActionHandler, ClientImpl)}
+ * and wires them into the JavaFX view.
  */
 public class JavaFXGui extends Application {
 
@@ -21,41 +21,35 @@ public class JavaFXGui extends Application {
     private static ClientImpl bootstrapClient;
 
     /**
-     * Avvia JavaFX usando oggetti già creati dal Client.main.
+     * Launches JavaFX using the already-created client dependencies.
+     *
+     * @param model observed client model
+     * @param actionHandler command handler used by the view
+     * @param client network client that connects to the server
      */
-    public static void launchGui(
-            ClientModel model,
-            UserActionHandler actionHandler,
-            ClientImpl client
-    ) {
+    public static void launchGui(ClientModel model, UserActionHandler actionHandler, ClientImpl client) {
         bootstrapModel = model;
         bootstrapActionHandler = actionHandler;
         bootstrapClient = client;
-
         Application.launch(JavaFXGui.class);
     }
 
+    /**
+     * Initializes the stage, registers the GUI observer, and starts the network connection.
+     */
     @Override
     public void start(Stage stage) {
         if (bootstrapModel == null || bootstrapActionHandler == null || bootstrapClient == null) {
             throw new IllegalStateException(
-                    "JavaFXGui deve essere avviata con launchGui(model, actionHandler, client)."
+                    "JavaFXGui must be started with launchGui(model, actionHandler, client)."
             );
         }
 
         GuiView guiView = new GuiView(bootstrapModel);
         guiView.setActionHandler(bootstrapActionHandler);
-
-        /*
-         * Fondamentale:
-         * la GUI deve diventare observer PRIMA della connect(),
-         * perché connect() manda RegisterLobbyCommand e il server risponde
-         * con LobbyStatusMessage.
-         */
         bootstrapModel.addObserver(guiView);
 
         SceneManager.init(stage, guiView);
-
         stage.setTitle("AM55 - Mesos");
         stage.setMinWidth(1150);
         stage.setMinHeight(760);
@@ -65,17 +59,19 @@ public class JavaFXGui extends Application {
         });
 
         guiView.showInitialScene();
+        startConnectionThread();
+    }
 
-        /*
-         * La connect parte solo ora, quando la GuiView è già observer.
-         * Uso un thread separato per non bloccare il thread JavaFX.
-         */
+    /**
+     * Connects the network client without blocking the JavaFX application thread.
+     */
+    private void startConnectionThread() {
         Thread connectThread = new Thread(() -> {
             try {
                 bootstrapClient.connect();
             } catch (Exception e) {
                 Platform.runLater(() -> {
-                    System.err.println("[GUI] Errore durante la connessione: " + e.getMessage());
+                    System.err.println("[GUI] Connection error: " + e.getMessage());
                     e.printStackTrace();
                 });
             }

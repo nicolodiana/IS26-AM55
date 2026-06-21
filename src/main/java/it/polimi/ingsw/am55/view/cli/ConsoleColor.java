@@ -1,6 +1,12 @@
 package it.polimi.ingsw.am55.view.cli;
 
-public class ConsoleColor {
+/**
+ * ANSI color constants used by the command-line renderer.
+ * <p>
+ * The constants keep terminal styling out of the rendering logic and provide a
+ * single mapping between Mesos totem colors and terminal colors.
+ */
+public final class ConsoleColor {
 
     public static final String RESET = "\033[0m";
 
@@ -35,6 +41,12 @@ public class ConsoleColor {
     private ConsoleColor() {
     }
 
+    /**
+     * Returns the terminal color used for a totem color name.
+     *
+     * @param color totem color stored in the DTO
+     * @return ANSI color code for the totem
+     */
     public static String totemColor(String color) {
         if (color == null) {
             return WHITE_BRIGHT;

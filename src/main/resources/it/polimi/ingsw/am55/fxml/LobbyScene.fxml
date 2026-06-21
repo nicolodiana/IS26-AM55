@@ -26,7 +26,7 @@
             <left>
                 <VBox spacing="8">
                     <Label text="AM55 - Mesos" styleClass="main-title" />
-                    <Label text="Crea una partita o unisciti alla lobby già aperta sul server."
+                    <Label text="Create a game or join the open lobby on the server."
                            styleClass="subtitle" />
                 </VBox>
             </left>
@@ -43,15 +43,15 @@
     <center>
         <HBox alignment="CENTER" spacing="36">
             <VBox spacing="18" styleClass="card-panel" maxWidth="520">
-                <Label text="Dati giocatore" styleClass="section-title" />
+                <Label text="Player Details" styleClass="section-title" />
 
                 <VBox spacing="6">
                     <Label text="Nickname" />
-                    <TextField fx:id="nicknameField" promptText="es. nico" />
+                    <TextField fx:id="nicknameField" promptText="e.g. nico" />
                 </VBox>
 
                 <VBox spacing="6">
-                    <Label text="Colore totem" />
+                    <Label text="Totem Color" />
                     <ComboBox fx:id="totemComboBox" maxWidth="Infinity" />
                 </VBox>
 
@@ -60,16 +60,15 @@
                 <Separator />
 
                 <VBox spacing="6">
-                    <Label text="Numero giocatori per creare una nuova partita" />
+                    <Label text="Number of players for a new game" />
                     <Spinner fx:id="numPlayersSpinner" editable="true" />
                 </VBox>
 
                 <HBox spacing="12">
-                    <Button fx:id="createButton" text="Crea partita" onAction="#onCreateButtonClick" styleClass="primary-button" />
-                    <Button fx:id="joinButton" text="Unisciti" onAction="#onJoinButtonClick" styleClass="secondary-button" />
+                    <Button fx:id="createButton" text="Create Game" onAction="#onCreateButtonClick" styleClass="primary-button" />
+                    <Button fx:id="joinButton" text="Join" onAction="#onJoinButtonClick" styleClass="secondary-button" />
                     <Region HBox.hgrow="ALWAYS" />
                 </HBox>
-
 
                 <Label fx:id="statusLabel" wrapText="true" styleClass="info-text" />
             </VBox>

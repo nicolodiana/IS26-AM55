@@ -280,7 +280,7 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 server.close();
             }catch(Exception e){}
             System.out.println("[CLIENT_IMPL] I close the client.");
-            System.exit(0);
+            //System.exit(0);
 
     }
 

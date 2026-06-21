@@ -24,6 +24,7 @@ public class ClientModel implements  ClientModelUpdater {
     private boolean commandDone = false;
     private boolean inLobby = true;
     private LobbyView lobbyView;
+    private MessageToClient lastMessage;
 
     private final List<ClientModelObserver> observers;
     private final List<CardView> myHand;
@@ -47,8 +48,17 @@ public class ClientModel implements  ClientModelUpdater {
          *
          * Dopo l'update notifico gli observer.
          */
+        synchronized (lock) {
+            this.lastMessage = message;
+        }
         message.update(this);
         notifyObservers();
+    }
+
+    public MessageToClient getLastMessage() {
+        synchronized (lock) {
+            return lastMessage;
+        }
     }
 
     public void setGameEnded(boolean gameEnded) {

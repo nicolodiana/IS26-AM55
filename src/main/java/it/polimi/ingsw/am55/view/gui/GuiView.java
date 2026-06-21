@@ -6,19 +6,35 @@ import it.polimi.ingsw.am55.controller.UserActionHandler;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.LobbyView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
+import it.polimi.ingsw.am55.message.ConnectionLostMessage;
+import it.polimi.ingsw.am55.message.GameCrashedBroadcast;
+import it.polimi.ingsw.am55.message.MessageToClient;
+import it.polimi.ingsw.am55.message.QuitGameMessage;
+import it.polimi.ingsw.am55.message.QuitLobbyMessage;
 import it.polimi.ingsw.am55.view.ClientAction;
 import it.polimi.ingsw.am55.view.ClientActionResolver;
 import it.polimi.ingsw.am55.view.ClientModelObserver;
-import it.polimi.ingsw.am55.view.gui.scene.*;
+import it.polimi.ingsw.am55.view.gui.scene.EndGameSceneController;
+import it.polimi.ingsw.am55.view.gui.scene.GameSceneController;
+import it.polimi.ingsw.am55.view.gui.scene.GenericSceneController;
+import it.polimi.ingsw.am55.view.gui.scene.LobbySceneController;
+import it.polimi.ingsw.am55.view.gui.scene.QuitGameSceneController;
 import javafx.application.Platform;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * JavaFX implementation of the client view.
+ * <p>
+ * This class observes {@link ClientModel}, chooses the correct scene, and delegates
+ * rendering details to FXML controllers. Controller commands are executed on a
+ * dedicated background thread so the JavaFX application thread stays responsive.
+ */
 public class GuiView implements ClientModelObserver {
 
-    private static final String EVENT_RESOLUTION_START_MESSAGE = "Inizia la risoluzione degli eventi...";
+    private static final String EVENT_RESOLUTION_START_MESSAGE = "Event resolution is starting...";
 
     private final ClientModel model;
     private final ClientActionResolver actionResolver;
@@ -34,10 +50,14 @@ public class GuiView implements ClientModelObserver {
     private volatile LobbyView currentLobbyView;
     private volatile boolean startGameRequested;
 
+    /**
+     * Creates a GUI view bound to a client model.
+     *
+     * @param model observed client model
+     */
     public GuiView(ClientModel model) {
         this.model = Objects.requireNonNull(model, "model");
         this.actionResolver = new ClientActionResolver();
-        this.startGameRequested = false;
         this.commandExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread thread = new Thread(r);
             thread.setName("GUI-Command-Thread");
@@ -46,17 +66,34 @@ public class GuiView implements ClientModelObserver {
         });
     }
 
+    /**
+     * Injects the command handler used to send player actions to the server.
+     *
+     * @param actionHandler controller-facing action handler
+     */
     public void setActionHandler(UserActionHandler actionHandler) {
         this.actionHandler = actionHandler;
     }
 
+    /**
+     * Returns the nickname selected by the local player.
+     *
+     * @return local player nickname, or {@code null} before create/join
+     */
     public String getPlayerId() {
         return playerId;
     }
 
+    /**
+     * Shows the start scene on the JavaFX application thread.
+     */
     public void showInitialScene() {
         Platform.runLater(SceneManager::showStartScene);
     }
+
+    /**
+     * Lets the player leave the splash scene and synchronize with the lobby state.
+     */
     public void startGameFromInitialScene() {
         startGameRequested = true;
 
@@ -67,80 +104,43 @@ public class GuiView implements ClientModelObserver {
         }
 
         if (SceneManager.isCurrentScene(GuiSceneType.START)) {
-            showInfo("Sincronizzazione lobby con il server...");
+            showInfo("Synchronizing lobby with the server...");
         }
     }
 
+    /**
+     * Receives model updates and refreshes the correct scene.
+     */
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         Platform.runLater(() -> {
-
-            /*
-             * Stato PRECEDENTE della GuiView.
-             * Serve per capire se il QuitLobbyMessage che sta arrivando
-             * deriva da auto-quit perché la partita era già iniziata.
-             */
-            boolean wasInLobbyWithStartedGame =
-                    inLobby
-                            && currentLobbyView != null
-                            && currentLobbyView.getGameState() != null
-                            && currentLobbyView.getGameState() != GameState.CREATED;
-
             waitingServerResponse = false;
-
             currentErrorMessage = updatedModel.getLastError();
             currentInfoMessage = updatedModel.getStateRequest();
             currentGameView = updatedModel.getGameView();
             inLobby = updatedModel.isInLobby();
             currentLobbyView = updatedModel.getLobbyView();
 
-            /*
-             * Caso importante:
-             * arriva il QuitLobbyMessage dopo che avevamo visto una lobby
-             * con partita già iniziata.
-             *
-             * Quindi NON torno in lobby.
-             * Mostro la QuitGameScene con il messaggio del quit + motivo.
-             */
-            if (wasInLobbyWithStartedGame
-                    && currentInfoMessage != null
-                    && currentInfoMessage.toLowerCase().contains("uscito correttamente")) {
-                showTerminalMessage(
-                        currentInfoMessage
-                                + "\nPerché la partita è già iniziata e non accetta altri giocatori."
-                );
+            MessageToClient lastMessage = updatedModel.getLastMessage();
+            if (lastMessage instanceof QuitGameMessage
+                    || lastMessage instanceof QuitLobbyMessage
+                    || lastMessage instanceof GameCrashedBroadcast
+                    || lastMessage instanceof ConnectionLostMessage) {
+                showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "Disconnected from the server."));
                 return;
             }
 
-            /*
-             * Se siamo già nella schermata terminale di quit/crash,
-             * non dobbiamo più ricalcolare lo stato e tornare in lobby.
-             */
             if (SceneManager.isCurrentScene(GuiSceneType.QUIT_GAME)) {
-                GenericSceneController controller = SceneManager.getActiveController();
-
-                if (controller != null) {
-                    if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
-                        controller.showStatus(currentErrorMessage);
-                    } else if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
-                        controller.showStatus(currentInfoMessage);
-                    }
-                }
-
+                updateTerminalStatus();
                 return;
             }
 
-            /*
-             * StartScene:
-             * se non ho ancora premuto INIZIA GIOCO, non cambio scena.
-             */
             if (!startGameRequested && inLobby) {
                 if (SceneManager.isCurrentScene(GuiSceneType.START)
                         && currentInfoMessage != null
                         && !currentInfoMessage.isBlank()) {
-                    showInfo("CLICK BUTTON TO START  ");
+                    showInfo("Press START GAME to enter the lobby.");
                 }
-
                 return;
             }
 
@@ -148,143 +148,122 @@ public class GuiView implements ClientModelObserver {
             showPendingMessages();
         });
     }
-    //per gestire caso mi provo ad unire con partita in corso
+
+    /**
+     * Updates the terminal scene without navigating away from it.
+     */
+    private void updateTerminalStatus() {
+        GenericSceneController controller = SceneManager.getActiveController();
+        if (controller == null) {
+            return;
+        }
+        if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
+            controller.showStatus(currentErrorMessage);
+        } else if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
+            controller.showStatus(currentInfoMessage);
+        }
+    }
+
+    /**
+     * Checks whether the lobby is already past the joinable CREATED state.
+     */
     private boolean isLobbyGameAlreadyStarted() {
         return currentLobbyView != null
                 && currentLobbyView.getGameState() != null
                 && currentLobbyView.getGameState() != GameState.CREATED;
     }
-    //anche questo x gestire unione con partita in corso
+
+    /**
+     * Leaves the lobby automatically when the server says the game has already started.
+     */
     private void leaveLobbyBecauseGameAlreadyStarted() {
         if (waitingServerResponse || actionHandler == null) {
             return;
         }
 
         waitingServerResponse = true;
-
         commandExecutor.submit(() -> {
             try {
                 actionHandler.onQuitSelectedLobby();
             } catch (RuntimeException e) {
                 Platform.runLater(() -> {
                     waitingServerResponse = false;
-                    showTerminalMessage("Errore durante l'uscita dalla lobby: " + e.getMessage());
+                    showTerminalMessage("Error while leaving the lobby: " + e.getMessage());
                 });
             }
         });
     }
 
+    /**
+     * Routes the current model snapshot to the proper scene.
+     */
     private void renderCurrentState() {
-        /*
-         * Gestione crash/connessione persa.
-         * Deve avere priorità su lobby/game/endgame.
-         */
-        ClientAction crashAction = actionResolver.resolve(
-                currentGameView,
-                playerId,
-                inLobby,
-                model.isGameCrashed()
-        );
-
+        ClientAction crashAction = actionResolver.resolve(currentGameView, playerId, inLobby, model.isGameCrashed());
         if (crashAction == ClientAction.CRASHED) {
-            showTerminalMessage(
-                    currentInfoMessage != null && !currentInfoMessage.isBlank()
-                            ? currentInfoMessage
-                            : "Connessione chiusa."
-            );
+            showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "The connection is closed."));
             return;
         }
 
-        /*
-         * IMPORTANTE:
-         * Questo controllo deve stare prima del resolver di game.
-         * Se sei ancora in lobby, non devi calcolare action di board.
-         */
         if (inLobby) {
             if (isLobbyGameAlreadyStarted()) {
                 leaveLobbyBecauseGameAlreadyStarted();
                 return;
             }
-
             showLobby(false);
             return;
         }
-        EndGameResultView result = model.getEndGameResultView();
 
+        EndGameResultView result = model.getEndGameResultView();
         if (result != null) {
             showEndGame(result);
             return;
         }
 
-        /*
-         * IMPORTANTE:
-         * Qui il terzo parametro deve essere false.
-         * Siamo già fuori lobby, quindi il resolver deve calcolare
-         * PLACE_TOTEM / PICK_CARD / PICK_SPECIAL / WAITING_FOR_TURN ecc.
-         */
-        ClientAction action = actionResolver.resolve(
-                currentGameView,
-                playerId,
-                false,
-                model.isGameCrashed()
-        );
-
+        ClientAction action = actionResolver.resolve(currentGameView, playerId, false, model.isGameCrashed());
         switch (action) {
             case LOBBY -> showLobby(false);
-
             case WAITING_TO_START -> showLobby(true);
-
             case END_GAME -> {
                 EndGameResultView endGameResult = model.getEndGameResultView();
-
                 if (endGameResult != null) {
                     showEndGame(endGameResult);
                 } else {
-                    showTerminalMessage(
-                            currentInfoMessage != null && !currentInfoMessage.isBlank()
-                                    ? currentInfoMessage
-                                    : "Partita terminata."
-                    );
+                    showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "The game has ended."));
                 }
             }
-
-            case CRASHED -> showTerminalMessage(
-                    currentInfoMessage != null && !currentInfoMessage.isBlank()
-                            ? currentInfoMessage
-                            : "Connessione chiusa."
-            );
-
+            case CRASHED -> showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "The connection is closed."));
             default -> showGame(currentGameView, action);
         }
     }
 
-    //usato sia per crash sia per quit, la gestione è analoga di cambio di scena, è una schermata standard che mostra il messaggio finale con spiegazione della chiusura di gioco
+    /**
+     * Shows the terminal scene used for quit and crash messages.
+     */
     private void showTerminalMessage(String message) {
         SceneManager.showQuitGameScene();
-
-        QuitGameSceneController controller =
-                (QuitGameSceneController) SceneManager.getActiveController();
-
+        QuitGameSceneController controller = (QuitGameSceneController) SceneManager.getActiveController();
         controller.render(message);
     }
 
+    /**
+     * Shows the lobby scene and renders the latest lobby state.
+     */
     private void showLobby(boolean locked) {
         SceneManager.showLobbySceneIfNeeded();
-
-        LobbySceneController controller =
-                (LobbySceneController) SceneManager.getActiveController();
-
+        LobbySceneController controller = (LobbySceneController) SceneManager.getActiveController();
         controller.renderLobby(currentLobbyView, locked || waitingServerResponse);
 
         if (locked) {
-            controller.lockInteractions(
-                    currentInfoMessage != null && !currentInfoMessage.isBlank()
-                            ? currentInfoMessage
-                            : "Partita creata. In attesa degli altri giocatori..."
-            );
+            controller.lockInteractions(nonBlankOrDefault(
+                    currentInfoMessage,
+                    "Game created. Waiting for the other players..."
+            ));
         }
     }
 
+    /**
+     * Shows the game scene and renders the latest game board.
+     */
     private void showGame(GameView gameView, ClientAction action) {
         if (gameView == null) {
             showLobby(false);
@@ -292,127 +271,136 @@ public class GuiView implements ClientModelObserver {
         }
 
         SceneManager.showGameSceneIfNeeded();
-
-        GameSceneController controller =
-                (GameSceneController) SceneManager.getActiveController();
-
+        GameSceneController controller = (GameSceneController) SceneManager.getActiveController();
         controller.render(gameView, action, playerId, waitingServerResponse);
 
         if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
-            controller.showStatus("Risoluzione eventi in corso...");
+            controller.showStatus("Event resolution in progress...");
         }
     }
 
+    /**
+     * Shows the end-game scene and renders final results.
+     */
     private void showEndGame(EndGameResultView result) {
         SceneManager.showEndGameScene();
-
-        EndGameSceneController controller =
-                (EndGameSceneController) SceneManager.getActiveController();
-
+        EndGameSceneController controller = (EndGameSceneController) SceneManager.getActiveController();
         controller.render(result, currentGameView);
     }
 
+    /**
+     * Displays pending info or error messages on the active scene.
+     */
     private void showPendingMessages() {
         if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
             showError(currentErrorMessage);
             return;
         }
-
         if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
             showInfo(currentInfoMessage);
         }
     }
 
+    /**
+     * Sends an info message to the active scene controller.
+     */
     private void showInfo(String message) {
         GenericSceneController controller = SceneManager.getActiveController();
-
         if (controller != null) {
             controller.showStatus(message);
         }
     }
 
+    /**
+     * Sends an error message to the active scene controller.
+     */
     private void showError(String message) {
         GenericSceneController controller = SceneManager.getActiveController();
-
         if (controller != null) {
             controller.showError(message);
         }
     }
 
+    /**
+     * Requests to leave the current game.
+     */
     public void quitGame() {
         if (!ensureActionHandler() || playerId == null) {
             return;
         }
-
         submitCommand(() -> actionHandler.onQuitGameSelected(playerId));
     }
 
+    /**
+     * Requests to leave the lobby.
+     */
     public void quitLobby() {
         if (!ensureActionHandler()) {
             return;
         }
-
-        showTerminalMessage("Uscita dalla lobby in corso...");
-
         submitCommand(() -> actionHandler.onQuitSelectedLobby());
     }
 
+    /**
+     * Sends a create-game command.
+     */
     public void createGame(String playerId, String totemColor, int numPlayers) {
         if (!ensureActionHandler()) {
             return;
         }
-
         this.playerId = playerId.trim();
         submitCommand(() -> actionHandler.onCreateGameSelected(this.playerId, totemColor, numPlayers));
     }
 
+    /**
+     * Sends a join-game command.
+     */
     public void joinGame(String playerId, String totemColor) {
         if (!ensureActionHandler()) {
             return;
         }
-
         this.playerId = playerId.trim();
         submitCommand(() -> actionHandler.onJoinGameSelected(this.playerId, totemColor));
     }
 
+    /**
+     * Sends a totem-placement command.
+     */
     public void placeTotem(int ticketIndex) {
         if (!ensureActionHandler()) {
             return;
         }
-
         submitCommand(() -> actionHandler.onPlaceTotemSelected(this.playerId, ticketIndex));
     }
 
+    /**
+     * Sends a standard card-pick command.
+     */
     public void pickCard(int cardId) {
         if (!ensureActionHandler() || playerId == null) {
             return;
         }
-
         submitCommand(() -> actionHandler.onPickCardSelected(playerId, cardId));
     }
 
+    /**
+     * Sends a special card-pick command.
+     */
     public void pickSpecial(int cardId) {
         if (!ensureActionHandler() || playerId == null) {
             return;
         }
-
         submitCommand(() -> actionHandler.onPickSpecialSelected(playerId, cardId));
     }
 
-    public void refreshCurrentScene() {
-        Platform.runLater(() -> {
-            renderCurrentState();
-            showPendingMessages();
-        });
-    }
-
+    /**
+     * Runs a server command off the JavaFX thread and locks the active scene until the next update.
+     */
     private void submitCommand(Runnable command) {
         waitingServerResponse = true;
-
         GenericSceneController controller = SceneManager.getActiveController();
-
         if (controller != null) {
-            controller.lockInteractions("Comando inviato. In attesa del server...");
+            controller.lockInteractions("Command sent. Waiting for the server...");
         }
 
         commandExecutor.submit(() -> {
@@ -427,15 +415,27 @@ public class GuiView implements ClientModelObserver {
         });
     }
 
+    /**
+     * Verifies that the command handler dependency is available.
+     */
     private boolean ensureActionHandler() {
         if (actionHandler != null) {
             return true;
         }
-
-        showError("ActionHandler non configurato: impossibile inviare il comando.");
+        showError("Action handler is not configured: the command cannot be sent.");
         return false;
     }
 
+    /**
+     * Returns a fallback when a message is blank.
+     */
+    private String nonBlankOrDefault(String message, String fallback) {
+        return message == null || message.isBlank() ? fallback : message;
+    }
+
+    /**
+     * Stops the background command executor.
+     */
     public void shutdown() {
         commandExecutor.shutdownNow();
     }

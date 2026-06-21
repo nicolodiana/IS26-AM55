@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
@@ -20,9 +18,7 @@
                 <Insets top="18" right="24" bottom="14" left="24" />
             </padding>
             <HBox alignment="CENTER_LEFT">
-                <Label fx:id="titleLabel" text="Fine partita" styleClass="main-title-small" />
-                <Region HBox.hgrow="ALWAYS" />
-                <Button text="Refresh" onAction="#onRefreshClick" />
+                <Label fx:id="titleLabel" text="Game Over" styleClass="main-title-small" />
             </HBox>
             <Label fx:id="statusLabel" styleClass="info-text" />
         </VBox>
@@ -37,17 +33,22 @@
                     </padding>
 
                     <VBox spacing="8" styleClass="card-panel">
-                        <Label text="Vincitore/i" styleClass="section-title" />
+                        <Label text="Winner(s)" styleClass="section-title" />
                         <VBox fx:id="winnersBox" spacing="6" />
                     </VBox>
 
                     <VBox spacing="8" styleClass="card-panel">
-                        <Label text="Effetti finali" styleClass="section-title" />
+                        <Label text="Global Leaderboard" styleClass="section-title" />
+                        <VBox fx:id="leaderBoardBox" spacing="6" />
+                    </VBox>
+
+                    <VBox spacing="8" styleClass="card-panel">
+                        <Label text="Final Effects" styleClass="section-title" />
                         <VBox fx:id="effectsBox" spacing="6" />
                     </VBox>
 
                     <VBox spacing="8" styleClass="card-panel">
-                        <Label text="Eventi finali risolti" styleClass="section-title" />
+                        <Label text="Resolved Final Events" styleClass="section-title" />
                         <VBox fx:id="finalEventsBox" spacing="6" />
                     </VBox>
                 </VBox>

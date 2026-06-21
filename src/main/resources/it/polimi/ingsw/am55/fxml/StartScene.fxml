@@ -24,16 +24,15 @@
                styleClass="start-title"/>
 
         <Label fx:id="statusLabel"
-               text="Click button to start."
+               text="Press START GAME to synchronize with the lobby."
                wrapText="true"
                textAlignment="CENTER"
                styleClass="start-subtitle"/>
 
         <Button fx:id="startButton"
-                text="START GAME "
+                text="START GAME"
                 onAction="#onStartClicked"
                 styleClass="start-button"/>
 
     </VBox>
-
 </StackPane>

@@ -217,3 +217,14 @@
     -fx-text-fill: white;
     -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.95), 6, 0.75, 3, 4);
 }
+.leaderboard-header {
+    -fx-font-weight: 800;
+    -fx-text-fill: #3e2d1e;
+    -fx-border-color: rgba(109,81,50,0.26);
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0 0 5 0;
+}
+
+.leaderboard-row {
+    -fx-padding: 3 0 3 0;
+}

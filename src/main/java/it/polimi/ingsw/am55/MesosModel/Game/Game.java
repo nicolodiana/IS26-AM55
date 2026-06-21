@@ -957,22 +957,22 @@ public class Game implements GameModelInterface{
         Map<String, Integer> winners = calculateWinners();
 
         /*
-        *  4.Salvo i dati nella base di dati
-        */
-        //RIATTIVO SOLO QUANDO HO DB LOCALE ALTRIMENTI DA PROBLEMI
-//        gameRepository = new DatabaseManger();
-//        gameRepository.registerGame(this.id,this.numPlayers);
-//        for(Player p: players){
-//            gameRepository.registerPlayer(this.id,p.getNickname(),p.getNumPP(),p.getNumFoods());
-//        }
-//        List<LeaderBoardEntryView> leaderBoard = gameRepository.getGeneralClassification(this.numPlayers);
+         *  4.Salvo i dati nella base di dati
+         */
+
+        gameRepository = new DatabaseManger();
+        gameRepository.registerGame(this.id,this.numPlayers);
+        for(Player p: players){
+            gameRepository.registerPlayer(this.id,p.getNickname(),p.getNumPP(),p.getNumFoods());
+        }
+        List<LeaderBoardEntryView> leaderBoard = gameRepository.getGeneralClassification(this.numPlayers);
 
         /*
          * 5. Cambio stato finale.
          */
         changeState(GameState.ENDED);
 
-        return new EndGameResultView(resolvedEvents, endGameEffects, winners);
+        return new EndGameResultView(resolvedEvents, endGameEffects, winners,leaderBoard);
     }
     /**
      * Transitions the game state to CRASHED.
