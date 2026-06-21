@@ -64,7 +64,7 @@ public interface GameModelInterface {
      * @throws BiddingTicketIsTaken if the indicated bidding ticket has already taken
      * @throws IndexOutOfBoundsException if the index is out of the range of bidding tickets
      * */
-    void placeTotem(int index, String id) throws BiddingTicketIsTaken,IndexOutOfBoundsException,IllegalArgumentException;
+    List<String> placeTotem(int index, String id) throws BiddingTicketIsTaken, IndexOutOfBoundsException, IllegalArgumentException;
 
 
     /**
@@ -87,13 +87,13 @@ public interface GameModelInterface {
      * @throws CantPickFromRow if the player has already reached their limit for the row containing the card.
      * @throws CannotAffordBuildingException if the player lacks sufficient food to pay for a building card.
      */
-    void pickCard(int index,String idPlayer);
+    List<String> pickCard(int index, String idPlayer);
 
     /**
      * Allows for a client player gets foods
      * @throws IllegalStateException if it will be when there are less than 5 players
      **/
-    void pickFood(String id) throws IllegalStateException;
+    List<String> pickFood(String id) throws IllegalStateException;
 
     /**
      * Allows a controller terminates the game if one player crashed

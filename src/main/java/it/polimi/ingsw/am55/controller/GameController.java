@@ -23,6 +23,110 @@ public class GameController {
         this.numPlayers = 0;
     }
 
+    private String createSkippedPlayersMessage(
+            String baseMessage,
+            List<String> skippedPlayers
+    ) {
+        StringBuilder message =
+                new StringBuilder(baseMessage);
+
+        for (String nickname : skippedPlayers) {
+            message.append(System.lineSeparator())
+                    .append(nickname)
+                    .append(
+                            " ha saltato il turno poiché "
+                                    + "non erano presenti carte "
+                                    + "selezionabili da lui."
+                    );
+        }
+
+        return message.toString();
+    }
+
+    /**
+     * Se gli skip automatici hanno terminato l'intera fase di pesca,
+     * risolve gli eventi o il fine partita.
+     *
+     * Altrimenti restituisce semplicemente il messaggio ricevuto.
+     */
+    private MessageToClient resolveEndOfPickPhaseIfNeeded(
+            MessageToClient actionUpdateMessage
+    ) {
+        /*
+         * Fine normale del round.
+         */
+        if (gameModel.getGameState()
+                .equals(GameState.EVENTRESOLVE)) {
+
+            List<MessageToClient> messages =
+                    new ArrayList<>();
+
+            /*
+             * Prima viene mostrato l'aggiornamento della pick
+             * e l'elenco dei giocatori saltati.
+             */
+            messages.add(actionUpdateMessage);
+
+            List<ResolveEventView> resolvedEvents =
+                    gameModel.eventResolve();
+
+            GameView viewAfterResolve =
+                    gameModel.toView();
+
+            if (resolvedEvents == null
+                    || resolvedEvents.isEmpty()) {
+
+                messages.add(new UpdateViewMessage(
+                        viewAfterResolve,
+                        "[no event to resolve]"
+                ));
+
+                return new MultipleMessages(messages);
+            }
+
+            viewAfterResolve.setResolveEvents(
+                    resolvedEvents
+            );
+
+            messages.add(new UpdateViewMessage(
+                    viewAfterResolve,
+                    "event resolved"
+            ));
+
+            return new MultipleMessages(messages);
+        }
+
+        /*
+         * Fine dell'ultimo round.
+         */
+        if (gameModel.getGameState()
+                .equals(GameState.ENDGAMERESOLVE)) {
+
+            List<MessageToClient> messages =
+                    new ArrayList<>();
+
+            messages.add(actionUpdateMessage);
+
+            EndGameResultView endGameResult =
+                    gameModel.endGame();
+
+            GameView finalGameView =
+                    gameModel.toView();
+
+            messages.add(new GameEndResolveMessage(
+                    finalGameView,
+                    endGameResult,
+                    "Partita terminata."
+            ));
+
+            return new MultipleMessages(messages);
+        }
+
+        /*
+         * La fase di pesca non è ancora terminata.
+         */
+        return actionUpdateMessage;
+    }
 
     public LobbyView getLobbyView() {
         //se nessuno è entrato in partita non devo aggiornare lobby ma mandare quella base con tutte le opzioni)
@@ -78,106 +182,135 @@ public class GameController {
         }
     }
 
-    public MessageToClient pickCard(String playerId, int cardId) {
+    public MessageToClient pickCard(
+            String playerId,
+            int cardId
+    ) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage(
+                    "Nessuna partita creata."
+            );
         }
 
         try {
-            gameModel.pickCard(cardId, playerId);
-            int newPp = gameModel.getPlayerPoints(playerId);
-            int newFood = gameModel.getPlayerFood(playerId);
-            //GameView viewAfterPick = gameModel.toView();
+            List<String> skippedPlayers =
+                    gameModel.pickCard(
+                            cardId,
+                            playerId
+                    );
+
+            int newPp =
+                    gameModel.getPlayerPoints(playerId);
+
+            int newFood =
+                    gameModel.getPlayerFood(playerId);
+
+            MessageToClient pickUpdateMessage;
+
             /*
-             * CASO 1:
-             * Fine round normale: devo risolvere gli eventi della lower row(spetta a me se non ho pickspecial da fare)
-             * + e prima di mostrare messaggio di risoluzione eventi mando prima board after pick
+             * Nessun giocatore è stato saltato:
+             * mantieni il precedente messaggio incrementale.
              */
-            if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
-                List<MessageToClient> messages = new ArrayList<>();
-                //accodo primo messaggio della board post pick
-//                messages.add(new UpdateViewMessage(
-//                        viewAfterPick,
-//                        "pick done"
-//                ));
-                messages.add(new PickCardMessage(playerId, cardId, newFood, newPp, gameModel.getCurrentPlayer(), gameModel.getGameState()));
-
-                List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
-                GameView viewAfterResolve = gameModel.toView();
-                //ACCODO 2 MESSAGGIO DISTINGUENDO SE HA EVENTI RISOLTI O MENO PERCHE CAMBIA IL MESSAGGIO ASSOCIATO
-                //se non ho eventi da risolvere devo comunque mandare la board aggiornata perche si e fatto swap delle row
-                if (resolvedEvents == null || resolvedEvents.isEmpty()) {
-                    messages.add(new UpdateViewMessage(
-                            viewAfterResolve,
-                            "[no event to resolve]"
-                    ));
-
-                    return new MultipleMessages(messages);
-                }
-
-//se invece ci sono eventi da risolvere li copio nella Gameview nella lista dedicada, e poi ritorno la view aggiornata
-                viewAfterResolve.setResolveEvents(resolvedEvents);
-                messages.add(new UpdateViewMessage(
-                        viewAfterResolve,
-                        "event resolved"
-                ));
-
-                return new MultipleMessages(messages);
+            if (skippedPlayers.isEmpty()) {
+                pickUpdateMessage =
+                        new PickCardMessage(
+                                playerId,
+                                cardId,
+                                newFood,
+                                newPp,
+                                gameModel.getCurrentPlayer(),
+                                gameModel.getGameState()
+                        );
+            } else {
+                /*
+                 * Quando vengono saltati uno o più giocatori,
+                 * invia una GameView completa.
+                 *
+                 * Gli skip possono infatti modificare:
+                 * - Bidding Trail;
+                 * - Turn Ticket;
+                 * - Cibo;
+                 * - Punti Prestigio;
+                 * - currentPlayer;
+                 * - GameState.
+                 */
+                pickUpdateMessage =
+                        new UpdateViewMessage(
+                                gameModel.toView(),
+                                createSkippedPlayersMessage(
+                                        "Carta pescata correttamente.",
+                                        skippedPlayers
+                                )
+                        );
             }
 
             /*
-             * CASO 2:
-             * Fine ultimo round (sempre senza pickspecial) : devo risolvere l'end game.
+             * Gestisce anche il caso in cui gli skip abbiano
+             * terminato l'intera fase di pesca.
              */
-            if (gameModel.getGameState().equals(GameState.ENDGAMERESOLVE)) {
-                List<MessageToClient> messages = new ArrayList<>();
-
-                messages.add(new PickCardMessage(
-                        playerId,
-                        cardId,
-                        newFood,
-                        newPp,
-                        gameModel.getCurrentPlayer(),
-                        gameModel.getGameState()
-                ));
-
-                EndGameResultView endGameResult = gameModel.endGame();
-                GameView finalGameView = gameModel.toView();
-
-                messages.add(new GameEndResolveMessage(
-                        finalGameView,
-                        endGameResult,
-                        "Partita terminata."
-                ));
-
-                return new MultipleMessages(messages);
-            }
-
-            /*
-             * CASO 3:
-             * Pick normale (non ultimo player, ricevo subito board aggiornata)
-             */
-            return new PickCardMessage(playerId, cardId, newFood, newPp, gameModel.getCurrentPlayer(), gameModel.getGameState());
+            return resolveEndOfPickPhaseIfNeeded(
+                    pickUpdateMessage
+            );
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
     }
 
-    public MessageToClient placeTotem(String playerId, int index) {
+    public MessageToClient placeTotem(
+            String playerId,
+            int index
+    ) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage(
+                    "Nessuna partita creata."
+            );
         }
 
         try {
-            gameModel.placeTotem(index, playerId);
+            List<String> skippedPlayers =
+                    gameModel.placeTotem(
+                            index,
+                            playerId
+                    );
 
-            //            return new UpdateViewMessage(
-//                    gameModel.toView(),
-//                    "Totem piazzato correttamente."
-//            );
-            return new PlaceTotemMessage(playerId, index, gameModel.getCurrentPlayer(), gameModel.getGameState());
+            MessageToClient placeTotemUpdateMessage;
 
+            /*
+             * Il piazzamento non ha provocato skip:
+             * mantieni il comportamento precedente.
+             */
+            if (skippedPlayers.isEmpty()) {
+                placeTotemUpdateMessage =
+                        new PlaceTotemMessage(
+                                playerId,
+                                index,
+                                gameModel.getCurrentPlayer(),
+                                gameModel.getGameState()
+                        );
+            } else {
+                /*
+                 * Questo ramo viene utilizzato quando è stato
+                 * piazzato l'ultimo Totem e il primo giocatore
+                 * della fase di pesca non può prendere carte.
+                 */
+                placeTotemUpdateMessage =
+                        new UpdateViewMessage(
+                                gameModel.toView(),
+                                createSkippedPlayersMessage(
+                                        "Totem piazzato correttamente.",
+                                        skippedPlayers
+                                )
+                        );
+            }
+
+            /*
+             * Se tutti i giocatori sono stati saltati, avvia
+             * immediatamente eventi o fine partita.
+             */
+            return resolveEndOfPickPhaseIfNeeded(
+                    placeTotemUpdateMessage
+            );
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
