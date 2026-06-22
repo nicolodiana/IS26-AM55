@@ -16,7 +16,12 @@ public class SummaryCardView extends CardView {
 
     @Override
     public String toString() {
-        return "Summary card";
+        return "- Shaman Ritual: player with max stars gain ? pp,\n " +
+                "player with min stars lose ? pp\n" +
+                "\n- Hunting Event: gain 1 food per hunter with icon\n" +
+                "\n- Cave Paintings Event: player with less/equal artists than ? lose ? pp,\n " +
+                "player with more/equal ? artist gain ? pp per artist\n" +
+                "\n- Sustenance Event: lose 1 food per character";
     }
 
     public CliCardInfo getCliCardInfo() {
@@ -24,7 +29,6 @@ public class SummaryCardView extends CardView {
                 "SUMMARY",
                 ConsoleColor.BLUE_BRIGHT,
                 List.of(
-                        new CliCardDetails("Type", "Summary"),
                         new CliCardDetails("Info", this.toString())
                 )
         );
