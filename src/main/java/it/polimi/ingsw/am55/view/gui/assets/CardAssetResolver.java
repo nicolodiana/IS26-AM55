@@ -15,7 +15,7 @@ public final class CardAssetResolver {
      * @return classpath resource path
      */
     public static String resolveCardPath(int cardId) {
-        if (cardId <= 0) {
+        if (cardId < 0) {
             return "/it/polimi/ingsw/am55/images/cards/card_back.png";
         }
         return String.format("/it/polimi/ingsw/am55/images/cards/card_%03d.png", cardId);

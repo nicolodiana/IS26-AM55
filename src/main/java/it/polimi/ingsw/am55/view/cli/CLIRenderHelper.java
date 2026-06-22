@@ -399,7 +399,9 @@ public class CLIRenderHelper {
         lines.add(borderColor + "┌" + repeat("─", CARD_WIDTH) + "┐" + ConsoleColor.RESET);
         lines.add(borderColor + "│" + ConsoleColor.RESET + center(header, CARD_WIDTH) + borderColor + "│" + ConsoleColor.RESET);
         lines.add(borderColor + "├" + repeat("─", CARD_WIDTH) + "┤" + ConsoleColor.RESET);
-        lines.add(borderColor + "│" + ConsoleColor.RESET + " " + padRight("Era: " + (card == null ? "-" : card.getEra()), CARD_WIDTH - 1) + borderColor + "│" + ConsoleColor.RESET);
+        if (card.getId() != 0) {
+            lines.add(borderColor + "│" + ConsoleColor.RESET + " " + padRight("Era: " + (card == null ? "-" : card.getEra()), CARD_WIDTH - 1) + borderColor + "│" + ConsoleColor.RESET);
+        }
         addCardDetails(lines, card, borderColor);
         lines.add(borderColor + "└" + repeat("─", CARD_WIDTH) + "┘" + ConsoleColor.RESET);
 

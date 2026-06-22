@@ -4,7 +4,7 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.dto.CardView;
 
 public abstract class Card {
-    private final int id ;
+    protected final int id ;
     public final  int era;
 
     protected Card(int id, int era) {

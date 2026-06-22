@@ -3,6 +3,7 @@ package it.polimi.ingsw.am55.MesosModel.Player;
 import it.polimi.ingsw.am55.MesosModel.Cards.BuildingCard;
 import it.polimi.ingsw.am55.MesosModel.Cards.Card;
 import it.polimi.ingsw.am55.MesosModel.Cards.CharacterCard;
+import it.polimi.ingsw.am55.MesosModel.Cards.SummaryCard;
 import it.polimi.ingsw.am55.MesosModel.Effect.*;
 import it.polimi.ingsw.am55.MesosModel.Enum.BuildingType;
 import it.polimi.ingsw.am55.MesosModel.Enum.CharacterType;
@@ -42,6 +43,7 @@ public class Player {
     //mappa che serve per mappare i charactertype con liste associate (per effetto building 2 e 12)
     private Map<CharacterType, List<? extends CharacterCard>> characterLists;
     private int minSetCompleted;
+    private final SummaryCard summeryCard = new SummaryCard(0, 0);
 
     public Player(String nickname, String totem) {
         this.id = nickname;
@@ -299,6 +301,8 @@ public class Player {
 
     public List<CardView> giveMyHand() {
         List<CardView> list = new ArrayList<>();
+
+        list.add(summeryCard.toView());
 
         for (Shaman card : this.shamanList) { list.add(card.toView()); }
         for (Artist card : this.artistList) { list.add(card.toView()); }
