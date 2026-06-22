@@ -79,7 +79,12 @@ public class BoardView implements Serializable {
      * it removes the player from the turn ticket
      */
     public void removePlayerFromTurnTicket() {
-        turnTicket.removeFirst();
+        if (turnTicket == null || turnTicket.isEmpty()) {
+            return;
+        }
+
+        turnTicket.remove(0);
+        turnTicket.add(null);
     }
 
     /**
