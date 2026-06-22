@@ -395,7 +395,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      */
     public void quitLobby(String sessionId){
 
-        MessageToClient message = new QuitLobbyMessage("You are disconnected ",false);
+        MessageToClient message = new QuitLobbyMessage("Ti sei disconnesso dalla lobby",false);
         message.deliver(sessionId, this);
 
         unregisterLobbyClient(sessionId);

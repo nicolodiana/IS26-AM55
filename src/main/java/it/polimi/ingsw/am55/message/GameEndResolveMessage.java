@@ -4,6 +4,9 @@ package it.polimi.ingsw.am55.message;
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.dto.GameView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
+import it.polimi.ingsw.am55.network.ClientConnectionControl;
+
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * Final game update containing the resolved end-game result.
@@ -61,5 +64,22 @@ public class GameEndResolveMessage extends MessageToClient {
     @Override
     public void deliver(String playerId, MessageDelivery context) {
         context.broadcast(this);
+    }
+
+    @Override
+    public void executeClientNetworkAction(ClientConnectionControl client) throws Exception {
+        client.stopPing();
+        new Thread(() -> {
+            try {
+                Thread.sleep(5000);
+                client.closeConnection();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
+    }
+    @Override
+    public boolean closeGameSession(){
+        return true;
     }
 }

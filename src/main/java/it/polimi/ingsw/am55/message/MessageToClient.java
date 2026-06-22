@@ -72,4 +72,7 @@ public abstract class MessageToClient implements Serializable {
      * @return {@code true} when {@link #update(ClientModel)} should be called
      */
     public boolean shouldUpdateModel() {return  true;}
+
+    public boolean closeGameSession(){return false;}
+
 }

@@ -34,4 +34,5 @@ module it.polimi.ingsw.am55 {
 
     opens it.polimi.ingsw.am55.view.gui to javafx.graphics;
     opens it.polimi.ingsw.am55.view.gui.scene to javafx.fxml;
+    exports it.polimi.ingsw.am55.utility;
 }
