@@ -230,18 +230,26 @@ public class ClientModel implements  ClientModelUpdater {
     }
 
     public void placeTotem(String playerId, int index) {
-        gameView.placeTotem(playerId, index);
+        synchronized (lock) {
+            gameView.placeTotem(playerId, index);
+        }
     }
 
     public void pickCard(String playerId, int index, int newFood, int newPp) {
-        gameView.pickCard(playerId, index, newFood,  newPp);
+        synchronized (lock) {
+            gameView.pickCard(playerId, index, newFood, newPp);
+        }
     }
 
     public void setCurrentPlayer(String playerd) {
-        this.gameView.setCurrentPlayer(playerd);
+        synchronized (lock) {
+            this.gameView.setCurrentPlayer(playerd);
+        }
     }
 
     public void setCurrentGameState(GameState state) {
-        this.gameView.setState(state);
+        synchronized (lock) {
+            this.gameView.setState(state);
+        }
     }
 }

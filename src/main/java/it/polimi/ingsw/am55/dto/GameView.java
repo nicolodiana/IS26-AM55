@@ -9,13 +9,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameView implements Serializable {
-
+    /**
+     * game unique recognizer
+     */
     private final String gameId;
+
+    /**
+     * current game state
+     */
     private GameState state;
+
+    /**
+     * current player who need to execute a command
+     */
     private String currentPlayer;
+
+    /**
+     * current number of round the game is in
+     */
     private final int round;
+
+    /**
+     * players who partecipate in the game
+     */
     private final List<PlayerView> players;
+
+    /**
+     * board of the game
+     */
     private final BoardView board;
+
+    /**
+     * list of the events from the board
+     * that need to be resolved at the end of the last player's turn in every round
+     */
     //questa lista si popolerà a fine di ogni round, per gli update non di fine round rimane nulla
     private List<ResolveEventView> resolveEvents = new ArrayList<>();
 
@@ -85,18 +112,39 @@ public class GameView implements Serializable {
 
         return null;
     }
-    //public void addCardToPlayer(String nickname, )
+
+    /**
+     * it takes the player and move his totem to the ticket choose by the player using its index
+     * @param playerId player who execute placetotem command
+     * @param index index of the ticket he wants to move into
+     */
+
     public void placeTotem(String playerId, int index) {
         PlayerView player = getPlayer(playerId);
+        if (!resolveEvents.isEmpty()) {
+            resolveEvents.clear();
+        }
 
         board.getBiddingTrail().get(index).setPlayer(player);
+        board.removePlayerFromTurnTicket();
     }
 
+
+    /**
+     * this method add the card that the player want from the board to his hands
+     * @param playerId id player who does the command pickcard
+     * @param cardId card id that the player want to pick
+     * @param newFood player's food after the pick
+     * @param newPp players'pp after the pick
+     */
     public void pickCard(String playerId, int cardId, int newFood, int newPp) {
         CardView card = this.board.searchCard(cardId);
         PlayerView player = getPlayer(playerId);
+
         player.pickCard(card);
         player.setPointsAndFood(newFood, newPp);
+
+        board.putPlayerInTurnTicket(getPlayer(playerId));
     }
 
     public void setCurrentPlayer(String currentPlayer) {
