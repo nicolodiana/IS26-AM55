@@ -55,7 +55,6 @@ public class PlaceTotemMessage extends MessageToClient {
         model.clearError();
         model.setStateRequest(message);
         model.setGameStarted(true);
-        
         model.setLastMessageUpdatedGameView(true);
         model.setCurrentPlayer(this.currentPlayer);
         model.setCurrentGameState(this.state);

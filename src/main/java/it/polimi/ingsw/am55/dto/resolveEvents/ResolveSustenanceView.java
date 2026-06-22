@@ -12,10 +12,6 @@ public class ResolveSustenanceView extends ResolveEventView implements Serializa
     public ResolveSustenanceView(Map<String, Integer> effectToFood, Map<String, Integer> effectToPP, String nameEvent) {
         super(effectToFood, nameEvent);
         this.effectToPP = effectToPP;
-
-        System.out.println("Nome evento: " + this.nameEvent);
-        System.out.println("effect to food: " + this.effectToPlayer);
-        System.out.println("Nome evento: " + this.effectToPP);
     }
 
 

@@ -13,6 +13,7 @@ public class BiddingTicketView implements Serializable {
     private final int numPlayer;
     private final char trailPlacement;
     private PlayerView player;
+    private int sumPick;
 
     public BiddingTicketView(BiddingTicket ticket) {
         this.foodBonus = ticket.getFoodBonus();
@@ -20,7 +21,7 @@ public class BiddingTicketView implements Serializable {
         this.chooseLowerCard = ticket.getChooseLowerCard();
         this.numPlayer = ticket.getNumPlayer();
         this.trailPlacement = ticket.getTrailPlacement();
-
+        this.sumPick = chooseLowerCard + chooseUpperCard;
         Player playerOnTicket = ticket.getPlayer();
 
         if (playerOnTicket != null) {
@@ -71,5 +72,20 @@ public class BiddingTicketView implements Serializable {
 
     public void setPlayer(PlayerView player) {
         this.player = player;
+    }
+
+    /**
+     * First it reduces the sumPick cause it's called during a pick
+     * if sumPick then is 0 the player cannot do another pick so i return true and reset the counter
+     * @return
+     */
+    public boolean allPickDone() {
+        this.sumPick--;
+        if (sumPick <= 0) {
+            sumPick = this.chooseLowerCard + this.chooseUpperCard;
+            return true;
+        }
+
+        return false;
     }
 }
