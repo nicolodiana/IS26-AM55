@@ -11,11 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PaintingsEventCardTest {
 
-    // test per pitture rupestri:
-    // - player con artisti = upperNumberOfArtist -> perde PP
-    // - player con artisti = lowerNumberOfArtist -> guadagna PP
-    // - player con BUILDING10 -> guadagna cibo pari agli artisti, ma solo se ha almeno minArtist
-    // - player con artisti < minArtist -> nessun effetto
     @Test
     void constructorsExistAndActivateEventAppliesEffects() {
 
@@ -32,11 +27,7 @@ class PaintingsEventCardTest {
         Player neutral = new Player("neutral", "yellow");
         neutral.addTribeCard(new Artist(4, 1));
         neutral.addTribeCard(new Artist(5, 1));
-        //neutral.addTribeCard(new Artist(6, 1));
 
-        /*Player belowMinimum = new Player("belowMinimum", "red", "red summary");
-        belowMinimum.addPP(5);*/
-        // 0 artisti, quindi sotto il minimo richiesto
 
         PaintingsEventCard card = new PaintingsEventCard(7, 1,4, 3, 1, 3);
         card.activateEvent(List.of(upper, lower, neutral));
@@ -50,7 +41,5 @@ class PaintingsEventCardTest {
         assertEquals(0, neutral.getNumFoods(), "neutral has no BUILDING10, so food should not change");
         assertEquals(0, neutral.getNumPP(), "neutral matches neither upper nor lower threshold");
 
-        //assertEquals(0, belowMinimum.getNumFoods(), "player below minimum artists should receive no food");
-        //assertEquals(5, belowMinimum.getNumPP(), "player below minimum artists should receive no PP changes");
     }
 }

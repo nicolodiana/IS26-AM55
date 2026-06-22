@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class BuildingTypeTest {
-    //per verificare funzionamento dell'enum (poco utile ) ma la usiamo x coprire di piu
     @Test
     void enumValuesAndValueOfAreAvailable() {
         assertEquals(14, BuildingType.values().length);

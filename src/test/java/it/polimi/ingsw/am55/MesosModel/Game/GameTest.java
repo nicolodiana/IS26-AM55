@@ -39,9 +39,6 @@ class GameTest {
         g = new Game(2);
     }
 
-    // =========================
-    // Constructor and setup
-    // =========================
 
     /**
      * Verifies the initial state of a newly created game.
@@ -78,9 +75,6 @@ class GameTest {
         assertEquals(GameState.CRASHED, g.getGameState());
     }
 
-    // =========================
-    // addPlayer
-    // =========================
 
     /**
      * Verifies that adding a player beyond the configured player limit
@@ -161,10 +155,6 @@ class GameTest {
         assertThrows(WrongTotemColor.class, ()->g.addPlayer("Player1", "wrong"));
     }
 
-    // =========================
-    // placeTotem
-    // =========================
-
     /**
      * Verifies that placing a totem with an invalid player while the game
      * is not in a valid playable configuration throws an {@link IllegalStateException}.
@@ -213,10 +203,6 @@ class GameTest {
         assertThrows(IllegalStateException.class, () -> g.placeTotem(1, "invalid"));
     }
 
-
-    // =========================
-    // pickFood
-    // =========================
 
     /**
      * Verifies that attempting to pick food in an invalid player-count scenario
@@ -268,7 +254,6 @@ class GameTest {
 
         String firstPlayer = game.getCurrentPlayer();
         game.placeTotem(0, game.getCurrentPlayer());
-        // Save the second player and let that player attempt to pick food from the wrong position.
         String secondPlayer = game.getCurrentPlayer();
         game.placeTotem(2, game.getCurrentPlayer());
         game.placeTotem(5, game.getCurrentPlayer());
@@ -281,9 +266,6 @@ class GameTest {
         );
     }
 
-    // =========================
-    // pickCard
-    // =========================
 
     /**
      * Verifies that attempting to pick a card during the wrong game phase
@@ -297,7 +279,6 @@ class GameTest {
 
         String player1 = g.getCurrentPlayer();
         g.placeTotem(0, g.getCurrentPlayer());
-        // Attempt to pick a card during the wrong phase.
         assertThrows(IllegalStateException.class, () -> g.pickCard(2, player1));
     }
 
@@ -347,10 +328,9 @@ class GameTest {
     void testPickCard_pickValidAndEndRound() throws PlayerNumberOutOfRange {
         addTwoPlayers();
 
-        //Player firstPlayer = g.getSharedBoard().getFirstPlayerFirstPhase();
-        g.placeTotem(3, g.getCurrentPlayer());// Bidding tile F: upper and upper.
-        //Optional<Player> secondPlayer = g.getSharedBoard().getNextPlayerFirstPhase(firstPlayer);
-        g.placeTotem(2, g.getCurrentPlayer());// Bidding tile E: upper and lower.
+
+        g.placeTotem(3, g.getCurrentPlayer());
+        g.placeTotem(2, g.getCurrentPlayer());
         g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(1,true, 1));
         g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(2,true, 1));
         g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(3,false, 1));
@@ -363,11 +343,11 @@ class GameTest {
 
         CharacterCard firstLowerCard = firstLowerCharacterCard();
         g.pickCard(firstLowerCard.getId(), g.getCurrentPlayer());
-        // The first player has finished picking cards.
+
         Optional<Player> nextPlayer = g.getSharedBoard().nextPlayerSecondPhase();
         assertTrue(nextPlayer.isPresent());
         assertEquals(nextPlayer.get().getNickname(), g.getCurrentPlayer());
-        // The next player is now picking cards.
+
         CharacterCard secondUpperCard = firstUpperCharacterCard();
         g.pickCard(secondUpperCard.getId(), g.getCurrentPlayer());
 
@@ -380,7 +360,7 @@ class GameTest {
         assertAll(
                 () -> assertEquals(GameState.PLACETOTEM, g.getGameState()),
                 () -> assertEquals(expectedFirstPlayerNextRound, g.getCurrentPlayer()),
-                () -> assertEquals(2, g.getCountRound()) // A new round starts.
+                () -> assertEquals(2, g.getCountRound())
         );
     }
 
@@ -394,35 +374,29 @@ class GameTest {
     void testPickCardAndPickSpecial_PlayerWithBuilding13() throws Exception {
         addTwoPlayers();
 
-        // Since the order is randomly generated on the turn-order tile,
-        // the test assumes that the first player is the one who will receive Building 13.
-        // That player is saved in a variable and then retrieved from the game player list.
         Player playerWithSpecialBuilding = g.getSharedBoard().getFirstPlayerFirstPhase();
         g.placeTotem(1, g.getCurrentPlayer());
         g.placeTotem(0, g.getCurrentPlayer());
-        // The first player picks from the lower row, so a character card is retrieved from the lower row.
+
         CharacterCard lowerCard = firstLowerCharacterCard();
         g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
 
-        // Now the second player should pick a character card and, once everyone has repositioned,
-        // the game state should change to PICKSPECIAL so that the player can make an additional pick.
         BuildingCard building13 = new BuildingCard(119, 3, 9, 3, BuildingType.BUILDING13, null, 0);
         Player targetPlayer = g.getPlayers().get(g.getPlayers().indexOf(playerWithSpecialBuilding));
-        targetPlayer.addFood(7); // The player has 2 food
-        //  6 additional food so that the building can be afforded.
+        targetPlayer.addFood(7);
+
 
         targetPlayer.addTribeCard(building13);
 
-        // Advance the game so that all players have repositioned on the turn-order tile.
         CharacterCard upperCard = firstUpperCharacterCard();
         g.pickCard(upperCard.getId(), targetPlayer.getNickname());
 
         assertAll(
-                () -> assertEquals(GameState.PICKSPECIAL, g.getGameState()), // Verify that the state changes.
+                () -> assertEquals(GameState.PICKSPECIAL, g.getGameState()),
                 () -> assertEquals(targetPlayer.getNickname(), g.getCurrentPlayer())
         );
 
-        CharacterCard specialPickCard = firstUpperCharacterCard(); // Only picking from the upper row is allowed.
+        CharacterCard specialPickCard = firstUpperCharacterCard();
         g.pickSpecial(specialPickCard.getId(), g.getCurrentPlayer());
         g.eventResolve();
 
@@ -442,8 +416,6 @@ class GameTest {
         Player firstPhasePlayer = g.getSharedBoard().getFirstPlayerFirstPhase();
         g.placeTotem(0, g.getCurrentPlayer());
 
-        // This is required to normalize the food amount so that the exception is triggered,
-        // because the player must not be able to afford adding the building to the tribe.
         Optional<Player> secondPlayer = g.getSharedBoard().getNextPlayerFirstPhase(firstPhasePlayer);
         assertTrue(secondPlayer.isPresent());
         g.placeTotem(1, g.getCurrentPlayer());
@@ -452,9 +424,7 @@ class GameTest {
         g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
 
         BuildingCard buildingCard = g.getSharedBoard().getUpperRow().getBuildingCardsList().getBuildingCardByIndex(0);
-        secondPlayer.get().payFood(1);// Since the second player always starts with 3 food,
-        // the player could afford a building in the best case because a building costs at least 3 food.
-        // Therefore, the food amount is reduced by 1.
+        secondPlayer.get().payFood(1);
 
         assertAll(
                 () -> assertThrows(CannotAffordBuildingException.class,
@@ -547,7 +517,7 @@ class GameTest {
 
         g.placeTotem(0, g.getCurrentPlayer());
         g.placeTotem(1, g.getCurrentPlayer());
-        g.setCountRound(10); // Assume the game is at the final round even though it has just started.
+        g.setCountRound(10);
 
         CharacterCard lowerCard = firstLowerCharacterCard();
         g.pickCard(lowerCard.getId(), g.getCurrentPlayer());
@@ -562,9 +532,6 @@ class GameTest {
         );
     }
 
-    // =========================
-    // pickSpecial
-    // =========================
 
     /**
      * Verifies that calling {@code pickSpecial} in the wrong game phase
@@ -601,7 +568,7 @@ class GameTest {
         g.placeTotem(0, g.getCurrentPlayer());
         g.placeTotem(1, g.getCurrentPlayer());
         g.changeState(GameState.PICKSPECIAL);
-        // Out of the valid card index range.
+
         assertAll(
                 () -> assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(-1, g.getCurrentPlayer())),
                 () -> assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(121, g.getCurrentPlayer()))
@@ -624,11 +591,6 @@ class GameTest {
         CharacterCard lowerCard = firstLowerCharacterCard();
         assertThrows(IllegalArgumentException.class, () -> g.pickSpecial(lowerCard.getId(), g.getCurrentPlayer()));
     }
-
-
-    // =========================
-    // automatic skip logic
-    // =========================
 
     @Test
     void testSelectableCardsUsedBySkipLogic() throws Exception {
@@ -786,9 +748,6 @@ class GameTest {
         assertTrue(foodPlayer.getNumFoods() >= foodBefore + 3);
     }
 
-    // =========================
-    // endGame / effects
-    // =========================
 
     @Test
     void testEndGame_illegalStateException()
@@ -810,7 +769,6 @@ class GameTest {
         Player rich = g.getPlayers().getFirst();
         Player plain = g.getPlayers().get(1);
 
-        // Rich player setup.
         rich.addTribeCard(new Shaman(1, 1, 1));
         rich.addTribeCard(new Hunter(2, false, 1));
         rich.addTribeCard(new Hunter(3, false, 1));
@@ -833,7 +791,6 @@ class GameTest {
         rich.getBuildings().add(new BuildingCard(19, 1, 0, 2, BuildingType.BUILDING12, CharacterType.HUNTER, 0));
         rich.getBuildings().add(new BuildingCard(20, 1, 0, 0, BuildingType.BUILDING14, null, 0));
 
-        // Plain player setup.
         plain.addTribeCard(new Builder(21, 5, 0, 1));
         plain.addTribeCard(new Inventor("stone", 22, 1));
         plain.addTribeCard(new Inventor("rope", 23, 1));
@@ -882,7 +839,7 @@ class GameTest {
 
         game.changeState(GameState.ENDGAMERESOLVE);
         EndGameResultView endGameResultView = game.endGame();
-//
+
 //        assertAll(
 //                () -> assertEquals(GameState.ENDED, game.getGameState()),
 //                () -> assertEquals(2, endGameResultView.getWinners().size()),
@@ -964,12 +921,6 @@ class GameTest {
         assertEquals(g.getCountRound(), gv.getRound());
     }
 
-
-
-
-    // =========================
-    // Helpers
-    // =========================
 
     /**
      * Adds two players to the shared game instance.

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class InventorTest {
-    //stesso testo specificato per gli artisti
     @Test
     void inventorStoresIconAndAddsItselfToPlayer() {
         Player player = new Player("Player1", "red");

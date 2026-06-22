@@ -9,7 +9,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class EventCardTest {
-    //controllo che una EventCard generica non abbia effetti ( solo quelle piu specifiche portano effetti)
     @Test
     void baseEventCardDoesNothing() {
         Player player = new Player("testEvent", "red");

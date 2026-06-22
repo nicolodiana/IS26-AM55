@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShamanTest {
-    //stesso test degli artisti per check override+ check del getter delle stelle
     @Test
     void shamanStoresStarsAndAddsItselfToPlayer() {
         Player player = new Player("Player1", "red");

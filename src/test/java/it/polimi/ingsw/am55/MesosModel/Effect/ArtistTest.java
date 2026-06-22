@@ -9,9 +9,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ArtistTest {
-    //testo l'override di add to player e del count same type istanziando un player e passandogli 2
-// personaggi con tipo statico card e dinamico artisti, mi aspetto che la lista artisti del player 1 sia di lunghezza 2
-    //e il conteggio della carta sul suo tipo dinamico sia 2
+
     @Test
     void addToPlayerAddsArtistAndCountSameTypeReflectsPlayerState() {
         Player player = new Player("Player1", "red");

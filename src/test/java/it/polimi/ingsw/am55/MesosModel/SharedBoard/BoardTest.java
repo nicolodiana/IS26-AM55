@@ -51,7 +51,7 @@ class BoardTest {
                 board.getUpperRow().getCharacterCardsList().size()
                         + board.getUpperRow().getEventCardsList().size();
 
-        assertEquals(7, total); // non dipende dal deck interno
+        assertEquals(7, total);
     }
 
     @Test
@@ -132,17 +132,10 @@ class BoardTest {
         assertFalse(board.restoreForRound(3));
     }
 
-    /*@Test
-    void nextPlayerSecondPhaseTest() {
-        Player player = null;
-        assertThrows(IllegalArgumentException.class, ()->{board.nextPlayerSecondPhase();});
-    }*/
-
     @Test
     void findCardUpperRowTest() {
         CardSearchResult result = new CardSearchResult();
 
-        // prendo una carta reale dalla row
         Optional<CharacterCard> cardOpt =
                 board.getUpperRow().getCharacterCardsList().stream().findFirst();
 

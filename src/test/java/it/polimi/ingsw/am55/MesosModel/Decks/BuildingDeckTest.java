@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BuildingDeckTest {
 
-    //test if the deck of Era 1 has the right amount of card
     @Test
     void initBuildingDeckEra1Test() {
         BuildingDeck deck = new BuildingDeck();
@@ -23,7 +22,6 @@ public class BuildingDeckTest {
         assertEquals(2, deck.buildingCardsList.size());
     }
 
-    //check if the deck of Era 2 has the right amount of card
     @Test
     void initBuildingDeckEra2Test() {
         BuildingDeck deck = new BuildingDeck();
@@ -37,7 +35,6 @@ public class BuildingDeckTest {
         assertEquals(3, deck.buildingCardsList.size());
     }
 
-    //test if the deck of Era 3 has the right amount of card
     @Test
     void initBuildingDeckEra3Test() {
         BuildingDeck deck = new BuildingDeck();
@@ -51,7 +48,6 @@ public class BuildingDeckTest {
         assertEquals(5, deck.buildingCardsList.size());
     }
 
-    //test if the metod clear actually leave the deck Empty
     @Test
     void clearTest(){
         BuildingDeck deck = new BuildingDeck();
@@ -60,23 +56,7 @@ public class BuildingDeckTest {
         assertEquals(0, deck.buildingCardsList.size());
     }
 
-    //test if the donor deck after the method is empty and
-    //test if the receiver deck is equal to the starting donor
-//    @Test
-//    void swapBuildingDeckTest() {
-//        BuildingDeck donor = new BuildingDeck();
-//        donor.initBuildingDeckEra1(2);
-//        BuildingDeck receiver = new BuildingDeck();
-//        receiver.initBuildingDeckEra2(4);
-//        BuildingDeck fakeDonor = new BuildingDeck();
-//        fakeDonor.buildingCardsList.addAll(donor.buildingCardsList);
-//
-//        receiver.swapBuildingDeck(donor, receiver);
-//        assertEquals(0, donor.buildingCardsList.size());
-//        assertEquals(receiver.buildingCardsList, fakeDonor.buildingCardsList);
-//    }
 
-    //test that only the right card is removed from the deck
     @Test
     void removeBuildingCardTest() {
         BuildingDeck deck = new BuildingDeck();

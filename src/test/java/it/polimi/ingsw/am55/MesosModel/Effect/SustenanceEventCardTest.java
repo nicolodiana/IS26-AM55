@@ -14,10 +14,6 @@ class SustenanceEventCardTest {
 
     @Test
     void activateEventStandard() {
-        // Testa in un unico scenario i casi principali dell'evento sostentamento:
-        // - giocatore con abbastanza cibo
-        // - giocatore che grazie a BUILDING2 ottiene uno sconto ma non basta e perde PP
-        // - giocatore il cui costo finale va a zero grazie agli sconti
 
         Player enoughFood = new Player("enoughFood", "totem1");
         enoughFood.addPP(5);
@@ -26,10 +22,6 @@ class SustenanceEventCardTest {
         enoughFood.addTribeCard(new Artist(2, 0));
         enoughFood.addTribeCard(new Builder(3, 0, 0, 0));
         enoughFood.addTribeCard(new Collector(4, 0));
-        // personaggi = 4
-        // collector discount = 3
-        // costo finale = 1
-        // ha 10 cibo -> paga 1, no penalità
 
         Player withBuilding2Penalty = new Player("withBuilding2Penalty", "totem2");
         withBuilding2Penalty.addPP(10);
@@ -41,21 +33,13 @@ class SustenanceEventCardTest {
         withBuilding2Penalty.getBuildings().add(
                 new BuildingCard(9, 0, 0, 0, BuildingType.BUILDING2, CharacterType.HUNTER, 0)
         );
-        // personaggi = 4
-        // collector discount = 0
-        // building2 discount = 3 hunter
-        // costo finale = 1
-        // ha 2 cibo -> paga 1, no penalità
 
         Player freeDueToDiscounts = new Player("freeDueToDiscounts", "totem3");
         freeDueToDiscounts.addPP(7);
         freeDueToDiscounts.addFood(9);
         freeDueToDiscounts.addTribeCard(new Collector(10, 0));
         freeDueToDiscounts.addTribeCard(new Builder(11, 0, 0, 0));
-        // personaggi = 2
-        // collector discount = 3
-        // building2 discount = 0
-        // costo finale = max(0, 2 - 3) = 0
+
 
         SustenanceEventCard card = new SustenanceEventCard(12, 1, 2);
         card.activateEvent(List.of(enoughFood, withBuilding2Penalty, freeDueToDiscounts));
@@ -72,8 +56,6 @@ class SustenanceEventCardTest {
 
     @Test
     void activateEventShouldReducePPWhenPlayerCannotPayEnoughFood() {
-        // Testa il caso in cui il giocatore non abbia abbastanza cibo:
-        // paga tutto quello che può e perde numPP per ogni unità di costo rimasta scoperta.
 
         Player poor = new Player("poor", "totem4");
         poor.addPP(10);
@@ -83,19 +65,11 @@ class SustenanceEventCardTest {
         poor.addTribeCard(new Hunter(14, false, 0));
         poor.addTribeCard(new Artist(15, 0));
         poor.addTribeCard(new Collector(16, 0));
-        // personaggi = 4
-        // collector discount = 3
-        // costo finale = 1
-        // qui in realtà pagherebbe tutto -> niente penalità
-        // quindi aggiungo altri personaggi per generare costo residuo
+
 
         poor.addTribeCard(new Builder(17, 0, 0, 0));
         poor.addTribeCard(new Inventor("tool", 18, 0));
-        // personaggi = 6
-        // collector discount = 3
-        // costo finale = 3
-        // ha 1 cibo -> paga 1
-        // restano 2 non pagati -> perde 2 * 2 = 4 PP
+
 
         SustenanceEventCard card = new SustenanceEventCard(19, 1, 2);
         card.activateEvent(List.of(poor));
@@ -106,8 +80,6 @@ class SustenanceEventCardTest {
 
     @Test
     void activateEventShouldSumDiscountFromMultipleBuilding2Cards() {
-        // Testa che più BUILDING2 si sommino correttamente:
-        // ogni edificio 2 conta il numero di personaggi del proprio CharacterType.
 
         Player player = new Player("multiDiscount", "totem5");
         player.addPP(8);
@@ -118,7 +90,6 @@ class SustenanceEventCardTest {
         player.addTribeCard(new Builder(22, 0, 0, 0));
         player.addTribeCard(new Builder(23, 0, 0, 0));
         player.addTribeCard(new Artist(24, 0));
-        // personaggi = 5
 
         player.addTribeCard(
                 new BuildingCard(25, 0, 0, 0, BuildingType.BUILDING2, CharacterType.HUNTER, 0)
@@ -126,8 +97,6 @@ class SustenanceEventCardTest {
         player.addTribeCard(
                 new BuildingCard(26, 0, 0, 0, BuildingType.BUILDING2, CharacterType.BUILDER, 0)
         );
-        // sconto totale = 2 hunter + 2 builder = 4
-        // costo finale = 5 - 4 = 1
 
         SustenanceEventCard card = new SustenanceEventCard(27, 1, 3);
         card.activateEvent(List.of(player));

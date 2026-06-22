@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HunterTest {
-    //stesso test specificato per gli artisti
     @Test
     void hunterKeepsIconAndAddsItselfToPlayer() {
         Player player = new Player("hunter", "red");

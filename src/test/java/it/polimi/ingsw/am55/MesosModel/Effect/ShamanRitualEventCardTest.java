@@ -11,7 +11,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ShamanRitualEventCardTest {
-    //check effetti rituale sciamanico
     @Test
     void activateEventReturnsImmediatelyOnNullOrEmptyLists() {
         ShamanRitualEventCard card = new ShamanRitualEventCard(1, 1 ,4, 2);
@@ -33,12 +32,10 @@ class ShamanRitualEventCardTest {
         Player minimum = new Player("minimum", "red");
         minimum.addPP(10);
         minimum.addTribeCard(new Shaman(5,1, 1));
-//caso neutralizzata perdita x edificio 3
         Player protectedMinimum = new Player("protectedMinimum", "red");
         protectedMinimum.addPP(10);
         protectedMinimum.addTribeCard(new Shaman(6,1, 1));
         protectedMinimum.addTribeCard(new BuildingCard(0, 0, 0, 0, BuildingType.BUILDING3, null, 0));
-//per controllare i casi di n massimi o n minimi:
         Player doubleminimum = new Player("DoubleMinimum", "red");
         doubleminimum.addPP(10);
         doubleminimum.addTribeCard(new Shaman(7, 1, 1));

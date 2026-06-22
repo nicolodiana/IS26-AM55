@@ -12,8 +12,6 @@ class BuildingCardTest {
 
     @Test
     void constructorGettersAndAddToPlayerThroughPlayerMethodShouldWork() {
-        // Testa che il costruttore inizializzi correttamente i campi
-        // e che l'edificio possa essere aggiunto al player pagando il costo corretto.
 
         Player player = new Player("building", "totem1");
         player.addFood(10);
@@ -38,8 +36,6 @@ class BuildingCardTest {
 
     @Test
     void getSustenanceDiscountShouldReturnCountOfMatchingTypeForBuilding2() {
-        // Testa che BUILDING2 restituisca come sconto
-        // il numero di carte del tipo richiesto possedute dal player.
 
         Player player = new Player("discount", "totem2");
         player.addTribeCard(new Hunter(1, false, 0));
@@ -61,8 +57,6 @@ class BuildingCardTest {
 
     @Test
     void getSustenanceDiscountShouldReturnZeroIfBuildingIsNotBuilding2() {
-        // Testa che il metodo getSustenanceDiscount restituisca 0
-        // se l'edificio non è di tipo BUILDING2.
 
         Player player = new Player("noDiscount", "totem3");
         player.addTribeCard(new Hunter(1, false, 0));
@@ -83,8 +77,7 @@ class BuildingCardTest {
 
     @Test
     void getSustenanceDiscountShouldReturnZeroIfCharacterTypeIsNull() {
-        // Testa che BUILDING2 non generi sconto
-        // se il CharacterType associato è null.
+
 
         Player player = new Player("nullTypeDiscount", "totem4");
         player.addTribeCard(new Hunter(1, false, 0));
@@ -105,8 +98,7 @@ class BuildingCardTest {
 
     @Test
     void getEndGameBonusShouldReturnCountOfMatchingTypeForBuilding12() {
-        // Testa che BUILDING12 restituisca come bonus di fine partita
-        // il numero di carte del tipo richiesto possedute dal player.
+
 
         Player player = new Player("endBonus", "totem5");
         player.addTribeCard(new Builder(1, 3, 0, 0));
@@ -127,8 +119,7 @@ class BuildingCardTest {
 
     @Test
     void getEndGameBonusShouldReturnZeroIfBuildingIsNotBuilding12() {
-        // Testa che il bonus di fine partita sia 0
-        // se l'edificio non è di tipo BUILDING12.
+
 
         Player player = new Player("notEndBonus", "totem6");
         player.addTribeCard(new Builder(1, 3, 0, 0));
@@ -149,8 +140,7 @@ class BuildingCardTest {
 
     @Test
     void getEndGameBonusShouldReturnZeroIfCharacterTypeIsNull() {
-        // Testa che BUILDING12 non generi bonus di fine partita
-        // se il CharacterType associato è null.
+
 
         Player player = new Player("nullTypeBonus", "totem7");
         player.addTribeCard(new Builder(1, 3, 0, 0));

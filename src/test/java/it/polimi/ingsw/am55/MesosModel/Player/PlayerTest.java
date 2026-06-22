@@ -55,9 +55,6 @@ class PlayerTest {
     }
     @Test
     void addTribeCardForCharactersShouldPopulateAllListsAndApplyHunterInstantEffect() {
-        // Testa che ogni addTribeCard dei personaggi inserisca la carta
-        // nella lista corretta e che l'effetto istantaneo dell'Hunter con icona
-        // aggiunga cibo pari al numero di cacciatori presenti in tribù.
 
         Player player = new Player("tribe", "totem1");
 
@@ -77,15 +74,11 @@ class PlayerTest {
         assertEquals(1, player.getInventorsList().size());
         assertEquals(7, player.playerDeckSize());
 
-        // Il primo hunter ha icona e viene aggiunto quando la lista hunters ha size = 1
         assertEquals(1, player.getNumFoods());
     }
 
     @Test
     void addHunterWithIconShouldScaleFoodWithCurrentHunterCount() {
-        // Testa nel dettaglio l'effetto istantaneo dei cacciatori con icona:
-        // ogni volta che si aggiunge un Hunter con icona, il cibo guadagnato
-        // è pari al numero totale di Hunter dopo l'aggiunta.
 
         Player player = new Player("hunters", "totem2");
 
@@ -96,16 +89,11 @@ class PlayerTest {
         assertEquals(1, player.getNumFoods());
 
         player.addTribeCard(new Hunter(3, true, 0));
-        // al momento dell'aggiunta i cacciatori sono 3, quindi +3
         assertEquals(4, player.getNumFoods());
     }
 
     @Test
     void addInventorWithBuilding5ShouldAwardFoodOnlyWhenANewPairIsCompleted() {
-        // Testa l'effetto istantaneo di BUILDING5:
-        // quando si aggiunge un Inventor con la stessa invenzione e si completa
-        // una nuova coppia, il player guadagna 3 cibi.
-        // Il controllo deve essere case-insensitive.
 
         Player player = new Player("inventors", "totem3");
         player.getBuildings().add(new BuildingCard(1, 0, 0, 0, BuildingType.BUILDING5, null, 0));
@@ -125,10 +113,6 @@ class PlayerTest {
 
     @Test
     void addBuildingCardShouldApplyBuilderDiscountFloorAtZeroAndRejectIfFoodIsInsufficient() {
-        // Testa l'addTribeCard(BuildingCard):
-        // 1) applica correttamente lo sconto dato dai Builder
-        // 2) il costo non può scendere sotto zero
-        // 3) se il cibo non è sufficiente l'edificio non viene aggiunto
 
         Player discounted = new Player("discounted", "totem4");
         discounted.addFood(10);
@@ -149,7 +133,6 @@ class PlayerTest {
 
         Player poor = new Player("poor", "totem6");
         poor.addFood(1);
-        //*****Changes
         assertThrows(IllegalArgumentException.class,()->poor.addTribeCard(new BuildingCard(6, 0, 3, 0, BuildingType.BUILDING9, null, 0)));
         assertEquals(1, poor.getNumFoods());
         assertFalse(poor.hasBuilding(BuildingType.BUILDING9));
@@ -157,10 +140,6 @@ class PlayerTest {
 
     @Test
     void addBuilding1ShouldNotRewardPastCompletedSetsButShouldRewardNewOnes() {
-        // Testa il nuovo effetto di BUILDING1:
-        // i set già completati prima di ottenere l'edificio non danno ricompensa retroattiva;
-        // dopo aver ottenuto BUILDING1, ogni nuovo set completo di 6 tipi diversi
-        // deve assegnare 5 cibi nel momento esatto in cui si completa.
 
         Player player = new Player("building1", "totem7");
         player.addFood(20);
@@ -179,25 +158,16 @@ class PlayerTest {
         player.addTribeCard(new Collector(11, 0));
         player.addTribeCard(new Builder(12, 1, 0, 0));
 
-        // non ho ancora completato il secondo set, quindi niente bonus
         assertEquals(18, player.getNumFoods());
 
         player.addTribeCard(new Inventor("second-tool", 13, 0));
 
-        // qui completo il nuovo set e quindi ottengo +5 cibo
         assertEquals(23, player.getNumFoods());
         assertEquals(2, player.minCardSet());
     }
 
     @Test
     void addBuilding1ShouldRewardEveryNewCompletedSetExactlyOnce() {
-        // Testa che BUILDING1 assegni 5 cibi per ogni nuovo set completato,
-        // una sola volta per set, senza duplicare il bonus su aggiunte extra
-        // che non aumentano minCardSet().
-          // 10 cibo iniziale
-                // -2 costo BUILDING1
-                // +5 bonus per il completamento del set
-                //=13
 
         Player player = new Player("multiSet", "totem8");
         player.addFood(10);
@@ -225,8 +195,6 @@ class PlayerTest {
 
     @Test
     void addShamanShouldAffectCountShamanStarsAndBuilding6Bonus() {
-        // Testa che l'aggiunta degli Shaman aggiorni correttamente il conteggio stelle
-        // e che BUILDING6 aggiunga il bonus fisso di 3 stelle.
 
         Player player = new Player("stars", "totem9");
 

@@ -109,23 +109,6 @@ class BiddingTrailTest {
         assertEquals(Optional.empty(), trail.nextPlayerSecondPhase());
     }
 
-    /**
-     * Tests the boundary limits of the bidding trail after initialization.
-     * Verifies that valid max indices return expected states, while exceeding the
-     * available size throws an IndexOutOfBoundsException.
-     */
-    /*@Test
-    void testInitBiddingTrailSizeViaBounds() {
-        BiddingTrail biddingTrail = new BiddingTrail();
-        biddingTrail.initBiddingTrail(2);
-
-
-    }*\
-
-    /**
-     * Tests the  BiddingTrail#getIsTaken(int) method to verify that a bidding ticket's
-     * state correctly updates from available to taken after a player is placed on it.
-     */
     @Test
     void testBiddingTicketIsTaken(){
         BiddingTrail biddingTrail = new BiddingTrail();
@@ -148,8 +131,6 @@ class BiddingTrailTest {
         biddingTrail.setPlayer(0,p1);
         biddingTrail.removePlayer(p1);
 
-        // Note: This relies on the current while(true) implementation in getPlayerPositionOnTrail.
-        // If refactored, this assertion should be updated (e.g., to assert -1).
         assertThrows(PlayerNotOnTrail.class, () -> {
             biddingTrail.getPlayerPositionOnTrail(p1);
         });

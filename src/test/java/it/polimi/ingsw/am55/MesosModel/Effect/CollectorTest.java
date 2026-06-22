@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CollectorTest {
-    //stesso test degli artisti per check override
     @Test
     void addToPlayerAddsCollector() {
         Player player = new Player("Player 1", "red");

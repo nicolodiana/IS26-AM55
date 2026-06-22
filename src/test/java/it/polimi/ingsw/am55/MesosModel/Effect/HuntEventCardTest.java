@@ -10,7 +10,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class HuntEventCardTest {
-    //test per esclusivamente l'evento caccia
     @Test
     void activateEventAwardsPointsAndFoodWithAndWithoutBuilding8() {
         Player boosted = new Player("testhuntevent", "red");
