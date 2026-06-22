@@ -6,58 +6,54 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
-import java.util.concurrent.CountDownLatch;
-
 /**
  * JavaFX application entry point for the GUI client.
  * <p>
- * This class only initializes the JavaFX view and registers it as an observer
- * of the client model. The network connection is intentionally started by
- * {@code Client} after the GUI is ready, so the first server update cannot be lost.
+ * This class is responsible only for creating the JavaFX view, registering it
+ * as an observer of the client model, initializing the scene manager and showing
+ * the first scene. The network connection is started by the bootstrap code
+ * through a callback executed after the GUI is ready.
  */
 public class JavaFXGui extends Application {
 
-    private static final CountDownLatch GUI_READY = new CountDownLatch(1);
-
     private static ClientModel bootstrapModel;
     private static UserActionHandler bootstrapActionHandler;
+    private static Runnable onGuiReady;
 
     /**
-     * Launches JavaFX using the already-created client dependencies.
+     * Launches the JavaFX GUI.
      * <p>
-     * This method blocks until the JavaFX application is closed, so callers that
-     * need to continue execution should invoke it from a dedicated thread.
+     * {@link Application#launch(Class, String...)} is blocking, so the caller
+     * should not expect this method to return until the JavaFX application is closed.
+     * The {@code readyCallback} is executed after the GUI has registered its observer
+     * and displayed the initial scene.
      *
-     * @param model observed client model
-     * @param actionHandler command handler used by the GUI
+     * @param model observed client model.
+     * @param actionHandler command handler used by the GUI.
+     * @param readyCallback callback executed when the GUI is ready to receive updates.
      */
-    public static void launchGui(ClientModel model, UserActionHandler actionHandler) {
+    public static void launchGui(
+            ClientModel model,
+            UserActionHandler actionHandler,
+            Runnable readyCallback
+    ) {
         bootstrapModel = model;
         bootstrapActionHandler = actionHandler;
+        onGuiReady = readyCallback;
         Application.launch(JavaFXGui.class);
     }
 
     /**
-     * Waits until the GUI has created its view, registered the observer and
-     * initialized the first scene.
+     * Initializes the JavaFX stage and signals that the GUI can safely receive
+     * server-driven model updates.
      *
-     * @throws InterruptedException if the waiting thread is interrupted
-     */
-    public static void awaitGuiReady() throws InterruptedException {
-        GUI_READY.await();
-    }
-
-    /**
-     * Initializes the stage and registers the GUI observer before allowing the
-     * network connection to start.
-     *
-     * @param stage primary JavaFX stage
+     * @param stage primary JavaFX window.
      */
     @Override
     public void start(Stage stage) {
         if (bootstrapModel == null || bootstrapActionHandler == null) {
             throw new IllegalStateException(
-                    "JavaFXGui must be started with launchGui(model, actionHandler)."
+                    "JavaFXGui must be launched with a model and an action handler."
             );
         }
 
@@ -66,7 +62,6 @@ public class JavaFXGui extends Application {
         bootstrapModel.addObserver(guiView);
 
         SceneManager.init(stage, guiView);
-
         stage.setTitle("AM55 - Mesos");
         stage.setMinWidth(1150);
         stage.setMinHeight(760);
@@ -77,6 +72,8 @@ public class JavaFXGui extends Application {
 
         guiView.showInitialScene();
 
-        GUI_READY.countDown();
+        if (onGuiReady != null) {
+            new Thread(onGuiReady, "GUI-Connect-Thread").start();
+        }
     }
 }

@@ -165,7 +165,7 @@ class TurnTicketTest {
         turnTicket.initTurnTicket(List.of(p1, p2));
 
 
-        turnTicket.removePlayerFromTurnTicket();
+        turnTicket.removePlayersFromTurnTicket();
 
         assertTrue(turnTicket.getTurnOrder().isEmpty());
 

@@ -21,7 +21,6 @@ public class ClientModel implements  ClientModelUpdater {
     private boolean gameStarted;
     private boolean gameEnded;
     private boolean gameCrashed;
-    private boolean commandDone = false;
     private boolean inLobby = true;
     private LobbyView lobbyView;
     private MessageToClient lastMessage;
@@ -98,7 +97,7 @@ public class ClientModel implements  ClientModelUpdater {
     }
     public boolean isGameEnded() {
         synchronized (lock) {
-            return gameView != null && gameView.getState().equals(GameState.ENDED);
+            return gameEnded;
         }
     }
     public GameView getGameView() {

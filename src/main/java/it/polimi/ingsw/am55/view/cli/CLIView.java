@@ -494,14 +494,35 @@ public class CLIView implements ClientModelObserver {
             return;
         }
 
+        if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
+            withOutput(() -> {
+                if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
+                    renderer.showInfo(currentInfoMessage);
+                }
+                renderer.showInfo("The game has ended. Final results are being prepared...");
+            });
+            pendingEventResolutionDelay = true;
+            return;
+        }
+
         if (action == ClientAction.RESOLVE_EVENTS && gameViewUpdated) {
-            withOutput(() -> renderer.showInfo("Event resolution is starting..."));
+            withOutput(() -> {
+                if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
+                    renderer.showInfo(currentInfoMessage);
+                }
+                renderer.showInfo("Event resolution is starting...");
+            });
             pendingEventResolutionDelay = true;
             return;
         }
 
         if (action == ClientAction.END_GAME_RESOLVE && gameViewUpdated) {
-            withOutput(() -> renderer.showInfo("The game has ended. Final results are being prepared..."));
+            withOutput(() -> {
+                if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
+                    renderer.showInfo(currentInfoMessage);
+                }
+                renderer.showInfo("The game has ended. Final results are being prepared...");
+            });
             pendingEventResolutionDelay = true;
             return;
         }
@@ -676,7 +697,7 @@ public class CLIView implements ClientModelObserver {
      * Resolves the current client action from the latest local state.
      */
     private ClientAction resolveCurrentAction() {
-        return actionResolver.resolve(currentGameView, id, inLobby, model.isGameCrashed());
+        return actionResolver.resolve(currentGameView, id, inLobby, model.isGameCrashed(), model.isGameEnded());
     }
 
     /**

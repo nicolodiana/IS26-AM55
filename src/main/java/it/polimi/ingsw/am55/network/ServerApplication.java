@@ -378,7 +378,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         System.out.println("[SERVER_APP] quitGame called by: " + playerId);
 
         MessageToClient message = controller.quitGame(playerId);
-        MessageToClient messageToLobby = new QuitLobbyMessage("Uno o più giocatori hanno chiesto di uscire dal game, sarai disconnesso...",true);
+        MessageToClient messageToLobby = new QuitLobbyMessage("One or more players has requested to exit, you're disconnected",true);
 
         message.deliver(playerId, this);
         messageToLobby.deliver(null,this);
@@ -395,7 +395,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
      */
     public void quitLobby(String sessionId){
 
-        MessageToClient message = new QuitLobbyMessage("Ti sei disconnesso dalla lobby",false);
+        MessageToClient message = new QuitLobbyMessage("You are disconnected ",false);
         message.deliver(sessionId, this);
 
         unregisterLobbyClient(sessionId);

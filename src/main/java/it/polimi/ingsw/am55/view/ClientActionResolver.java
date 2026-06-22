@@ -20,12 +20,16 @@ public class ClientActionResolver {
      * @param gameCrashed whether the client model marked the game as crashed
      * @return current view-level action
      */
-    public ClientAction resolve(GameView gameView, String myPlayerId, boolean inLobby, boolean gameCrashed) {
+    public ClientAction resolve(GameView gameView, String myPlayerId, boolean inLobby, boolean gameCrashed, boolean  game_ended) {
         if (gameCrashed) {
             return ClientAction.CRASHED;
         }
         if (inLobby) {
             return ClientAction.LOBBY;
+        }
+
+        if (game_ended ) {
+            return ClientAction.END_GAME;
         }
         if (gameView == null || gameView.getState() == null) {
             return ClientAction.WAITING_FOR_STATE;
@@ -36,9 +40,7 @@ public class ClientActionResolver {
         if (state == GameState.CREATED) {
             return ClientAction.WAITING_TO_START;
         }
-        if (state == GameState.ENDED) {
-            return ClientAction.END_GAME;
-        }
+
         if (state == GameState.EVENTRESOLVE) {
             return ClientAction.RESOLVE_EVENTS;
         }

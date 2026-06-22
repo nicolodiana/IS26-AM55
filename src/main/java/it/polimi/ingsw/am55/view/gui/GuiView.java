@@ -115,32 +115,14 @@ public class GuiView implements ClientModelObserver {
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         Platform.runLater(() -> {
+            MessageToClient lastmessage=updatedModel.getLastMessage();
             currentErrorMessage = updatedModel.getLastError();
             currentInfoMessage = updatedModel.getStateRequest();
             currentGameView = updatedModel.getGameView();
             inLobby = updatedModel.isInLobby();
             currentLobbyView = updatedModel.getLobbyView();
 
-            MessageToClient lastMessage = updatedModel.getLastMessage();
-            if (lastMessage instanceof QuitGameMessage
-                    || lastMessage instanceof QuitLobbyMessage
-                    || lastMessage instanceof GameCrashedBroadcast
-                    || lastMessage instanceof ConnectionLostMessage) {
-                showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "Disconnected from the server."));
-                return;
-            }
-
-            if (SceneManager.isCurrentScene(GuiSceneType.QUIT_GAME)) {
-                updateTerminalStatus();
-                return;
-            }
-
             if (!startGameRequested && inLobby) {
-                if (SceneManager.isCurrentScene(GuiSceneType.START)
-                        && currentInfoMessage != null
-                        && !currentInfoMessage.isBlank()) {
-                    showInfo("Press START GAME to enter the lobby.");
-                }
                 return;
             }
 
@@ -149,20 +131,6 @@ public class GuiView implements ClientModelObserver {
         });
     }
 
-    /**
-     * Updates the terminal scene without navigating away from it.
-     */
-    private void updateTerminalStatus() {
-        GenericSceneController controller = SceneManager.getActiveController();
-        if (controller == null) {
-            return;
-        }
-        if (currentErrorMessage != null && !currentErrorMessage.isBlank()) {
-            controller.showStatus(currentErrorMessage);
-        } else if (currentInfoMessage != null && !currentInfoMessage.isBlank()) {
-            controller.showStatus(currentInfoMessage);
-        }
-    }
 
     /**
      * Checks whether the lobby is already past the joinable CREATED state.
@@ -193,41 +161,48 @@ public class GuiView implements ClientModelObserver {
     /**
      * Routes the current model snapshot to the proper scene.
      */
+    /**
+     * Routes the current model snapshot to the proper scene.
+     * <p>
+     * This method is the GUI counterpart of the CLI expected-action rendering:
+     * it reads the latest model snapshot, resolves the current client action and
+     * chooses which scene must be shown.
+     */
+    /**
+     * Routes the current model snapshot to the proper scene.
+     * <p>
+     * This method is the GUI counterpart of the CLI expected-action rendering:
+     * it reads the latest model snapshot, resolves the current client action and
+     * chooses which scene must be shown.
+     */
     private void renderCurrentState() {
-        ClientAction crashAction = actionResolver.resolve(currentGameView, playerId, inLobby, model.isGameCrashed());
-        if (crashAction == ClientAction.CRASHED) {
-            showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "The connection is closed."));
-            return;
-        }
+        ClientAction action = actionResolver.resolve(currentGameView, playerId, inLobby, model.isGameCrashed(), model.isGameEnded());
 
-        if (inLobby) {
-            if (isLobbyGameAlreadyStarted()) {
-                leaveLobbyBecauseGameAlreadyStarted();
-                return;
-            }
-            showLobby(false);
-            return;
-        }
-
-        EndGameResultView result = model.getEndGameResultView();
-        if (result != null) {
-            showEndGame(result);
-            return;
-        }
-
-        ClientAction action = actionResolver.resolve(currentGameView, playerId, false, model.isGameCrashed());
         switch (action) {
-            case LOBBY -> showLobby(false);
-            case WAITING_TO_START -> showLobby(true);
+            case CRASHED -> showTerminalMessage(
+                    nonBlankOrDefault(currentInfoMessage, "The connection is closed.")
+            );
+
             case END_GAME -> {
                 EndGameResultView endGameResult = model.getEndGameResultView();
+
                 if (endGameResult != null) {
                     showEndGame(endGameResult);
                 } else {
                     showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "The game has ended."));
                 }
             }
-            case CRASHED -> showTerminalMessage(nonBlankOrDefault(currentInfoMessage, "The connection is closed."));
+
+            case LOBBY -> {
+                if (isLobbyGameAlreadyStarted()) {
+                    leaveLobbyBecauseGameAlreadyStarted();
+                    return;
+                }
+                showLobby(false);
+            }
+
+            case WAITING_TO_START -> showLobby(true);
+
             default -> showGame(currentGameView, action);
         }
     }

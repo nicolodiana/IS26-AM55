@@ -14,20 +14,7 @@ public class ResolveShamanRitualView extends ResolveEventView implements Seriali
         System.out.println("effect to food: " + this.effectToPlayer);
     }
 
-    @Override
-    public String toString() {
-        return "ResolveShamanRitualView{" +
-                "effectToPP=" + effectToPlayer +
-                '}';
-    }
 
-//    public void showEvent() {
-//        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
-//
-//        for (String id : effectToPlayer.keySet()) {
-//            System.out.println("PP gained/lost by " + id + ": " + effectToPlayer.get(id));
-//        }
-//    }
 
     public StringBuilder showEvent() {
         StringBuilder result = new StringBuilder();

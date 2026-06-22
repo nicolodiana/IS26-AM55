@@ -349,7 +349,7 @@ public class Board {
      * Empties every slot of the turn-order track while preserving its size.
      */
     public void removeAllPlayersFromTurnTicket(){
-        playerOrder.removePlayerFromTurnTicket();
+        playerOrder.removePlayersFromTurnTicket();
     }
 
     /**

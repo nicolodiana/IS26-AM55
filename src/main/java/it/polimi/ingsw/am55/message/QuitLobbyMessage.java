@@ -38,6 +38,7 @@ public class QuitLobbyMessage extends MessageToClient{
         model.clearError();
         model.setInLobby(false);
         model.setGameStarted(false);
+        model.setGameEnded(true);
         model.setStateRequest(message);
         model.setLastMessageUpdatedGameView(false);
     }

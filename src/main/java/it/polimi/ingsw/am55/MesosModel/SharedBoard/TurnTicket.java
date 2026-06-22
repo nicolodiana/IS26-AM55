@@ -163,20 +163,25 @@ public class TurnTicket {
      *        slot empty
      */
     public void addPlayer(Player player) {
-        turnOrder.add(player);
-//        for (int i = 0; i < turnOrder.size(); i++) {
-//
-//            if (turnOrder.get(i) == null) {
-//                turnOrder.set(i, player);
-//                return;
-//            }
-//        }
+        for (int i = 0; i < turnOrder.size(); i++) {
+            if (turnOrder.get(i) == null) {
+                turnOrder.set(i, player);
+                return;
+            }
+        }
     }
 
     /**
-     * Removes all players from the turn order ticket
+     * Clears all occupied turn-order slots without changing the track size.
+     *
+     * <p>Every non-{@code null} entry is replaced with {@code null}, preparing
+     * the track to receive players in their second-phase completion order.</p>
      */
-    public void removePlayerFromTurnTicket() {
-        turnOrder.clear();
+    public void removePlayersFromTurnTicket() {
+        for (int i = 0; i < turnOrder.size(); i++) {
+            if (turnOrder.get(i) != null) {
+                turnOrder.set(i, null);
+            }
+        }
     }
 }

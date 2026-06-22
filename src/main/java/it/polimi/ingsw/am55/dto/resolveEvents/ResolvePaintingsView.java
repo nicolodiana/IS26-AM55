@@ -18,22 +18,7 @@ public class ResolvePaintingsView extends ResolveEventView implements Serializab
         System.out.println("Nome evento: " + this.effectToPP);
     }
 
-    @Override
-    public String toString() {
-        return "ResolvePaintingsView{" +
-                "effectToPP=" + effectToPP +
-                ", effectToFood=" + effectToPlayer +
-                '}';
-    }
 
-//    public void showEvent() {
-//        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
-//
-//        for (String id : effectToPP.keySet()) {
-//            System.out.println("Food gained/lost by " + id + ": " + effectToPP.get(id));
-//            System.out.println("\nPP gained/lost by " + id + ": " + effectToPlayer.get(id));
-//        }
-//    }
 
     public StringBuilder showEvent() {
         StringBuilder result = new StringBuilder();

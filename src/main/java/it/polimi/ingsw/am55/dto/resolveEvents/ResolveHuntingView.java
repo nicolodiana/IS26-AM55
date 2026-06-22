@@ -12,34 +12,17 @@ public class ResolveHuntingView extends ResolveEventView implements Serializable
     public ResolveHuntingView(Map<String, Integer> effectToFood, Map<String, Integer> effectToPP, String nameEvent) {
         super(effectToFood, nameEvent);
         this.effectToPP = effectToPP;
-        /*System.out.println("Nome evento: " + this.nameEvent);
-        System.out.println("effect to food: " + this.effectToPlayer);
-        System.out.println("Nome evento: " + this.effectToPP);*/
+
     }
 
-    @Override
-    public String toString() {
-        return "ResolveHuntingView{" +
-                "effectToPP=" + effectToPP +
-                "effectToFood=" + effectToPlayer +
-                '}';
-    }
 
-//    public void showEvent() {
-//        System.out.println(ConsoleColor.RED_BOLD + nameEvent + ConsoleColor.RESET);
-//
-//        for (String id : effectToPP.keySet()) {
-//            System.out.println("Food gained/lost by " + id + ": " + effectToPP.get(id));
-//            System.out.println("PP gained/lost by " + id + ": " + effectToPlayer.get(id));
-//        }
-//    }
 
     public StringBuilder showEvent() {
         StringBuilder result = new StringBuilder();
 
         for (String id : effectToPP.keySet()) {
-            result.append("Food gained/lost by " + id + ": " + effectToPP.get(id) +
-                    "\nPP gained/lost by " + id + ": " + effectToPlayer.get(id) + "\n");
+            result.append("Food gained/lost by " + id + ": " + effectToPlayer.get(id) +
+                    "\nPP gained/lost by " + id + ": " + effectToPP.get(id) + "\n");
         }
 
         return result;

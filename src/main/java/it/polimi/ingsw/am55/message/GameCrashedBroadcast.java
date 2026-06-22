@@ -31,7 +31,6 @@ public class GameCrashedBroadcast extends MessageToClient{
         model.clearError();
         model.setStateRequest(message);
         model.setGameStarted(false);
-        model.setGameEnded(true);
         model.setGameCrashed(true);
         model.setInLobby(false);
         model.setLastMessageUpdatedGameView(false);

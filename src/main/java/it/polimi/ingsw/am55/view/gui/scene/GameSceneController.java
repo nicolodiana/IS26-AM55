@@ -565,8 +565,6 @@ public class GameSceneController implements GenericSceneController {
             case PICK_SPECIAL -> "Building 13: choose a card from the UPPER ROW.";
             case WAITING_FOR_TURN -> "Wait for " + safe(currentPlayer) + " to finish the turn.";
             case RESOLVE_EVENTS -> "Event resolution: read the summary and wait for the next update.";
-            case END_GAME -> "The game has ended.";
-            case CRASHED -> "The game is closed.";
             default -> "Wait for a state update.";
         };
 

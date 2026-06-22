@@ -28,7 +28,7 @@ public class StartSceneController implements GenericSceneController {
      */
     @FXML
     private void initialize() {
-        statusLabel.setText("Press START GAME to synchronize with the lobby.");
+        statusLabel.setText("Press START GAME to enter in lobby ");
     }
 
     /**

@@ -18,11 +18,8 @@ public class ConnectionLostMessage extends MessageToClient {
     @Override
     public void update(ClientModel model) {
         model.clearError();
-
         model.setStateRequest(message);
-
         model.setGameStarted(false);
-        model.setGameEnded(true);
         model.setGameCrashed(true);
 
         // Importante: se perdi connessione mentre sei ancora in lobby,

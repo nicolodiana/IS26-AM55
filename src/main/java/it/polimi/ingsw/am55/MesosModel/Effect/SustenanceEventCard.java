@@ -74,11 +74,11 @@ public class SustenanceEventCard extends EventCard {
             // Non tolgo foodToPay direttamente, perché il giocatore potrebbe
             // non avere abbastanza cibo.
             p.payFood(paidFood);
-            effectToFood.put(p.getNickname(), paidFood);
+            effectToFood.put(p.getNickname(), -paidFood);
             // 9) Applico la penalità in punti prestigio.
             // Per ogni personaggio non sfamato il giocatore perde numPP.
             p.payPP(unfedCharacters * numPP);
-            effectToPP.put(p.getNickname(), unfedCharacters * numPP);
+            effectToPP.put(p.getNickname(), -unfedCharacters * numPP);
         }
     }
 

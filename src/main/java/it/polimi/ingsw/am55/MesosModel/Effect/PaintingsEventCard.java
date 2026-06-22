@@ -30,25 +30,34 @@ public class PaintingsEventCard extends EventCard {
         this.lowerNumberOfArtist = lowerNumberOfArtist;
     }
 
+
     @Override
     public void activateEvent(List<Player> players) {
+        effectToFood.clear();
+        effectToPP.clear();
+
         for (Player p : players) {
             int counterArtist = p.countByType(CharacterType.ARTIST);
 
+            int foodEffect = 0;
+            int ppEffect = 0;
 
             if (p.hasBuilding(BuildingType.BUILDING10)) {
-                p.addFood(counterArtist);
-                effectToFood.put(p.getNickname(), counterArtist);
+                foodEffect = counterArtist;
+                p.addFood(foodEffect);
             }
 
             // nessun controllo: può andare sotto zero la riserva di punti prestigio
             if (counterArtist <= upperNumberOfArtist) {
+                ppEffect = -upperPP;
                 p.payPP(upperPP);
-                effectToPP.put(p.getNickname(), - upperPP);
             } else if (counterArtist >= lowerNumberOfArtist) {
-                p.addPP(counterArtist * lowerPP);
-                effectToPP.put(p.getNickname(), counterArtist * lowerPP);
+                ppEffect = counterArtist * lowerPP;
+                p.addPP(ppEffect);
             }
+
+            effectToFood.put(p.getNickname(), foodEffect);
+            effectToPP.put(p.getNickname(), ppEffect);
         }
     }
 
