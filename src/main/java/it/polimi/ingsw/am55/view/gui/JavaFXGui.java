@@ -2,46 +2,62 @@ package it.polimi.ingsw.am55.view.gui;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
-import it.polimi.ingsw.am55.network.ClientImpl;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * JavaFX application entry point for the GUI client.
  * <p>
- * Network objects are created by the regular client bootstrap. This class only
- * receives them through {@link #launchGui(ClientModel, UserActionHandler, ClientImpl)}
- * and wires them into the JavaFX view.
+ * This class only initializes the JavaFX view and registers it as an observer
+ * of the client model. The network connection is intentionally started by
+ * {@code Client} after the GUI is ready, so the first server update cannot be lost.
  */
 public class JavaFXGui extends Application {
 
+    private static final CountDownLatch GUI_READY = new CountDownLatch(1);
+
     private static ClientModel bootstrapModel;
     private static UserActionHandler bootstrapActionHandler;
-    private static ClientImpl bootstrapClient;
 
     /**
      * Launches JavaFX using the already-created client dependencies.
+     * <p>
+     * This method blocks until the JavaFX application is closed, so callers that
+     * need to continue execution should invoke it from a dedicated thread.
      *
      * @param model observed client model
-     * @param actionHandler command handler used by the view
-     * @param client network client that connects to the server
+     * @param actionHandler command handler used by the GUI
      */
-    public static void launchGui(ClientModel model, UserActionHandler actionHandler, ClientImpl client) {
+    public static void launchGui(ClientModel model, UserActionHandler actionHandler) {
         bootstrapModel = model;
         bootstrapActionHandler = actionHandler;
-        bootstrapClient = client;
         Application.launch(JavaFXGui.class);
     }
 
     /**
-     * Initializes the stage, registers the GUI observer, and starts the network connection.
+     * Waits until the GUI has created its view, registered the observer and
+     * initialized the first scene.
+     *
+     * @throws InterruptedException if the waiting thread is interrupted
+     */
+    public static void awaitGuiReady() throws InterruptedException {
+        GUI_READY.await();
+    }
+
+    /**
+     * Initializes the stage and registers the GUI observer before allowing the
+     * network connection to start.
+     *
+     * @param stage primary JavaFX stage
      */
     @Override
     public void start(Stage stage) {
-        if (bootstrapModel == null || bootstrapActionHandler == null || bootstrapClient == null) {
+        if (bootstrapModel == null || bootstrapActionHandler == null) {
             throw new IllegalStateException(
-                    "JavaFXGui must be started with launchGui(model, actionHandler, client)."
+                    "JavaFXGui must be started with launchGui(model, actionHandler)."
             );
         }
 
@@ -50,6 +66,7 @@ public class JavaFXGui extends Application {
         bootstrapModel.addObserver(guiView);
 
         SceneManager.init(stage, guiView);
+
         stage.setTitle("AM55 - Mesos");
         stage.setMinWidth(1150);
         stage.setMinHeight(760);
@@ -59,26 +76,7 @@ public class JavaFXGui extends Application {
         });
 
         guiView.showInitialScene();
-        startConnectionThread();
-    }
 
-    /**
-     * Connects the network client without blocking the JavaFX application thread.
-     */
-    private void startConnectionThread() {
-        Thread connectThread = new Thread(() -> {
-            try {
-                bootstrapClient.connect();
-            } catch (Exception e) {
-                Platform.runLater(() -> {
-                    System.err.println("[GUI] Connection error: " + e.getMessage());
-                    e.printStackTrace();
-                });
-            }
-        });
-
-        connectThread.setName("GUI-Connect-Thread");
-        connectThread.setDaemon(true);
-        connectThread.start();
+        GUI_READY.countDown();
     }
 }

@@ -7,17 +7,16 @@ import javafx.scene.control.Label;
 /**
  * Controller for terminal messages such as quit, crash, and connection loss.
  */
-public class QuitGameSceneController implements GenericSceneController {
+public class TerminalGameSceneController implements GenericSceneController {
 
     @FXML private Label messageLabel;
-
 
     /**
      * Injects the owning GUI view.
      */
     @Override
     public void setGuiView(GuiView guiView) {
-        // No interactive actions are available in this terminal scene.
+
     }
 
     /**
@@ -51,7 +50,7 @@ public class QuitGameSceneController implements GenericSceneController {
      * Keeps the final message stable because this scene has no active controls.
      */
     @Override
-    public void lockInteractions(String message) {
-        // Terminal scene: there are no interactions to lock.
+    public void lockInteractions() {
+
     }
 }

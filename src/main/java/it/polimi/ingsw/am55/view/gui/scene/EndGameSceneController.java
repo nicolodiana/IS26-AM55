@@ -35,7 +35,7 @@ public class EndGameSceneController implements GenericSceneController {
      */
     @Override
     public void setGuiView(GuiView guiView) {
-        // No interactive actions are available in the final scene.
+
     }
 
     /**
@@ -212,7 +212,7 @@ public class EndGameSceneController implements GenericSceneController {
      * Does nothing because the final scene has no gameplay interactions.
      */
     @Override
-    public void lockInteractions(String message) {
-        // Final scene: no interactions to lock.
+    public void lockInteractions() {
+
     }
 }

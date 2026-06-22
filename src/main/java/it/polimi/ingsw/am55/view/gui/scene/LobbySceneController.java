@@ -69,7 +69,6 @@ public class LobbySceneController implements GenericSceneController {
             return;
         }
 
-        lockInteractions("Creating the game...");
         guiView.createGame(nickname, totem, numPlayers);
     }
 
@@ -85,7 +84,6 @@ public class LobbySceneController implements GenericSceneController {
             return;
         }
 
-        lockInteractions("Joining the game...");
         guiView.joinGame(nickname, totem);
     }
 
@@ -114,12 +112,10 @@ public class LobbySceneController implements GenericSceneController {
 
         if (locked) {
             setLocked(true);
-            showMessage(nonBlankOrDefault(statusLabel.getText(), "Command sent. Waiting for the server..."));
             return;
         }
 
         applyLobbyControls(lobbyView, availableTotems);
-        showLobbySummary(lobbyView, availableTotems);
     }
 
     /**
@@ -154,32 +150,6 @@ public class LobbySceneController implements GenericSceneController {
         numPlayersSpinner.setDisable(true);
     }
 
-    /**
-     * Writes the lobby summary matching the current lobby snapshot.
-     */
-    private void showLobbySummary(LobbyView lobbyView, List<String> availableTotems) {
-        boolean hasGame = lobbyView != null && lobbyView.hasGame();
-        boolean gameCreated = lobbyView != null && lobbyView.isGameCreated();
-
-        if (!hasGame) {
-            showMessage("No game has been created yet. You can create a new one.");
-            return;
-        }
-
-        if (gameCreated) {
-            String players = lobbyView.getPlayerIds().isEmpty()
-                    ? "no players"
-                    : String.join(", ", lobbyView.getPlayerIds());
-            String totems = availableTotems.isEmpty()
-                    ? "none"
-                    : String.join(", ", availableTotems).toUpperCase();
-
-            showMessage("Game created. Players: " + players + ". Available totems: " + totems + ".");
-            return;
-        }
-
-        showMessage("The game has already started or is not accepting new players.");
-    }
 
     /**
      * Restores lobby controls after an error using the same rules as a normal render.
@@ -223,14 +193,11 @@ public class LobbySceneController implements GenericSceneController {
     }
 
     /**
-     * Locks lobby controls while a command is waiting for a server response.
+     * Locks lobby controls without changing the currently visible status message.
      */
     @Override
-    public void lockInteractions(String message) {
+    public void lockInteractions() {
         setLocked(true);
-        statusLabel.getStyleClass().removeAll("error-text", "info-text");
-        statusLabel.getStyleClass().add("info-text");
-        statusLabel.setText(message == null ? "" : message);
     }
 
     /**

@@ -69,11 +69,10 @@ public class StartSceneController implements GenericSceneController {
     }
 
     /**
-     * Locks the start button while the view is waiting for the server.
+     * Locks the start button without changing the current status message.
      */
     @Override
-    public void lockInteractions(String message) {
+    public void lockInteractions() {
         startButton.setDisable(true);
-        showStatus(message);
     }
 }

@@ -78,14 +78,13 @@ public class GameSceneController implements GenericSceneController {
      * @param gameView latest game snapshot
      * @param action current client action
      * @param myPlayerId local player nickname
-     * @param locked whether a command is waiting for the server
      */
-    public void render(GameView gameView, ClientAction action, String myPlayerId, boolean locked) {
+    public void render(GameView gameView, ClientAction action, String myPlayerId) {
         if (gameView == null) {
             return;
         }
 
-        this.mode = locked ? GuiInteractionMode.LOCKED : toGuiMode(action);
+        this.mode = toGuiMode(action);
         synchronizePickProgress(gameView, myPlayerId);
 
         gameIdLabel.setText("Game: " + safe(gameView.getGameId()));
@@ -98,7 +97,7 @@ public class GameSceneController implements GenericSceneController {
         renderBiddingTrail(gameView.getBoard(), myPlayerId);
         renderRows(gameView.getBoard());
         renderEvents(gameView.getResolveEvents());
-        updateInstruction(action, gameView, myPlayerId, locked);
+        updateInstruction(action, gameView, myPlayerId);
 
         previousBoardSnapshot = BoardSnapshot.from(gameView.getBoard());
     }
@@ -124,16 +123,14 @@ public class GameSceneController implements GenericSceneController {
     }
 
     /**
-     * Disables all clickable board elements while waiting for the server.
+     * Disables all clickable board elements without changing the current messages.
      */
     @Override
-    public void lockInteractions(String message) {
+    public void lockInteractions() {
         this.mode = GuiInteractionMode.LOCKED;
         disableChildrenClicks(biddingTrailBox);
         disableChildrenClicks(upperRowBox);
         disableChildrenClicks(lowerRowBox);
-        showStatus(message);
-        instructionLabel.setText("Wait for the server response...");
     }
 
     /**
@@ -560,12 +557,7 @@ public class GameSceneController implements GenericSceneController {
     /**
      * Updates the instruction banner according to the current action.
      */
-    private void updateInstruction(ClientAction action, GameView gameView, String myPlayerId, boolean locked) {
-        if (locked) {
-            instructionLabel.setText("Command sent. Wait for the server response.");
-            return;
-        }
-
+    private void updateInstruction(ClientAction action, GameView gameView, String myPlayerId) {
         String currentPlayer = gameView == null ? null : gameView.getCurrentPlayer();
         String text = switch (action) {
             case PLACE_TOTEM -> "It is your turn: choose a free ticket on the Bidding Trail.";

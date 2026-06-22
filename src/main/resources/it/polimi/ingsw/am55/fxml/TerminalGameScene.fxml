@@ -7,7 +7,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            fx:controller="it.polimi.ingsw.am55.view.gui.scene.QuitGameSceneController"
+            fx:controller="it.polimi.ingsw.am55.view.gui.scene.TerminalGameSceneController"
             stylesheets="@../css/gui.css"
             styleClass="root-pane">
 

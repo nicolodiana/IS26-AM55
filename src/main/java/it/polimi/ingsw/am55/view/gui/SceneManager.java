@@ -16,6 +16,7 @@ import java.util.Objects;
  * The primary {@link Stage} is created once; each navigation only replaces the
  * root node of the active {@link Scene} with the root loaded from the requested FXML.
  */
+
 public final class SceneManager {
 
     private static Stage mainStage;
@@ -31,6 +32,7 @@ public final class SceneManager {
     /**
      * Initializes the manager with the application stage and owner view.
      */
+
     public static void init(Stage stage, GuiView view) {
         mainStage = Objects.requireNonNull(stage, "stage");
         guiView = Objects.requireNonNull(view, "view");
@@ -39,36 +41,25 @@ public final class SceneManager {
     /**
      * Returns the controller of the currently visible scene.
      */
+
     public static GenericSceneController getActiveController() {
         return activeController;
     }
 
     /**
-     * Returns the FXML path of the currently visible scene.
+    questo serve per ritornare il type dell'istanza scena che ho
+     *
      */
-    public static String getCurrentFxml() {
-        return currentFxml;
-    }
 
-    /**
-     * Returns the enum value of the currently visible scene.
-     */
     public static GuiSceneType getCurrentSceneType() {
         return currentSceneType;
     }
 
     /**
-     * Checks whether a scene type is currently visible.
+     * questo serve x controllare se una scena e uguale ad un altra
      */
     public static boolean isCurrentScene(GuiSceneType sceneType) {
         return currentSceneType == sceneType;
-    }
-
-    /**
-     * Returns the JavaFX primary stage.
-     */
-    public static Stage getMainStage() {
-        return mainStage;
     }
 
     /** Shows the splash/start scene. */
@@ -134,6 +125,7 @@ public final class SceneManager {
             }
 
             sceneController.setGuiView(guiView);
+
             activeController = sceneController;
             currentFxml = fxmlPath;
             currentSceneType = sceneType;

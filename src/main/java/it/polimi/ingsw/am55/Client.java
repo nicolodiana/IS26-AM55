@@ -71,12 +71,40 @@ public class Client {
         client.connect();
     }
 
+    /**
+     * Starts the JavaFX GUI and connects the network client only after the GUI
+     * has registered itself as an observer of the model.
+     *
+     * @param model shared client model
+     * @param controller command handler used by the GUI
+     * @param client network client
+     * @throws Exception if the GUI initialization wait is interrupted
+     */
     private static void startGui(
             ClientModel model,
             ClientController controller,
             ClientImpl client
-    ) {
-        JavaFXGui.launchGui(model, controller, client);
+    ) throws Exception {
+        Thread guiThread = new Thread(
+                () -> JavaFXGui.launchGui(model, controller),
+                "JavaFX-Launcher-Thread"
+        );
+        guiThread.setDaemon(false);
+        guiThread.start();
+
+        JavaFXGui.awaitGuiReady();
+
+        Thread connectThread = new Thread(() -> {
+            try {
+                client.connect();
+            } catch (Exception e) {
+                System.err.println("[CLIENT] Connection error: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }, "GUI-Connect-Thread");
+
+        connectThread.setDaemon(true);
+        connectThread.start();
     }
 
     private static String askHost(Scanner scanner, String[] args) {

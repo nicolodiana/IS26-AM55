@@ -29,9 +29,11 @@ public interface GenericSceneController {
     void showError(String message);
 
     /**
-     * Locks user interactions while a command is waiting for a server response.
-     *
-     * @param message message explaining why interactions are locked
+     * Locks user interactions without changing the currently visible status message.
+     * <p>
+     * Each scene controller decides which controls must be disabled for its own
+     * layout. The GUI view uses this method before dispatching a command so that
+     * repeated clicks are prevented while the next server update is pending.
      */
-    void lockInteractions(String message);
+    void lockInteractions();
 }

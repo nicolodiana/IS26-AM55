@@ -18,7 +18,7 @@ import it.polimi.ingsw.am55.view.gui.scene.EndGameSceneController;
 import it.polimi.ingsw.am55.view.gui.scene.GameSceneController;
 import it.polimi.ingsw.am55.view.gui.scene.GenericSceneController;
 import it.polimi.ingsw.am55.view.gui.scene.LobbySceneController;
-import it.polimi.ingsw.am55.view.gui.scene.QuitGameSceneController;
+import it.polimi.ingsw.am55.view.gui.scene.TerminalGameSceneController;
 import javafx.application.Platform;
 
 import java.util.Objects;
@@ -26,11 +26,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * JavaFX implementation of the client view.
- * <p>
- * This class observes {@link ClientModel}, chooses the correct scene, and delegates
- * rendering details to FXML controllers. Controller commands are executed on a
- * dedicated background thread so the JavaFX application thread stays responsive.
+ * Questa classe osserva {@link ClientModel}, sceglie la scena corretta e delega
+ * i dettagli di rendering ai controller FXML. I comandi del controller vengono eseguiti su un
+ * thread in background dedicato, in modo che il thread dell'applicazione JavaFX rimanga reattivo.
  */
 public class GuiView implements ClientModelObserver {
 
@@ -41,13 +39,19 @@ public class GuiView implements ClientModelObserver {
     private final ExecutorService commandExecutor;
 
     private UserActionHandler actionHandler;
+
     private volatile GameView currentGameView;
+
     private volatile String currentInfoMessage;
+
     private volatile String currentErrorMessage;
-    private volatile boolean waitingServerResponse;
+
     private volatile String playerId;
+
     private volatile boolean inLobby = true;
+
     private volatile LobbyView currentLobbyView;
+
     private volatile boolean startGameRequested;
 
     /**
@@ -87,6 +91,7 @@ public class GuiView implements ClientModelObserver {
     /**
      * Shows the start scene on the JavaFX application thread.
      */
+
     public void showInitialScene() {
         Platform.runLater(SceneManager::showStartScene);
     }
@@ -94,18 +99,14 @@ public class GuiView implements ClientModelObserver {
     /**
      * Lets the player leave the splash scene and synchronize with the lobby state.
      */
+
     public void startGameFromInitialScene() {
         startGameRequested = true;
 
         if (currentLobbyView != null) {
             renderCurrentState();
-            showPendingMessages();
-            return;
         }
 
-        if (SceneManager.isCurrentScene(GuiSceneType.START)) {
-            showInfo("Synchronizing lobby with the server...");
-        }
     }
 
     /**
@@ -114,7 +115,6 @@ public class GuiView implements ClientModelObserver {
     @Override
     public void onModelChanged(ClientModel updatedModel) {
         Platform.runLater(() -> {
-            waitingServerResponse = false;
             currentErrorMessage = updatedModel.getLastError();
             currentInfoMessage = updatedModel.getStateRequest();
             currentGameView = updatedModel.getGameView();
@@ -177,19 +177,15 @@ public class GuiView implements ClientModelObserver {
      * Leaves the lobby automatically when the server says the game has already started.
      */
     private void leaveLobbyBecauseGameAlreadyStarted() {
-        if (waitingServerResponse || actionHandler == null) {
+        if (actionHandler == null) {
             return;
         }
 
-        waitingServerResponse = true;
         commandExecutor.submit(() -> {
             try {
                 actionHandler.onQuitSelectedLobby();
             } catch (RuntimeException e) {
-                Platform.runLater(() -> {
-                    waitingServerResponse = false;
-                    showTerminalMessage("Error while leaving the lobby: " + e.getMessage());
-                });
+                Platform.runLater(() -> showTerminalMessage("Error while leaving the lobby: " + e.getMessage()));
             }
         });
     }
@@ -239,9 +235,10 @@ public class GuiView implements ClientModelObserver {
     /**
      * Shows the terminal scene used for quit and crash messages.
      */
+
     private void showTerminalMessage(String message) {
         SceneManager.showQuitGameScene();
-        QuitGameSceneController controller = (QuitGameSceneController) SceneManager.getActiveController();
+        TerminalGameSceneController controller = (TerminalGameSceneController) SceneManager.getActiveController();
         controller.render(message);
     }
 
@@ -249,15 +246,14 @@ public class GuiView implements ClientModelObserver {
      * Shows the lobby scene and renders the latest lobby state.
      */
     private void showLobby(boolean locked) {
+
         SceneManager.showLobbySceneIfNeeded();
         LobbySceneController controller = (LobbySceneController) SceneManager.getActiveController();
-        controller.renderLobby(currentLobbyView, locked || waitingServerResponse);
+
+        controller.renderLobby(currentLobbyView, false);
 
         if (locked) {
-            controller.lockInteractions(nonBlankOrDefault(
-                    currentInfoMessage,
-                    "Game created. Waiting for the other players..."
-            ));
+            controller.lockInteractions();
         }
     }
 
@@ -265,6 +261,7 @@ public class GuiView implements ClientModelObserver {
      * Shows the game scene and renders the latest game board.
      */
     private void showGame(GameView gameView, ClientAction action) {
+
         if (gameView == null) {
             showLobby(false);
             return;
@@ -272,7 +269,7 @@ public class GuiView implements ClientModelObserver {
 
         SceneManager.showGameSceneIfNeeded();
         GameSceneController controller = (GameSceneController) SceneManager.getActiveController();
-        controller.render(gameView, action, playerId, waitingServerResponse);
+        controller.render(gameView, action, playerId);
 
         if (EVENT_RESOLUTION_START_MESSAGE.equals(currentInfoMessage)) {
             controller.showStatus("Event resolution in progress...");
@@ -394,13 +391,19 @@ public class GuiView implements ClientModelObserver {
     }
 
     /**
-     * Runs a server command off the JavaFX thread and locks the active scene until the next update.
+     * Runs a server command off the JavaFX thread and silently locks the active scene.
+     * <p>
+     * The lock is delegated to the active scene controller through
+     * {@link GenericSceneController#lockInteractions()}, so each scene disables
+     * only the controls that belong to it. No temporary status message is shown:
+     * the next server update will redraw the scene and display the real server
+     * message, if any.
      */
+
     private void submitCommand(Runnable command) {
-        waitingServerResponse = true;
         GenericSceneController controller = SceneManager.getActiveController();
         if (controller != null) {
-            controller.lockInteractions("Command sent. Waiting for the server...");
+            controller.lockInteractions();
         }
 
         commandExecutor.submit(() -> {
@@ -408,7 +411,7 @@ public class GuiView implements ClientModelObserver {
                 command.run();
             } catch (RuntimeException e) {
                 Platform.runLater(() -> {
-                    waitingServerResponse = false;
+                    renderCurrentState();
                     showError(e.getMessage());
                 });
             }

@@ -7,7 +7,7 @@ public enum GuiSceneType {
     START("/it/polimi/ingsw/am55/fxml/StartScene.fxml"),
     LOBBY("/it/polimi/ingsw/am55/fxml/LobbyScene.fxml"),
     GAME("/it/polimi/ingsw/am55/fxml/GameScene.fxml"),
-    QUIT_GAME("/it/polimi/ingsw/am55/fxml/QuitGameScene.fxml"),
+    QUIT_GAME("/it/polimi/ingsw/am55/fxml/TerminalGameScene.fxml"),
     END_GAME("/it/polimi/ingsw/am55/fxml/EndGameScene.fxml");
 
     private final String fxmlPath;
