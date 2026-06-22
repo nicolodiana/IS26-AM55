@@ -353,18 +353,6 @@ public class Board {
     }
 
     /**
-     * Removes players from both board tracks.
-     *
-     * <p>The turn-order slots are set to {@code null}; the bidding trail then
-     * delegates to {@link BiddingTrail#removeAllPlayers()}, which clears its
-     * internal ticket list.</p>
-     */
-    public void removeAllPlayers(){
-        removeAllPlayersFromTurnTicket();
-        biddingTrail.removeAllPlayers();
-    }
-
-    /**
      * Returns the player following the supplied player in first-phase order.
      *
      * @param player current player in the turn-order track
@@ -596,7 +584,7 @@ public class Board {
         List<CardView> upperRow = new ArrayList<>();
         List<CardView> lowerRow = new ArrayList<>();
         List<BiddingTicketView> biddingTrailView = new ArrayList<>();
-//ogni carta bidding ticket la trasformo in ticket view e la inserisco nella biddingtrailView
+        //ogni carta bidding ticket la trasformo in ticket view e la inserisco nella biddingtrailView
         for (BiddingTicket ticket : biddingTrail.getTicketList()) {
             biddingTrailView.add(ticket.toView());
         }

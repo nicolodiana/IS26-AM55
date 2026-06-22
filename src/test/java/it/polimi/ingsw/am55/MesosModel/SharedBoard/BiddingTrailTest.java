@@ -5,6 +5,8 @@ import it.polimi.ingsw.am55.MesosModel.Exceptions.PlayerNotOnTrail;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -225,5 +227,15 @@ class BiddingTrailTest {
 
         assertEquals(0, biddingTrail.getChooseLowerCard(p2));
         assertEquals(2, biddingTrail.getChooseUpperCard(p2));
+    }
+
+    @Test
+    void getTicketList(){
+        BiddingTrail biddingTrail = new BiddingTrail();
+        biddingTrail.initBiddingTrail(2);
+
+        List<BiddingTicket> b1 = biddingTrail.getTicketList();
+
+        assertSame(b1,biddingTrail.getTicketList());
     }
 }

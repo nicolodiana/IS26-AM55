@@ -194,13 +194,6 @@ public class BiddingTrail {
         ticketList.get(getPlayerPositionOnTrail(player)).removePlayer();
     }
 
-    /**
-     * Removes every ticket from the active trail by clearing the internal list.
-     *
-     */
-    public void removeAllPlayers() {
-        ticketList.clear();
-    }
 
     /**
      * Returns the internal list of active bidding tickets.

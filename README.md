@@ -54,7 +54,37 @@ Those are the functionalities we have implemented:
 
 ## Set Up
 
-    
+This section contains all instructions about how to run this project.
+
+### Database
+make sure to Download on every device [*MySQL*](https://dev.mysql.com/downloads/mysql/8.0.html)
+
+- Download latest database edition there: [**Database**](readmeFiles/mesos-rules-it.pdf)
+
+### Server
+
+- Download latest Server edition there: [**Server**](jars/)
+- Run in terminal: `java -jar `
+
+### Client
+
+- Download latest Client edition there: [**Client**](jars/)
+- Run in terminal: `java -jar `
+- 
+
+
+## How to run from IDE (IntelliJ IDEA)
+
+**Server**
+- Run `Server`
+- share the Server IP with your friends
+
+**Client**
+- Run `Client`
+- Set:
+  - server IP 
+  - Socket or RMI connections 
+  - CLI or GUI
 
 ## License
 [Mesos](https://www.craniocreations.it/prodotto/mesos) is property of [Cranio Creations](https://www.craniocreations.it)
