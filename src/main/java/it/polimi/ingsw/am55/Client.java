@@ -2,172 +2,88 @@ package it.polimi.ingsw.am55;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.controller.ClientController;
-import it.polimi.ingsw.am55.network.*;
+import it.polimi.ingsw.am55.controller.UserActionHandler;
+import it.polimi.ingsw.am55.network.ClientImpl;
+import it.polimi.ingsw.am55.network.ClientImplFactory;
+import it.polimi.ingsw.am55.network.ClientStartupException;
+import it.polimi.ingsw.am55.utility.ClientConfig;
+import it.polimi.ingsw.am55.view.launcher.ClientViewLauncher;
+import it.polimi.ingsw.am55.view.launcher.ClientViewLauncherFactory;
 
-import it.polimi.ingsw.am55.network.middleware.ServerStub;
-import it.polimi.ingsw.am55.view.cli.CLIView;
-import it.polimi.ingsw.am55.view.gui.JavaFXGui;
-import it.polimi.ingsw.am55.virtualview.VirtualServer;
-
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-import java.util.Scanner;
-
+/**
+ * Application entry point for the game client.
+ *
+ * <p>The client reads its startup parameters through {@link ClientConfig}, creates
+ * the client-side model and controller, creates the proper network client through
+ * {@link ClientImplFactory}, and starts the selected user interface through a
+ * generic {@link ClientViewLauncher}.</p>
+ *
+ * <p>The class coordinates the bootstrap phase only: configuration parsing,
+ * network-client creation and view-specific startup details are delegated to
+ * dedicated collaborators.</p>
+ */
 public class Client {
 
-    private static final String DEFAULT_HOST = "localhost";
-    private static final int RMI_PORT = 1234;
-    private static final int SOCKET_PORT = 1235;
-    private static final String SERVER_NAME = "GameServer";
-
+    /**
+     * Starts the client application.
+     *
+     * <p>The accepted command-line syntax is:</p>
+     *
+     * <pre>{@code
+     * java -jar client.jar <host> <rmi|socket> <port> <cli|gui>
+     * }</pre>
+     *
+     * @param args command-line arguments containing server host, connection
+     *             technology, port and view mode
+     */
     public static void main(String[] args) {
         try {
-            Scanner scanner = new Scanner(System.in);
+            ClientConfig config = new ClientConfig();
+            config.setHost(args);
+            config.setConnectionTechnology(args);
+            config.setPort(args);
+            config.setViewMode(args);
 
-            String host = askHost(scanner, args);
-            ConnectionTechnology technology = askTechnology(scanner);
-            ViewMode viewMode = askViewMode(scanner);
             ClientModel model = new ClientModel();
+            ClientImpl client = ClientImplFactory.create(config, model);
+            UserActionHandler controller = new ClientController(client);
 
-            /*
-             * Creo il client di rete, ma NON faccio ancora connect().
-             * La connect() manda RegisterLobbyCommand, quindi deve partire
-             * solo dopo che la view è già observer del model.
-             */
-            ClientImpl client = createClient(technology, host, model);
-            ClientController controller = new ClientController(client);
+            ClientViewLauncher launcher = ClientViewLauncherFactory.create(config.getViewMode(), model, controller, client);
 
-            switch (viewMode) {
-                case CLI -> startCli(model, controller, client);
-                case GUI -> startGui(model, controller, client);
-                default -> throw new IllegalArgumentException("View mode non supportata: " + viewMode);
-            }
+            launcher.start();
+
+        } catch (ClientStartupException e) {
+            printConnectionError(e.getMessage());
+
+        } catch (IllegalArgumentException e) {
+            printCorrectUsage(e.getMessage());
 
         } catch (Exception e) {
-            System.err.println("[CLIENT] Errore durante l'avvio del client: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("[CLIENT] Unexpected error during startup: " + e.getMessage());
         }
     }
 
-    private static void startCli(
-            ClientModel model,
-            ClientController controller,
-            ClientImpl client
-    ) throws Exception {
-        CLIView view = new CLIView(model);
-
-        /*
-         * Observer registrato PRIMA della connect().
-         */
-        model.addObserver(view);
-
-        view.setActionHandler(controller);
-        view.start();
-
-        /*
-         * Da qui parte RegisterLobbyCommand.
-         * Ora la CLI riceverà LobbyStatusMessage.
-         */
-        client.connect();
+    private static void printConnectionError(String message) {
+        System.err.println();
+        System.err.println("Unable to start client.");
+        System.err.println(message);
+        System.err.println();
+        System.err.println("Check that:");
+        System.err.println("- the server is started;");
+        System.err.println("- host and port are correct;");
+        System.err.println("- the technology chosen is the same as that used by the server.");
+        System.err.println();
     }
 
-    private static void startGui(
-            ClientModel model,
-            ClientController controller,
-            ClientImpl client
-    ) {
-        JavaFXGui.launchGui(model, controller, client);
-    }
-
-    private static String askHost(Scanner scanner, String[] args) {
-        if (args.length > 0 && args[0] != null && !args[0].isBlank()) {
-            return args[0];
-        }
-
-        System.out.print("IP server [default: localhost]: ");
-        String input = scanner.nextLine();
-
-        if (input == null || input.isBlank()) {
-            return DEFAULT_HOST;
-        }
-
-        return input.trim();
-    }
-
-    private static ConnectionTechnology askTechnology(Scanner scanner) {
-        while (true) {
-            System.out.print("Scegli tecnologia di connessione [rmi/socket]: ");
-            String input = scanner.nextLine().trim().toLowerCase();
-
-            switch (input) {
-                case "rmi":
-                    return ConnectionTechnology.RMI;
-
-                case "socket":
-                case "tcp":
-                    return ConnectionTechnology.SOCKET;
-
-                default:
-                    System.out.println("Tecnologia non valida. Scrivi 'rmi' oppure 'socket'.");
-            }
-        }
-    }
-
-    private static ViewMode askViewMode(Scanner scanner) {
-        while (true) {
-            System.out.print("Scegli interfaccia [cli/gui]: ");
-            String input = scanner.nextLine().trim().toLowerCase();
-
-            switch (input) {
-                case "cli":
-                case "tui":
-                    return ViewMode.CLI;
-
-                case "gui":
-                case "javafx":
-                    return ViewMode.GUI;
-
-                default:
-                    System.out.println("Interfaccia non valida. Scrivi 'cli' oppure 'gui'.");
-            }
-        }
-    }
-
-    private static ClientImpl createClient(
-            ConnectionTechnology technology,
-            String host,
-            ClientModel model
-    ) throws Exception {
-        return switch (technology) {
-            case RMI -> createRmiClient(host, model);
-            case SOCKET -> createSocketClient(host, model);
-        };
-    }
-
-    private static ClientImpl createRmiClient(String host, ClientModel model) throws Exception {
-        Registry registry = LocateRegistry.getRegistry(host, RMI_PORT);
-        VirtualServer server = (VirtualServer) registry.lookup(SERVER_NAME);
-
-        return new ClientImpl(server, model);
-    }
-
-    private static ClientImpl createSocketClient(String host, ClientModel model) throws Exception {
-        ServerStub serverStub = new ServerStub(host, SOCKET_PORT);
-
-        ClientImpl client = new ClientImpl(serverStub, model);
-
-        serverStub.startListener(client);
-
-        return client;
-    }
-
-    private enum ConnectionTechnology {
-        RMI,
-        SOCKET
-    }
-
-    private enum ViewMode {
-        CLI,
-        GUI
+    private static void printCorrectUsage(String message) {
+        System.err.println();
+        System.err.println("Invalid client configuration: " + message);
+        System.err.println();
+        System.err.println("Correct use:");
+        System.err.println("java -jar client.jar <host> <rmi|socket> <port> <cli|gui>");
+        System.err.println();
+        System.err.println("Example:");
+        System.err.println("java -jar client.jar localhost socket 1235 cli");
+        System.err.println();
     }
 }

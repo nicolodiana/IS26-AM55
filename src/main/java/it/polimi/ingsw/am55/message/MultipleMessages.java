@@ -47,5 +47,11 @@ public class MultipleMessages extends MessageToClient {
             message.deliver(playerId, context);
         }
     }
+
+    @Override
+    public boolean closeGameSession() {
+        return messages.stream().anyMatch(MessageToClient::closeGameSession);
+    }
+
 }
 

@@ -273,8 +273,6 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
      */
     @Override
     public void closeConnection() {
-
-            stopPing();
             System.out.println("[CLIENT_IMPL] Client ping stopped");
             try{
                 server.close();

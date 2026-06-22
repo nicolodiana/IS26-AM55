@@ -342,11 +342,13 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 + cardId);
 
         MessageToClient message = controller.pickCard(playerId, cardId);
-
+        message.deliver(playerId, this);
         System.out.println("[SERVER_APP] pickCard produced message: "
                 + message.getClass().getSimpleName());
 
-        message.deliver(playerId, this);
+        if(message.closeGameSession()){
+            resetServer();
+        }
     }
 
     /**
@@ -362,11 +364,14 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
                 + cardId);
 
         MessageToClient message = controller.pickSpecial(playerId, cardId);
-
+        message.deliver(playerId, this);
         System.out.println("[SERVER_APP] pickSpecial produced message: "
                 + message.getClass().getSimpleName());
 
-        message.deliver(playerId, this);
+        if(message.closeGameSession()){
+            resetServer();
+        }
+
     }
 
     /**
@@ -378,7 +383,7 @@ public class ServerApplication extends UnicastRemoteObject implements VirtualSer
         System.out.println("[SERVER_APP] quitGame called by: " + playerId);
 
         MessageToClient message = controller.quitGame(playerId);
-        MessageToClient messageToLobby = new QuitLobbyMessage("Uno o più giocatori hanno chiesto di uscire dal game, sarai disconnesso...",true);
+        MessageToClient messageToLobby = new QuitLobbyMessage("One or more players have asked to leave the game, you will be disconnected...",true);
 
         message.deliver(playerId, this);
         messageToLobby.deliver(null,this);

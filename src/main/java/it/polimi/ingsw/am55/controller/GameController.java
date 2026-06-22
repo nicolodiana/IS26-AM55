@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameController {
-    //Le eccezioni lanciate dal model vengono catturate dal Controller in un ERROR MESSAGE
     private GameModelInterface gameModel;
     private int numPlayers;
 
@@ -37,7 +36,7 @@ public class GameController {
     }
     public MessageToClient createGame(String playerId, String totemColor, int numPlayers) {
         if (gameModel != null) {
-            return new ErrorMessage("La partita esiste già.");
+            return new ErrorMessage("The game already exists.");
         }
 
         try {
@@ -45,7 +44,7 @@ public class GameController {
             gameModel.addPlayer(playerId, totemColor);
             this.numPlayers = numPlayers;
             return new WaitingMessage(
-                    "Partita creata correttamente  "+" in attesa di altri player..", gameModel.toView()
+                    "Match created successfully "+" waiting for more players..", gameModel.toView()
             );
 
         } catch (Exception e) {
@@ -57,7 +56,7 @@ public class GameController {
 
     public MessageToClient joinGame(String playerId, String totemColor) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No matches created.");
         }
 
         try {
@@ -65,12 +64,12 @@ public class GameController {
             if (gameModel.getNumPlayers() == this.numPlayers) {
                 return new UpdateViewMessage(
                         gameModel.toView(),
-                        "La partita è iniziata!"
+                        "The game has begun!"
                 );
             }
 
             return new WaitingMessage(
-                    "Aggiunto correttamente in partita "+" in attesa di altri player..", gameModel.toView()
+                    "Successfully added to game "+" waiting for more players..", gameModel.toView()
             );
 
         } catch (Exception e) {
@@ -80,7 +79,7 @@ public class GameController {
 
     public MessageToClient pickCard(String playerId, int cardId) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No matches created.");
         }
 
         try {
@@ -147,9 +146,10 @@ public class GameController {
                 messages.add(new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
-                        "Partita terminata."
+                        "Game ENDED"
                 ));
-
+                gameModel=null;
+                this.numPlayers=0;
                 return new MultipleMessages(messages);
             }
 
@@ -166,7 +166,7 @@ public class GameController {
 
     public MessageToClient placeTotem(String playerId, int index) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No matches created.");
         }
 
         try {
@@ -186,7 +186,7 @@ public class GameController {
 
     public MessageToClient pickSpecial(String playerId, int cardId) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No matches created.");
         }
 
         try {
@@ -255,9 +255,10 @@ public class GameController {
                 messages.add(new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
-                        "Partita terminata."
+                        "Game ENDED"
                 ));
-
+                gameModel=null;
+                this.numPlayers=0;
                 return new MultipleMessages(messages);
             }
 
@@ -265,7 +266,7 @@ public class GameController {
              * Caso teoricamente impossibile:
              * pickSpecial dovrebbe sempre portare a EVENTRESOLVE o ENDGAMERESOLVE.
              */
-            return new ErrorMessage("Stato non valido dopo la pick special.");
+            return new ErrorMessage("Invalid state after pick special.");
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
@@ -274,7 +275,7 @@ public class GameController {
     public MessageToClient handleGameCrashed(){
 
         gameModel.handleGameCrashed();
-        MessageToClient message =  new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        MessageToClient message =  new GameCrashedBroadcast("A player has disconnected, the game has crashed");
         gameModel = null;
         this.numPlayers = 0;
         return message;
@@ -282,14 +283,14 @@ public class GameController {
     }
     public MessageToClient quitGame(String playerId){
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No matches created.");
         }
 
         try {
             gameModel.quitGame();
 
             MessageToClient message = new QuitGameMessage(gameModel.toView(),
-                    "PLAYER  " + playerId + " è uscito. ");
+                    "Player " + playerId + " came out. ");
             gameModel=null;
             this.numPlayers = 0;
             return message;
