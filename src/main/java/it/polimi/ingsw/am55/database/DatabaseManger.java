@@ -30,7 +30,7 @@ public class DatabaseManger implements GameRepository {
      */
     public DatabaseManger() {
         try {
-            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/dbmesos", "root", "root");
+            conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/mesosdb", "root", "root");
         } catch (SQLException e) {
             System.err.println("[DATABASE] Impossibile collegarsi alla base di dati: " + e.getMessage());
             System.out.println("[ERRORE CONNESSIONE MYSQL]");

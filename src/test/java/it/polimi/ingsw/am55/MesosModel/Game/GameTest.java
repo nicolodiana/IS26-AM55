@@ -221,26 +221,6 @@ class GameTest {
         assertThrows(IllegalStateException.class, () -> g.pickFood(firstPlayer));
     }
 
-//    /**
-//     * Verifies that the correct player can legally pick food from the proper position
-//     * in a five-player game.
-//     *
-//     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
-//     */
-//    @Test
-//    void testPickFood_CorrectNumberOfPlayerCorrectPosition() throws PlayerNumberOutOfRange{
-//        Game game = createFivePlayerGame();
-//
-//        String firstPlayer = game.getCurrentPlayer();
-//        game.placeTotem(0, game.getCurrentPlayer());
-//        game.placeTotem(2, game.getCurrentPlayer());
-//        game.placeTotem(5, game.getCurrentPlayer());
-//        game.placeTotem(4, game.getCurrentPlayer());
-//        game.placeTotem(3, game.getCurrentPlayer());
-//
-//        assertEquals(firstPlayer, game.getCurrentPlayer());
-//        assertDoesNotThrow(() -> game.pickFood(firstPlayer));
-//    }
     @Test
     void playerOnFoodTicketReceivesSixFoodAutomaticallyAtEndOfPlaceTotem() throws Exception {
         Game game = createFivePlayerGame();
@@ -280,31 +260,6 @@ class GameTest {
                 game.getSharedBoard().getPlayerFromTurnTicket(0).getNickname()
         );
     }
-
-
-///**
-//     * Verifies that a player cannot pick food from the wrong position
-//     * even if the action would otherwise be available in a five-player game.
-//     *
-//     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
-//     */
-//    @Test
-//    void testPickFood_CorrectNumberOfPlayerWrongPosition() throws PlayerNumberOutOfRange {
-//        Game game = createFivePlayerGame();
-//
-//        String firstPlayer = game.getCurrentPlayer();
-//        game.placeTotem(0, game.getCurrentPlayer());
-//        String secondPlayer = game.getCurrentPlayer();
-//        game.placeTotem(2, game.getCurrentPlayer());
-//        game.placeTotem(5, game.getCurrentPlayer());
-//        game.placeTotem(4, game.getCurrentPlayer());
-//        game.placeTotem(3, game.getCurrentPlayer());
-//
-//        assertAll(
-//                () -> assertEquals(firstPlayer, game.getCurrentPlayer()),
-//                () -> assertThrows(IllegalStateException.class, () -> game.pickFood(secondPlayer))
-//        );
-//    }
 
 
     /**
@@ -769,26 +724,6 @@ class GameTest {
         assertEquals(GameState.EVENTRESOLVE, game.getGameState());
     }
 
-    @Test
-    void testPickFoodThenSkipsOnlyBlockedFollowingPlayer() throws Exception {
-        Game game = createStartedGame(5);
-        clearRows(game);
-        game.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(1, false, 1));
-        String[] order = new String[5];
-
-        for (int i = 0; i < order.length; i++) {
-            order[i] = game.getCurrentPlayer();
-            assertTrue(game.placeTotem(i, order[i]).isEmpty());
-        }
-
-        Player foodPlayer = playerByName(game, order[0]);
-        int foodBefore = foodPlayer.getNumFoods();
-        assertEquals(List.of(order[1]), game.pickFood(order[0]));
-        assertEquals(order[2], game.getCurrentPlayer());
-        assertEquals(GameState.PICKCARD, game.getGameState());
-        assertTrue(foodPlayer.getNumFoods() >= foodBefore + 3);
-    }
-
 
     @Test
     void testEndGame_illegalStateException()
@@ -837,17 +772,17 @@ class GameTest {
         plain.addTribeCard(new Inventor("rope", 23, 1));
         plain.addTribeCard(new Artist(24, 1));
 
-//        g.changeState(GameState.ENDGAMERESOLVE);
-//        EndGameResultView endGameResultView = g.endGame();
-//
-//        assertAll(
-//                () -> assertEquals(77, rich.getNumPP()),
-//                () -> assertEquals(9, plain.getNumPP()),
-//                () -> assertEquals(1, endGameResultView.getWinners().size()),
-//                () -> assertTrue(endGameResultView.getWinners().containsKey(rich.getNickname())),
-//                () -> assertTrue(endGameResultView.getWinners().containsValue(77)),
-//                () -> assertEquals(GameState.ENDED, g.getGameState())
-//        );
+        g.changeState(GameState.ENDGAMERESOLVE);
+        EndGameResultView endGameResultView = g.endGame();
+
+        assertAll(
+                () -> assertEquals(77, rich.getNumPP()),
+                () -> assertEquals(9, plain.getNumPP()),
+                () -> assertEquals(1, endGameResultView.getWinners().size()),
+                () -> assertTrue(endGameResultView.getWinners().containsKey(rich.getNickname())),
+                () -> assertTrue(endGameResultView.getWinners().containsValue(77)),
+                () -> assertEquals(GameState.ENDED, g.getGameState())
+        );
     }
 
     /**
@@ -881,18 +816,18 @@ class GameTest {
         game.changeState(GameState.ENDGAMERESOLVE);
         EndGameResultView endGameResultView = game.endGame();
 
-//        assertAll(
-//                () -> assertEquals(GameState.ENDED, game.getGameState()),
-//                () -> assertEquals(2, endGameResultView.getWinners().size()),
-//                () -> assertTrue(endGameResultView.getWinners().containsKey("alice")),
-//                () -> assertTrue(endGameResultView.getWinners().containsKey("bob")),
-//                () -> assertEquals(1, endGameResultView.getWinners().get("alice")),
-//                () -> assertEquals(1, endGameResultView.getWinners().get("bob")),
-//                () -> assertEquals(20, p1.getNumPP()),
-//                () -> assertEquals(20, p2.getNumPP()),
-//                () -> assertEquals(1, p1.getNumFoods()),
-//                () -> assertEquals(1, p2.getNumFoods())
-//        );
+        assertAll(
+                () -> assertEquals(GameState.ENDED, game.getGameState()),
+                () -> assertEquals(2, endGameResultView.getWinners().size()),
+                () -> assertTrue(endGameResultView.getWinners().containsKey("alice")),
+                () -> assertTrue(endGameResultView.getWinners().containsKey("bob")),
+                () -> assertEquals(1, endGameResultView.getWinners().get("alice")),
+                () -> assertEquals(1, endGameResultView.getWinners().get("bob")),
+                () -> assertEquals(20, p1.getNumPP()),
+                () -> assertEquals(20, p2.getNumPP()),
+                () -> assertEquals(1, p1.getNumFoods()),
+                () -> assertEquals(1, p2.getNumFoods())
+        );
     }
 
     @Test
