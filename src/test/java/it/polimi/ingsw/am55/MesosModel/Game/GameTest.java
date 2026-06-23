@@ -338,11 +338,12 @@ class GameTest {
         g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(5,false, 1));
         g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(6,false, 1));
 
+        CharacterCard firstLowerCard = firstLowerCharacterCard();
+        g.pickCard(firstLowerCard.getId(), g.getCurrentPlayer());
+
         CharacterCard firstUpperCard = firstUpperCharacterCard();
         g.pickCard(firstUpperCard.getId(), g.getCurrentPlayer());
 
-        CharacterCard firstLowerCard = firstLowerCharacterCard();
-        g.pickCard(firstLowerCard.getId(), g.getCurrentPlayer());
 
         Optional<Player> nextPlayer = g.getSharedBoard().nextPlayerSecondPhase();
         assertTrue(nextPlayer.isPresent());
