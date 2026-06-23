@@ -7,14 +7,27 @@ import it.polimi.ingsw.am55.view.cli.ConsoleColor;
 
 import java.util.List;
 
+/**
+ * DTO for a shaman character card.
+ * <p>It exposes the shaman star value and CLI metadata required to render the card in the client views.
+ */
 public class ShamanCardView extends CardView {
+    /**
+     * Number of shaman stars present in this card.
+     */
     private int numStars;
     //final CharacterType type = CharacterType.SHAMAN;
 
+    /**
+     * Creates a shaman card view from model data that can be sent to the client.
+     *
+     * @param id the identifier of this object
+     * @param era the era associated with the card
+     * @param numStars the num stars value
+     */
     public ShamanCardView(int id,  int era, int numStars) {
         super(id, era);
         this.numStars = numStars;
-        //this.era = era;
     }
 
     public int getNumStars() {
@@ -27,6 +40,11 @@ public class ShamanCardView extends CardView {
             "\nNum of starts: " + numStars;
     }
 
+    /**
+     * Builds the CLI rendering metadata used to display this card.
+     *
+     * @return the CLI rendering metadata for this card
+     */
     public CliCardInfo getCliCardInfo() {
         return new CliCardInfo(
                 "CHARACTER",

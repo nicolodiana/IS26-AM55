@@ -35,18 +35,21 @@ public class GameView implements Serializable {
     private final List<PlayerView> players;
 
     /**
-     * board of the game
+     * Snapshot of board of the game
      */
     private final BoardView board;
 
     /**
-     * list of the events from the board
-     * that need to be resolved at the end of the last player's turn in every round
+     * List of the events from the board
+     * that need to be resolved at the end of the last player turn in every round
      */
-    //questa lista si popolerà a fine di ogni round, per gli update non di fine round rimane nulla
     private List<ResolveEventView> resolveEvents = new ArrayList<>();
 
-
+    /**
+     * Creates a game view from model data that can be sent to the client.
+     *
+     * @param game the game model used as the data source
+     */
     public GameView(Game game) {
         this.gameId = game.getIdGame();
         this.state = game.getGameState();
@@ -60,7 +63,6 @@ public class GameView implements Serializable {
                 .map(PlayerView::new)
                 .toList();
 
-        //this.board = new BoardView(game.getSharedBoard());
         this.board = game.getSharedBoard().toView();
     }
 
@@ -103,6 +105,12 @@ public class GameView implements Serializable {
         return resolveEvents;
     }
 
+    /**
+     * Finds the player view that matches the requested player identifier.
+     *
+     * @param playerId the identifier of the player
+     * @return the player view value
+     */
     public PlayerView getPlayer(String playerId) {
         for (PlayerView player : players) {
             if (playerId.equals(player.getNickname())) {
@@ -114,9 +122,10 @@ public class GameView implements Serializable {
     }
 
     /**
-     * it takes the player and move his totem to the ticket choose by the player using its index
-     * @param playerId player who execute placetotem command
-     * @param index index of the ticket he wants to move into
+     * Moves the player's totem to the selected bidding ticket.
+     *
+     * @param playerId identifier of the player executing the place-totem command
+     * @param index index of the bidding ticket selected by the player
      */
 
     public void placeTotem(String playerId, int index) {
@@ -131,11 +140,12 @@ public class GameView implements Serializable {
 
 
     /**
-     * this method add the card that the player want from the board to his hands
-     * @param playerId id player who does the command pickcard
-     * @param cardId card id that the player want to pick
-     * @param newFood player's food after the pick
-     * @param newPp players'pp after the pick
+     * Adds the card picked from board to the player's hand and updates the local resources.
+     *
+     * @param playerId identifier of the player executing the pick-card command
+     * @param cardId identifier of the card selected by the player
+     * @param newFood player's food amount after the pick
+     * @param newPp player's prestige-point amount after the pick
      */
     public void pickCard(String playerId, int cardId, int newFood, int newPp) {
         CardView card = this.board.searchCard(cardId);

@@ -3,13 +3,36 @@ package it.polimi.ingsw.am55.dto;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * Serializable DTO that represents the shared board visible to clients.
+ * <p>It contains the upper and lower card rows, the bidding trail, and the current turn-order track.
+ */
 public class BoardView implements Serializable {
-
+    /**
+     * Field carrying the upper row value for client-side rendering.
+     */
     private final List<CardView> upperRow;
+    /**
+     * Field carrying the lower row value for client-side rendering.
+     */
     private final List<CardView> lowerRow;
+    /**
+     * Field carrying the bidding trail value for client-side rendering.
+     */
     private final List<BiddingTicketView> biddingTrail;
+    /**
+     * Field carrying the turn ticket value for client-side rendering.
+     */
     private final List<PlayerView> turnTicket;
 
+    /**
+     * Creates a board view from model data that can be sent to the client.
+     *
+     * @param upperRow the upper board row
+     * @param lowerRow the lower board row
+     * @param turnTicket the turn ticket value
+     * @param biddingTrail the bidding trail value
+     */
     public BoardView(
             List<CardView> upperRow,
             List<CardView> lowerRow,
@@ -105,17 +128,4 @@ public class BoardView implements Serializable {
             }
         }
     }
-
-    /*public void removeTotemFromTrail(String id) {
-
-        for (BiddingTicketView ticket : this.biddingTrail) {
-            if (ticket.getPlayer() != null && ticket.getPlayer().getNickname().equals(id)) {
-                if (ticket.allPickDone(0)) {
-                    ticket.setPlayer(null);
-                }
-
-                return;
-            }
-        }
-    }*/
 }

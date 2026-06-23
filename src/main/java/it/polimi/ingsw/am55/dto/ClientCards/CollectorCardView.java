@@ -7,14 +7,24 @@ import it.polimi.ingsw.am55.view.cli.ConsoleColor;
 
 import java.util.List;
 
+/**
+ * DTO for a collector character card.
+ * <p>It exposes the card data and CLI metadata required to render the collector in the client views.
+ */
 public class CollectorCardView extends CardView {
+    /**
+     * Food discount applied by this character effect
+     */
     final private int foodDiscount = 3;
-    //final CharacterType type = CharacterType.COLLECTOR;
 
+    /**
+     * Creates a collector card view from model data that can be sent to the client.
+     *
+     * @param id the identifier of this object
+     * @param era the era associated with the card
+     */
     public CollectorCardView(int id, int era) {
-
         super(id, era);
-        //this.era= era;
     }
 
     @Override
@@ -22,6 +32,11 @@ public class CollectorCardView extends CardView {
         return "Collector";
     }
 
+    /**
+     * Builds the CLI rendering metadata used to display this card.
+     *
+     * @return the CLI rendering metadata for this card
+     */
     public CliCardInfo getCliCardInfo() {
         return new CliCardInfo(
                 "CHARACTER",

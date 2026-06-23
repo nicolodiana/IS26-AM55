@@ -7,11 +7,28 @@ import it.polimi.ingsw.am55.view.cli.ConsoleColor;
 
 import java.util.List;
 
+/**
+ * Client-side DTO for a builder character card.
+ * <p>It exposes prestige-point and building-discount information for rendering in the client views.
+ */
 public class BuilderCardView extends CardView {
-    int numPP;
-    int pickbuildingdiscount; //sconto che forniscono su ogni edificio
-    //final CharacterType type = CharacterType.BUILDER;
+    /**
+     * Number of prestige points granted by this element.
+     */
+    private int numPP;
+    /**
+     * DTO field carrying the pickbuildingdiscount value.
+     */
+    private int pickbuildingdiscount;
 
+    /**
+     * Creates a builder card view from model data that can be sent to the client.
+     *
+     * @param id the identifier of this object
+     * @param era the era associated with the card
+     * @param numPP the num of pp value
+     * @param pickbuildingdiscount the pickbuildingdiscount value
+     */
     public BuilderCardView(int id, int era, int numPP, int pickbuildingdiscount) {
         super(id, era);
         this.numPP = numPP;
@@ -33,6 +50,11 @@ public class BuilderCardView extends CardView {
                 "\nBuilding discount: " + pickbuildingdiscount + " food";
     }
 
+    /**
+     * Builds the CLI rendering metadata used to display this card.
+     *
+     * @return the CLI rendering metadata for this card
+     */
     public CliCardInfo getCliCardInfo() {
         return new CliCardInfo(
                 "CHARACTER",

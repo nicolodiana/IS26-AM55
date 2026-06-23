@@ -6,15 +6,40 @@ import it.polimi.ingsw.am55.MesosModel.SharedBoard.BiddingTicket;
 import java.io.Serializable;
 
 public class BiddingTicketView implements Serializable {
-
+    /**
+     * Food bonus awarded by this bidding ticket or effect.
+     */
     private final int foodBonus;
+    /**
+     * Number of cards that may be chosen from the lower row.
+     */
     private final int chooseLowerCard;
+    /**
+     * Number of cards that may be chosen from the upper row.
+     */
     private final int chooseUpperCard;
+    /**
+     * Minimum number of players required for this card or component to be used.
+     */
     private final int numPlayer;
+    /**
+     * Letter identifying this ticket position on the bidding trail.
+     */
     private final char trailPlacement;
+    /**
+     * Player currently associated with this component, if any.
+     */
     private PlayerView player;
+    /**
+     * Total number of card picks granted by the ticket.
+     */
     private int sumPick;
 
+    /**
+     * Creates a bidding ticket view from model data that can be sent to the client.
+     *
+     * @param ticket the ticket value
+     */
     public BiddingTicketView(BiddingTicket ticket) {
         this.foodBonus = ticket.getFoodBonus();
         this.chooseUpperCard = ticket.getChooseUpperCard();
@@ -75,9 +100,10 @@ public class BiddingTicketView implements Serializable {
     }
 
     /**
-     * First it reduces the sumPick cause it's called during a pick
-     * if sumPick then is 0 the player cannot do another pick so i return true and reset the counter
-     * @return
+     * First it reduces the sumPick when it's called during a pick
+     * if sumPick then is 0 the player cannot do another pick
+     *
+     * @return true if all pick are done, otherwise false
      */
     public boolean allPickDone() {
         this.sumPick--;
