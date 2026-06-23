@@ -11,12 +11,30 @@ import it.polimi.ingsw.am55.dto.resolveEvents.ResolveSustenanceView;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Event card that resolves hunting effects.
+ * <p>It evaluates players during event resolution and produces a client DTO describing food and prestige-point changes.
+ */
 public class HuntEventCard extends EventCard {
+    /**
+     * Number of prestige points granted or required by this element.
+     */
     private final int numPP;
+    /**
+     * Mapping between affected players and the food assigned or removed by the effect.
+     */
     private final Map<String, Integer> effectToFood = new HashMap<>();
+    /**
+     * Mapping between affected players and the prestige points assigned by the effect.
+     */
     private final Map<String, Integer> effectToPP = new HashMap<>();
-
+    /**
+     * Creates a hunt event card with its card metadata and rule values.
+     *
+     * @param id the identifier to use for the object
+     * @param era the era associated with the card
+     * @param numPP the num pp value
+     */
     public HuntEventCard(int id, int era, int numPP) {
         super(id, era);
         this.numPP = numPP;
@@ -38,12 +56,27 @@ public class HuntEventCard extends EventCard {
         }
     }
 
+    /**
+     * Returns the event-resolution order used to sort event cards.
+     *
+     * @return the order value
+     */
     public int getOrder(){
         return 0;
     }
 
+    /**
+     * Builds the client-facing view representation of this hunt event card.
+     *
+     * @return the client-facing view representation of this hunt event card
+     */
     public HuntEventView toView() { return new HuntEventView(getId(), this.era, this.numPP); }
 
+    /**
+     * Builds the event-resolution view generated after resolving this event card.
+     *
+     * @return the client-facing view representation of this hunt event card
+     */
     public ResolveHuntingView toViewResolve() {
         return new ResolveHuntingView(effectToFood, effectToPP, "HUNTING"); }
 

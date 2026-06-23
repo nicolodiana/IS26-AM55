@@ -22,13 +22,36 @@ import java.util.Map;
  */
 public class EndGameSceneController implements GenericSceneController {
 
-    @FXML private Label titleLabel;
-    @FXML private Label statusLabel;
-    @FXML private VBox winnersBox;
-    @FXML private VBox leaderBoardBox;
-    @FXML private VBox effectsBox;
-    @FXML private VBox finalEventsBox;
 
+    /**
+     * Label displaying the final scene title and the game identifier.
+     */
+    @FXML private Label titleLabel;
+
+    /**
+     * Label displaying status and error messages.
+     */
+    @FXML private Label statusLabel;
+
+    /**
+     * Container displaying the game winners and their prestige points.
+     */
+    @FXML private VBox winnersBox;
+
+    /**
+     * Container displaying the persistent leaderboard entries.
+     */
+    @FXML private VBox leaderBoardBox;
+
+    /**
+     * Container displaying the end-game scoring effects.
+     */
+    @FXML private VBox effectsBox;
+
+    /**
+     * Container displaying the events resolved at the end of the game.
+     */
+    @FXML private VBox finalEventsBox;
     /**
      * The final scene does not send commands, but the reference is accepted for a
      * uniform controller contract.

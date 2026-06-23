@@ -118,7 +118,7 @@ public class TurnTicket {
             return Optional.of(turnOrder.get(index + 1));
         }
         else{
-            return Optional.empty(); //return an empty optional if there aren't no other players
+            return Optional.empty();
         }
     }
 

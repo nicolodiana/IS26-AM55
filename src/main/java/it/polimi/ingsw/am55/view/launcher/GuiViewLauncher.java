@@ -20,6 +20,10 @@ public class GuiViewLauncher implements ClientViewLauncher {
         this.client = client;
     }
 
+    /**
+     * start the GUI and setup connections
+     * catching exceptions
+     */
     @Override
     public void start() {
         JavaFXGui.launchGui(model, actionHandler, () -> {

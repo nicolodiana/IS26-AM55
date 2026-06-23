@@ -22,7 +22,11 @@ public interface GameModelInterface {
      * @return game's id
     **/
     GameView toView();
-    //serve per ottenere il dto dello stato di gioco dal server
+    /**
+     * Returns the unique identifier of the game.
+     *
+     * @return the game identifier
+     */
     String getIdGame();
     /**
      * A modifier method that allows a new player to join the game.
@@ -109,20 +113,67 @@ public interface GameModelInterface {
      */
     EndGameResultView endGame();
 
+    /**
+     * Resolves the current round's events and prepares the next round.
+     *
+     * @return the views of the resolved events
+     * @throws IllegalStateException if the game is not in the event-resolution state
+     */
     List<ResolveEventView> eventResolve();
 
-
+    /**
+     * Gives the selected upper-row card to the current player during a special pick.
+     *
+     * @param id the identifier of the selected card
+     * @param idPlayer the nickname of the player performing the action
+     * @throws IllegalStateException if the special pick is not allowed in the current state or turn
+     * @throws IllegalArgumentException if the card identifier is outside the valid range
+     * @throws CannotAffordBuildingException if the player cannot afford the selected building card
+     */
     void pickSpecial(int id,String idPlayer);
 
+    /**
+     * Ends the game immediately.
+     */
     void quitGame();
 
+    /**
+     * Checks whether a player with the specified nickname belongs to the game.
+     *
+     * @param idPlayer the nickname to search for
+     * @return {@code true} if the player belongs to the game; {@code false} otherwise
+     */
     boolean isInGame(String idPlayer);
 
+    /**
+     * Returns the current state of the game.
+     *
+     * @return the current game state
+     */
     GameState getState();
 
+    /**
+     * Returns the players registered in the game.
+     *
+     * @return the list of registered players
+     */
     List<Player> getPlayers();
 
-    //PlayerView getSinglePlayer(String nickname);
+    /**
+     * Returns the prestige points of the player with the specified nickname.
+     *
+     * @param nickname the player's nickname
+     * @return the player's prestige points
+     * @throws NullPointerException if no player has the specified nickname
+     */
     int getPlayerPoints(String nickname);
+
+    /**
+     * Returns the amount of food owned by the player with the specified nickname.
+     *
+     * @param nickname the player's nickname
+     * @return the player's food amount
+     * @throws NullPointerException if no player has the specified nickname
+     */
     int getPlayerFood(String nickname);
 }

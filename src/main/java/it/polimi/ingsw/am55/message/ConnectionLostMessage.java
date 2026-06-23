@@ -9,12 +9,25 @@ import it.polimi.ingsw.am55.ClientModel.ClientModel;
  */
 public class ConnectionLostMessage extends MessageToClient {
 
+    /**
+     * Human-readable connection-loss message exposed to the client view.
+     */
     private final String message;
 
+    /**
+     * Creates a local notification for a lost server connection.
+     *
+     * @param message human-readable description of the connection loss
+     */
     public ConnectionLostMessage(String message) {
         this.message = message;
     }
 
+    /**
+     * Updates the client model to represent a lost connection and crashed game session.
+     *
+     * @param model client-side model to update
+     */
     @Override
     public void update(ClientModel model) {
         model.clearError();
@@ -22,15 +35,19 @@ public class ConnectionLostMessage extends MessageToClient {
         model.setGameStarted(false);
         model.setGameCrashed(true);
 
-        // Importante: se perdi connessione mentre sei ancora in lobby,
-        // la CLI non deve più trattarti come client in lobby.
+
         model.setInLobby(false);
 
         model.setLastMessageUpdatedGameView(false);
     }
 
+    /**
+     * Performs no server-side delivery because this message is created locally by the client.
+     *
+     * @param playerId player or session identifier supplied by the delivery interface
+     * @param context  server delivery context
+     */
     @Override
     public void deliver(String playerId, MessageDelivery context) {
-        // Messaggio locale: non deve essere consegnato dal server.
     }
 }

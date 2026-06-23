@@ -87,27 +87,22 @@ public class TribeDeck {
         List<TribeCard> allCardsEra1 = new ArrayList<>();
         switch (numPlayer) {
             case 2:
-                //introdotte caso 2 giocatori
                 createCardTwoPlayersEra1(allCardsEra1);
                 break;
             case 3:
                 createCardTwoPlayersEra1(allCardsEra1);
-                //introdotte caso 3 giocatori
                 allCardsEra1.add(new Hunter(4,false,1));
                 allCardsEra1.add(new Hunter(5,false,1));
                 allCardsEra1.add(new Collector(12,1));
                 allCardsEra1.add(new Artist(17,1));
                 break;
             case 4:
-                //introdotte caso 2 giocatori
                 createCardTwoPlayersEra1(allCardsEra1);
-                //introdotte caso 3 giocatori
                 allCardsEra1.add(new Hunter(4,false,1));
                 allCardsEra1.add(new Hunter(5,false,1));
                 allCardsEra1.add(new Collector(12,1));
                 allCardsEra1.add(new Artist(17,1));
 
-                //introdotte per 4 giocatori
 
                 allCardsEra1.add(new Artist(18,1));
                 allCardsEra1.add(new Inventor("Rope",23,1));
@@ -118,15 +113,11 @@ public class TribeDeck {
 
                 break;
             case 5:
-                //introdotte caso 2 giocatori
                 createCardTwoPlayersEra1(allCardsEra1);
-                //introdotte caso 3 giocatori
                 allCardsEra1.add(new Hunter(4,false,1));
                 allCardsEra1.add(new Hunter(5,false,1));
                 allCardsEra1.add(new Collector(12,1));
                 allCardsEra1.add(new Artist(17,1));
-
-                //introdotte per 4 giocatori
 
                 allCardsEra1.add(new Artist(18,1));
                 allCardsEra1.add(new Inventor("Rope",23,1));
@@ -135,7 +126,6 @@ public class TribeDeck {
                 allCardsEra1.add(new Shaman(29,1,1));
 
 
-                //introdotte per 5 giocatori
                 allCardsEra1.add(new Builder(8,1,2,1));
                 allCardsEra1.add(new Collector(13,1));
                 allCardsEra1.add(new Artist(25,1));
@@ -188,42 +178,33 @@ public class TribeDeck {
         List<TribeCard> allCardsEra2 = new ArrayList<>();
         switch (numPlayer) {
             case 2:
-                //introdotte 2 giocatori
                 createCardsTwoPlayersEra2(allCardsEra2);
                 break;
             case 3:
-                //introdotte 2 giocatori
                 createCardsTwoPlayersEra2(allCardsEra2);
 
-                //introdotte 3 gicoatori
                 allCardsEra2.add(new Hunter(32,true,2));
                 allCardsEra2.add(new Builder(38,2,1,2));
                 allCardsEra2.add(new Collector(41,2));
                 allCardsEra2.add(new Artist(44,2));
                 break;
             case 4:
-                //2 giocatori
                 createCardsTwoPlayersEra2(allCardsEra2);
-                //introdotte 3 gicoatori
                 allCardsEra2.add(new Hunter(32,true,2));
                 allCardsEra2.add(new Builder(38,2,1,2));
                 allCardsEra2.add(new Collector(41,2));
                 allCardsEra2.add(new Artist(44,2));
-                //introdotte 4 giocatori
 
                 allCardsEra2.add(new Hunter(34,true,2));
                 allCardsEra2.add(new Collector(42,2));
                 allCardsEra2.add(new Inventor("Fish Hook",49,2));
                 break;
             case 5:
-                //2 giocatori
                 createCardsTwoPlayersEra2(allCardsEra2);
-                //introdotte 3 gicoatori
                 allCardsEra2.add(new Hunter(32,true,2));
                 allCardsEra2.add(new Builder(38,2,1,2));
                 allCardsEra2.add(new Collector(41,2));
                 allCardsEra2.add(new Artist(44,2));
-                //introdotte 4 giocatori
 
                 allCardsEra2.add(new Hunter(34,true,2));
                 allCardsEra2.add(new Collector(42,2));
@@ -281,41 +262,31 @@ public class TribeDeck {
         List<TribeCard> allCardsEra3 = new ArrayList<>();
         switch (numPlayer) {
             case 2:
-                //introdotte 2 giocatori
                 createCardTwoPlayersEra3(allCardsEra3);
                 break;
             case 3:
-                //introdotte 2 giocatori
                 createCardTwoPlayersEra3(allCardsEra3);
-                //introdotte 3 giocatori
                 allCardsEra3.add(new Shaman(80,2,3));
                 allCardsEra3.add(new Inventor("Boat",74,3));
                 allCardsEra3.add(new Inventor("Arrowhead",75,3));
                 break;
             case 4:
-                //introdotte 2 giocatori
                 createCardTwoPlayersEra3(allCardsEra3);
-                //introdotte 3 giocatori
                 allCardsEra3.add(new Shaman(80,2,3));
                 allCardsEra3.add(new Inventor("Boat",74,3));
                 allCardsEra3.add(new Inventor("Arrowhead",75,3));
-//introdotte 4 giocatori
                 allCardsEra3.add(new Collector(67,3));
                 allCardsEra3.add(new Inventor("Necklace",73,3));
                 allCardsEra3.add(new Shaman(84,2,3));
                 break;
             case 5:
-                //introdotte 2 giocatori
                 createCardTwoPlayersEra3(allCardsEra3);
-                //introdotte 3 giocatori
                 allCardsEra3.add(new Shaman(80,2,3));
                 allCardsEra3.add(new Inventor("Boat",74,3));
                 allCardsEra3.add(new Inventor("Arrowhead",75,3));
-//introdotte 4 giocatori
                 allCardsEra3.add(new Collector(67,3));
                 allCardsEra3.add(new Inventor("Necklace",73,3));
                 allCardsEra3.add(new Shaman(84,2,3));
-                //introdotte 5 giocatori
                 allCardsEra3.add(new Hunter(58,true,3));
                 allCardsEra3.add(new Builder(64,4,1,3));
                 allCardsEra3.add(new Collector(66,3));
@@ -332,8 +303,6 @@ public class TribeDeck {
      * @param numPlayer the number of players in the game
      * @return a shuffled list containing the final event cards
      */
-
-
     private List<TribeCard> createFinalEventCards(int numPlayer) {
         List<TribeCard> finalEventCards = new ArrayList<>();
         finalEventCards.add(new SustenanceEventCard(95,3,3));
@@ -341,9 +310,6 @@ public class TribeDeck {
         Collections.shuffle(finalEventCards);
         return finalEventCards;
     }
-
-
-
 
 
     /**

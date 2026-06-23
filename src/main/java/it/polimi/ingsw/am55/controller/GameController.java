@@ -13,16 +13,35 @@ import it.polimi.ingsw.am55.message.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Coordinates lobby and game operations by delegating them to the game model
+ * and converting their outcomes into messages for clients.
+ */
 public class GameController {
-    //Le eccezioni lanciate dal model vengono catturate dal Controller in un ERROR MESSAGE
+    /**
+     * gameModel with all the game Logic
+     */
     private GameModelInterface gameModel;
+    /**
+     * number of players
+     */
     private int numPlayers;
 
+    /**
+     * Creates a controller with no active game.
+     */
     public GameController() {
         this.gameModel = null;
         this.numPlayers = 0;
     }
 
+    /**
+     * Builds an action result message followed by one line for each automatically skipped player.
+     *
+     * @param baseMessage    initial action result text
+     * @param skippedPlayers nicknames of the automatically skipped players
+     * @return the composed message
+     */
     private String createSkippedPlayersMessage(
             String baseMessage,
             List<String> skippedPlayers
@@ -34,9 +53,7 @@ public class GameController {
             message.append(System.lineSeparator())
                     .append(nickname)
                     .append(
-                            " ha saltato il turno poiché "
-                                    + "non erano presenti carte "
-                                    + "selezionabili da lui."
+                            " turn skipped, couldn't select any card"
                     );
         }
 
@@ -44,27 +61,22 @@ public class GameController {
     }
 
     /**
-     * Se gli skip automatici hanno terminato l'intera fase di pesca,
-     * risolve gli eventi o il fine partita.
+     * Resolves events or the end game when the completed pick phase requires it.
      *
-     * Altrimenti restituisce semplicemente il messaggio ricevuto.
+     * @param actionUpdateMessage message describing the action that completed the phase
+     * @return the action message, optionally combined with the resulting phase-resolution message
      */
     private MessageToClient resolveEndOfPickPhaseIfNeeded(
             MessageToClient actionUpdateMessage
     ) {
-        /*
-         * Fine normale del round.
-         */
+
         if (gameModel.getGameState()
                 .equals(GameState.EVENTRESOLVE)) {
 
             List<MessageToClient> messages =
                     new ArrayList<>();
 
-            /*
-             * Prima viene mostrato l'aggiornamento della pick
-             * e l'elenco dei giocatori saltati.
-             */
+
             messages.add(actionUpdateMessage);
 
             List<ResolveEventView> resolvedEvents =
@@ -96,9 +108,7 @@ public class GameController {
             return new MultipleMessages(messages);
         }
 
-        /*
-         * Fine dell'ultimo round.
-         */
+
         if (gameModel.getGameState()
                 .equals(GameState.ENDGAMERESOLVE)) {
 
@@ -116,20 +126,21 @@ public class GameController {
             messages.add(new GameEndResolveMessage(
                     finalGameView,
                     endGameResult,
-                    "Partita terminata."
+                    "Game ended"
             ));
 
             return new MultipleMessages(messages);
         }
 
-        /*
-         * La fase di pesca non è ancora terminata.
-         */
         return actionUpdateMessage;
     }
 
+    /**
+     * Returns a snapshot of the current lobby.
+     *
+     * @return the current lobby view, or an empty view when no game exists
+     */
     public LobbyView getLobbyView() {
-        //se nessuno è entrato in partita non devo aggiornare lobby ma mandare quella base con tutte le opzioni)
         if (gameModel == null) {
             return new LobbyView(null, null);
         }
@@ -139,9 +150,18 @@ public class GameController {
                 gameModel.getPlayers()
         );
     }
+
+    /**
+     * Creates a game and adds its creator as the first player.
+     *
+     * @param playerId  identifier of the player creating the game
+     * @param totemColor totem color selected by the player
+     * @param numPlayers number of players required to start the game
+     * @return a waiting message on success, or an error message if creation fails
+     */
     public MessageToClient createGame(String playerId, String totemColor, int numPlayers) {
         if (gameModel != null) {
-            return new ErrorMessage("La partita esiste già.");
+            return new ErrorMessage("Game already exists");
         }
 
         try {
@@ -149,7 +169,7 @@ public class GameController {
             gameModel.addPlayer(playerId, totemColor);
             this.numPlayers = numPlayers;
             return new WaitingMessage(
-                    "Partita creata correttamente  "+" in attesa di altri player..", gameModel.toView()
+                    "game created waiting other players..", gameModel.toView()
             );
 
         } catch (Exception e) {
@@ -159,9 +179,16 @@ public class GameController {
         }
     }
 
+    /**
+     * Adds a player to the active game and starts it when the expected player count is reached.
+     *
+     * @param playerId  identifier of the joining player
+     * @param totemColor totem color selected by the player
+     * @return a lobby or game update on success, or an error message if joining fails
+     */
     public MessageToClient joinGame(String playerId, String totemColor) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No game created.");
         }
 
         try {
@@ -169,12 +196,12 @@ public class GameController {
             if (gameModel.getNumPlayers() == this.numPlayers) {
                 return new UpdateViewMessage(
                         gameModel.toView(),
-                        "La partita è iniziata!"
+                        "Game started!"
                 );
             }
 
             return new WaitingMessage(
-                    "Aggiunto correttamente in partita "+" in attesa di altri player..", gameModel.toView()
+                    "added in the game, waiting for other players..", gameModel.toView()
             );
 
         } catch (Exception e) {
@@ -182,13 +209,20 @@ public class GameController {
         }
     }
 
+    /**
+     * Applies a normal card pick and resolves the following phase when required.
+     *
+     * @param playerId identifier of the player performing the action
+     * @param cardId   identifier of the selected card
+     * @return the resulting client update, or an error message if the action fails
+     */
     public MessageToClient pickCard(
             String playerId,
             int cardId
     ) {
         if (gameModel == null) {
             return new ErrorMessage(
-                    "Nessuna partita creata."
+                    "No game created."
             );
         }
 
@@ -207,10 +241,7 @@ public class GameController {
 
             MessageToClient pickUpdateMessage;
 
-            /*
-             * Nessun giocatore è stato saltato:
-             * mantieni il precedente messaggio incrementale.
-             */
+
             if (skippedPlayers.isEmpty()) {
                 pickUpdateMessage =
                         new PickCardMessage(
@@ -222,32 +253,17 @@ public class GameController {
                                 gameModel.getGameState()
                         );
             } else {
-                /*
-                 * Quando vengono saltati uno o più giocatori,
-                 * invia una GameView completa.
-                 *
-                 * Gli skip possono infatti modificare:
-                 * - Bidding Trail;
-                 * - Turn Ticket;
-                 * - Cibo;
-                 * - Punti Prestigio;
-                 * - currentPlayer;
-                 * - GameState.
-                 */
+
                 pickUpdateMessage =
                         new UpdateViewMessage(
                                 gameModel.toView(),
                                 createSkippedPlayersMessage(
-                                        "Carta pescata correttamente.",
+                                        "Card drawn correctly.",
                                         skippedPlayers
                                 )
                         );
             }
 
-            /*
-             * Gestisce anche il caso in cui gli skip abbiano
-             * terminato l'intera fase di pesca.
-             */
             return resolveEndOfPickPhaseIfNeeded(
                     pickUpdateMessage
             );
@@ -257,13 +273,20 @@ public class GameController {
         }
     }
 
+    /**
+     * Places a player's totem and resolves the following phase when required.
+     *
+     * @param playerId identifier of the player performing the action
+     * @param index    target bidding-ticket index
+     * @return the resulting client update, or an error message if the action fails
+     */
     public MessageToClient placeTotem(
             String playerId,
             int index
     ) {
         if (gameModel == null) {
             return new ErrorMessage(
-                    "Nessuna partita creata."
+                    "No game created."
             );
         }
 
@@ -276,10 +299,6 @@ public class GameController {
 
             MessageToClient placeTotemUpdateMessage;
 
-            /*
-             * Il piazzamento non ha provocato skip:
-             * mantieni il comportamento precedente.
-             */
             if (skippedPlayers.isEmpty()) {
                 placeTotemUpdateMessage =
                         new PlaceTotemMessage(
@@ -289,25 +308,17 @@ public class GameController {
                                 gameModel.getGameState()
                         );
             } else {
-                /*
-                 * Questo ramo viene utilizzato quando è stato
-                 * piazzato l'ultimo Totem e il primo giocatore
-                 * della fase di pesca non può prendere carte.
-                 */
+
                 placeTotemUpdateMessage =
                         new UpdateViewMessage(
                                 gameModel.toView(),
                                 createSkippedPlayersMessage(
-                                        "Totem piazzato correttamente.",
+                                        "Totem placed correctly.",
                                         skippedPlayers
                                 )
                         );
             }
 
-            /*
-             * Se tutti i giocatori sono stati saltati, avvia
-             * immediatamente eventi o fine partita.
-             */
             return resolveEndOfPickPhaseIfNeeded(
                     placeTotemUpdateMessage
             );
@@ -317,9 +328,16 @@ public class GameController {
         }
     }
 
+    /**
+     * Applies a special-card pick and resolves the resulting event or end-game phase.
+     *
+     * @param playerId identifier of the player performing the action
+     * @param cardId   identifier of the selected special card
+     * @return the resulting client messages, or an error message if the action fails
+     */
     public MessageToClient pickSpecial(String playerId, int cardId) {
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No game created.");
         }
 
         try {
@@ -327,20 +345,10 @@ public class GameController {
             int newPp = gameModel.getPlayerPoints(playerId);
             int newFood = gameModel.getPlayerFood(playerId);
 
-            //GameView viewAfterPickSpecial = gameModel.toView();
 
-            /*
-             * CASO 1:
-             * Pick special fatta a fine round NON ultimo.
-             * Dopo la pick special parte sempre la risoluzione eventi.
-             */
             if (gameModel.getGameState().equals(GameState.EVENTRESOLVE)) {
                 List<MessageToClient> messages = new ArrayList<>();
-//
-//                messages.add(new UpdateViewMessage(
-//                        viewAfterPickSpecial,
-//                        "pick special done"
-//                ));
+
                 messages.add(new PickCardMessage(playerId, cardId, newFood, newPp, gameModel.getCurrentPlayer(), gameModel.getGameState()));
 
                 List<ResolveEventView> resolvedEvents = gameModel.eventResolve();
@@ -365,11 +373,6 @@ public class GameController {
                 return new MultipleMessages(messages);
             }
 
-            /*
-             * CASO 2:
-             * Pick special fatta a fine ultimo round.
-             * Dopo la pick special parte direttamente l'end game.
-             */
             if (gameModel.getGameState().equals(GameState.ENDGAMERESOLVE)) {
                 List<MessageToClient> messages = new ArrayList<>();
 
@@ -388,41 +391,50 @@ public class GameController {
                 messages.add(new GameEndResolveMessage(
                         finalGameView,
                         endGameResult,
-                        "Partita terminata."
+                        "Game ended."
                 ));
 
                 return new MultipleMessages(messages);
             }
 
-            /*
-             * Caso teoricamente impossibile:
-             * pickSpecial dovrebbe sempre portare a EVENTRESOLVE o ENDGAMERESOLVE.
-             */
-            return new ErrorMessage("Stato non valido dopo la pick special.");
+            return new ErrorMessage("Unvalid state after pickSpecial.");
 
         } catch (Exception e) {
             return new ErrorMessage(e.getMessage());
         }
     }
+
+    /**
+     * Marks the active game as crashed, clears the controller state, and creates a crash notification.
+     *
+     * @return the crash notification to broadcast to clients
+     */
     public MessageToClient handleGameCrashed(){
 
         gameModel.handleGameCrashed();
-        MessageToClient message =  new GameCrashedBroadcast("Un giocatore si è disconnesso, il gioco è terminato");
+        MessageToClient message =  new GameCrashedBroadcast("a Player got disconnected, game ended.");
         gameModel = null;
         this.numPlayers = 0;
         return message;
 
     }
+
+    /**
+     * Ends the active game, clears the controller state, and creates a quit notification.
+     *
+     * @param playerId identifier of the player leaving the game
+     * @return the quit notification, or an error message if the operation fails
+     */
     public MessageToClient quitGame(String playerId){
         if (gameModel == null) {
-            return new ErrorMessage("Nessuna partita creata.");
+            return new ErrorMessage("No game created.");
         }
 
         try {
             gameModel.quitGame();
 
             MessageToClient message = new QuitGameMessage(gameModel.toView(),
-                    "PLAYER  " + playerId + " è uscito. ");
+                    "PLAYER  " + playerId + " quit. ");
             gameModel=null;
             this.numPlayers = 0;
             return message;

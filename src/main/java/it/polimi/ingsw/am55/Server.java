@@ -115,7 +115,7 @@ public class Server {
         } catch (IllegalArgumentException e) {
             System.err.println("[SERVER] Invalid parameters: " + e.getMessage());
             printUsage();
-            System.exit(2);//Codice errore in caso di parametri non validi
+            System.exit(2);
         } catch (Exception e) {
             System.err.println("[SERVER] Error starting server: " + e.getMessage());
             System.exit(1);
@@ -162,7 +162,7 @@ public class Server {
             socketServer.start();
         } catch (Exception e) {
             System.out.println("[SERVER] Connection error in socket server: " + e.getMessage());
-            System.exit(1); //1 per errori di esecuzioni/avvio
+            System.exit(1);
         }
 
     }

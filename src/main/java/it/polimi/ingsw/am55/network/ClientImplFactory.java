@@ -20,9 +20,20 @@ import java.rmi.registry.Registry;
  */
 public class ClientImplFactory {
 
+    /**
+     * Name used to retrieve the game server from the RMI registry.
+     */
     private static final String SERVER_NAME = "GameServer";
 
 
+    /**
+     * Creates a client connected through the technology specified by the configuration.
+     *
+     * @param config client connection configuration
+     * @param model local client model associated with the created client
+     * @return the initialized client implementation
+     * @throws ClientStartupException if the client cannot connect to or initialize the selected server
+     */
     public static ClientImpl create(ClientConfig config, ClientModel model) throws ClientStartupException {
         return switch (config.getConnectionTechnology()) {
             case RMI -> createRmiClient(config.getHost(), config.getRmiPort(), model);
@@ -30,6 +41,15 @@ public class ClientImplFactory {
         };
     }
 
+    /**
+     * Creates a client connected to the server registered in the specified RMI registry.
+     *
+     * @param host host of the RMI registry
+     * @param port port of the RMI registry
+     * @param model local client model associated with the created client
+     * @return the initialized RMI client
+     * @throws ClientStartupException if the registry or registered server cannot be used to initialize the client
+     */
     private static ClientImpl createRmiClient(String host, int port, ClientModel model) throws ClientStartupException {
         try {
             Registry registry = LocateRegistry.getRegistry(host, port);
@@ -49,6 +69,15 @@ public class ClientImplFactory {
         }
     }
 
+    /**
+     * Creates a socket client and starts its server-message listener.
+     *
+     * @param host host of the socket server
+     * @param port port of the socket server
+     * @param model local client model associated with the created client
+     * @return the initialized socket client
+     * @throws ClientStartupException if the connection or client initialization fails
+     */
     private static ClientImpl createSocketClient(String host, int port, ClientModel model)
             throws ClientStartupException {
         ServerStub serverStub = null;

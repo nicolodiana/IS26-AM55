@@ -112,10 +112,8 @@ public class Board {
 
         biddingTrail.initBiddingTrail(numPlayers);
 
-        //create and join the tribeDeck
         tribeDeck.initTribeDeck(numPlayers);
 
-        //create buildingDeck
         buildingDeckEra1.initBuildingDeckEra1(numPlayers);
         buildingDeckEra2.initBuildingDeckEra2(numPlayers);
         buildingDeckEra3.initBuildingDeckEra3(numPlayers);
@@ -123,8 +121,6 @@ public class Board {
         setUpLowerRow(numPlayers);
         setUpUpperRow(numPlayers);
     }
-
-    //Test Helper
 
     /**
      * Returns the tribe deck owned by this board.
@@ -136,8 +132,6 @@ public class Board {
     public TribeDeck getTribeDeck(){
         return tribeDeck;
     }
-
-    //getter
 
     /**
      * Returns the era currently in play.
@@ -305,8 +299,7 @@ public class Board {
             if (tribeDeck.isEmpty()){
                 return false;
             }
-            tmp =tribeDeck.getNextCard();//Return a TribeCard to put in the row for next round
-            //By using polymorfism we can insert the card in the correct list
+            tmp =tribeDeck.getNextCard();
             tmp.addInRightList(upperRow);
             if (tmp.getEra() > currentEra) {
                 startNewEra();
@@ -570,7 +563,6 @@ public class Board {
         return biddingTrail.getPlayerPositionOnTrail(player);
     }
 
-    //------------------------
 
     /**
      * Creates a client-facing snapshot of the visible board state.
@@ -584,7 +576,6 @@ public class Board {
         List<CardView> upperRow = new ArrayList<>();
         List<CardView> lowerRow = new ArrayList<>();
         List<BiddingTicketView> biddingTrailView = new ArrayList<>();
-        //ogni carta bidding ticket la trasformo in ticket view e la inserisco nella biddingtrailView
         for (BiddingTicket ticket : biddingTrail.getTicketList()) {
             biddingTrailView.add(ticket.toView());
         }

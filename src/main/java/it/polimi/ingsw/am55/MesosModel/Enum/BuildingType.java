@@ -1,4 +1,8 @@
 package it.polimi.ingsw.am55.MesosModel.Enum;
+
+/**
+ * describes the different effects a building card could have
+ */
 public enum BuildingType {
     BUILDING1,
     BUILDING2,

@@ -46,7 +46,6 @@ public class Row {
         buildingCardsList = new BuildingDeck();
     }
 
-    //helper test
 
     /**
      * Replaces this row's building cards with a copy of another deck's cards.
@@ -61,8 +60,6 @@ public class Row {
     public void setBuildingCardsList(BuildingDeck deck) {
         buildingCardsList.setBuildingCardsList(new ArrayList<>(deck.getBuildingDeck()));
     }
-
-    //getter
 
     /**
      * Returns the live list of character cards in this row.
@@ -159,13 +156,10 @@ public class Row {
      * @param donor row whose character and event cards are moved
      */
     public void swapTribeRow(Row donor){
-        //This referes to the lowerRow
         this.characterCardsList.clear();
         this.eventCardsList.clear();
-        //Now putting all cards in lower row list
         this.characterCardsList.addAll(donor.characterCardsList);
         this.eventCardsList.addAll(donor.eventCardsList);
-        //Clear all upper row list
         donor.characterCardsList.clear();
         donor.eventCardsList.clear();
     }
@@ -280,7 +274,6 @@ public class Row {
      */
     public List<CardView> createCardView() {
         List<CardView> listOfViews = new ArrayList<>();
-//scorro le row, converto le carte che contiene in cardview e dopo le aggiungo alla rowview che sarebbe listofViews
         for (Card c : characterCardsList) {
             listOfViews.add(c.toView());
         }

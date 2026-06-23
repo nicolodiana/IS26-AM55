@@ -12,39 +12,81 @@ import it.polimi.ingsw.am55.dto.CardView;
 
 import java.util.*;
 /**
- * DESCRIPTION: Represents a player in the game.
- * This class stores the full state of a player, including identification data,
- * resources, selected cards, owned tribe characters, constructed buildings,
- * and auxiliary values used to resolve game effects.
- * A Player keeps track of:
- *     The player's identity and personal information,
- *     victory or prestige-related resources and food,
- *     selected cards from the upper and lower rows,
- *     owned tribe cards grouped by character type,
- *     owned building cards and effect-related counters.
- * The first part of the class provides basic initialization, getters, and
- * resource management methods.
- *
+ * Represents a player and stores their identity, resources, selected-card counts,
+ * tribe cards, buildings, and values used to resolve card effects.
  */
 public class Player {
+    /**
+     * The player's nickname, used as their identifier.
+     */
     private final String id;
+    /**
+     * The totem assigned to the player.
+     */
     private String totem;
+    /**
+     * The player's current prestige points.
+     */
     private int numPP;
+    /**
+     * The player's current amount of food.
+     */
     private int numFoods;
+    /**
+     * The number of cards selected from the upper row.
+     */
     private int upperRowCardSelected;
+    /**
+     * The number of cards selected from the lower row.
+     */
     private int lowerRowCardSelected;
+    /**
+     * The shaman cards in the player's tribe.
+     */
     private List<Shaman> shamanList;
+    /**
+     * The hunter cards in the player's tribe.
+     */
     private List<Hunter> hunterList = new ArrayList<>();
+    /**
+     * The artist cards in the player's tribe.
+     */
     private List<Artist> artistList = new ArrayList<>();
+    /**
+     * The collector cards in the player's tribe.
+     */
     private List<Collector> collectorList = new ArrayList<>();
+    /**
+     * The builder cards in the player's tribe.
+     */
     private List<Builder> builderList = new ArrayList<>();
+    /**
+     * The inventor cards in the player's tribe.
+     */
     private List<Inventor> inventorList = new ArrayList<>();
+    /**
+     * The building cards owned by the player.
+     */
     private List<BuildingCard> buildings;
-    //mappa che serve per mappare i charactertype con liste associate (per effetto building 2 e 12)
+    /**
+     * Maps each character type to the corresponding list of cards.
+     */
     private Map<CharacterType, List<? extends CharacterCard>> characterLists;
+    /**
+     * The number of complete character sets already rewarded by Building 1.
+     */
     private int minSetCompleted;
+    /**
+     * The summary card included in the player's hand view.
+     */
     private final SummaryCard summeryCard = new SummaryCard(0, 0);
 
+    /**
+     * Creates a player with the specified nickname and totem and initializes an empty tribe.
+     *
+     * @param nickname the player's nickname
+     * @param totem    the player's totem
+     */
     public Player(String nickname, String totem) {
         this.id = nickname;
         this.totem = totem;
@@ -71,37 +113,42 @@ public class Player {
         characterLists.put(CharacterType.COLLECTOR, collectorList);
     }
     /**
-     * Returns the player's id.
-     * @return the id of the player
+     * Returns the player's nickname.
+     *
+     * @return the player's nickname
      */
     public String getNickname() {
         return id;
     }
     /**
-     * Returns the current amount of player points.
-     * @return the player's current points
+     * Returns the player's current prestige points.
+     *
+     * @return the current prestige points
      */
     public int getNumPP() {
         return numPP;
     }
 
     /**
-     * Returns the current amount of food.
-     * @return the player's current food
+     * Returns the player's current amount of food.
+     *
+     * @return the current amount of food
      */
     public int getNumFoods() {
         return numFoods;
     }
     /**
      * Returns the player's totem.
+     *
      * @return the player's totem
      */
     public String getTotem() {
         return totem;
     }
     /**
-     * Decreases the player's points by the specified amount.
-     * @param amount the amount of points to spend, it must be zero or greater than zero
+     * Decreases the player's prestige points by the specified amount.
+     *
+     * @param amount the number of prestige points to remove
      * @throws IllegalArgumentException if {@code amount} is negative
      */
     public void payPP(int amount){
@@ -110,8 +157,9 @@ public class Player {
     }
 
     /**
-     * Increases the player's points by the specified amount.
-     * @param amount the amount of points to add, it must be zero or greater than zero
+     * Increases the player's prestige points by the specified amount.
+     *
+     * @param amount the number of prestige points to add
      * @throws IllegalArgumentException if {@code amount} is negative
      */
     public void addPP(int amount){
@@ -121,8 +169,9 @@ public class Player {
 
     /**
      * Increases the player's food by the specified amount.
-     * @param amount the amount of food to add, it must be zero or greater than zero
-     * @throws IllegalArgumentException if  amount is negative
+     *
+     * @param amount the amount of food to add
+     * @throws IllegalArgumentException if {@code amount} is negative
      */
     public void addFood(int amount){
         if(amount < 0) throw new IllegalArgumentException("Amount is negative");
@@ -130,9 +179,9 @@ public class Player {
     }
     /**
      * Decreases the player's food by the specified amount.
-     * @param amount the amount of food to pay, it must be zero or greater than zero.
-     * @throws IllegalArgumentException if  amount is negative
-     * @throws IllegalArgumentException if the amount > numFoods because the numFoods cannot be negative
+     *
+     * @param amount the amount of food to remove
+     * @throws IllegalArgumentException if {@code amount} is negative or exceeds the available food
      */
     public void payFood(int amount){
         if(amount < 0) throw new IllegalArgumentException("Amount is negative");
@@ -140,32 +189,46 @@ public class Player {
         numFoods = numFoods - amount;
     }
 
+    /**
+     * Returns the number of cards selected from the upper row.
+     *
+     * @return the upper-row selection count
+     */
     public int getUpperRowCardSelected() {
         return upperRowCardSelected;
     }
+    /**
+     * Returns the number of cards selected from the lower row.
+     *
+     * @return the lower-row selection count
+     */
     public int getLowerRowCardSelected() {
         return lowerRowCardSelected;
     }
+    /**
+     * Increments the number of cards selected from the upper row.
+     */
     public void addUpperRowCardSelected(){
         upperRowCardSelected++;
     }
+    /**
+     * Increments the number of cards selected from the lower row.
+     */
     public void addLowerRowCardSelected(){
         lowerRowCardSelected++;
     }
+    /**
+     * Resets both row-selection counters.
+     */
     public void clearRowCardsSelected(){
         upperRowCardSelected = 0;
         lowerRowCardSelected = 0;
     }
 
 
-    // Edificio 1 (effetto passivo su pescaggio personaggi):
-    // Dal momento in cui si possiede BUILDING1, si guadagnano 5 cibi ogni volta che
-    // si completa un nuovo set di 6 carte personaggio di tipo diverso (1 per tipo).
-    // Non conta i set già completati prima dell'acquisizione dell'edificio:
-    // quando si acquisisce BUILDING1, minSetCompleted viene allineato al valore attuale
-    // di minCardSet() cosi i set già fatti non vengono premiati.
-    // Ad ogni aggiunta di personaggio si controlla se minCardSet() è aumentato
-    // rispetto a minSetCompleted: se sì, si è completato un nuovo set e si aggiungono 5 cibi.
+    /**
+     * Awards five food when Building 1 is owned and a new complete character set is formed.
+     */
     public  void checkBuilding1() {
         if (hasBuilding(BuildingType.BUILDING1)) {
             int currentSet = minCardSet();
@@ -176,92 +239,159 @@ public class Player {
         }
     }
 
-    //ADD CARD CON EFFETTI ISTANTANEI
+    /**
+     * Adds a shaman card to the player's tribe and applies the Building 1 effect.
+     *
+     * @param card the shaman card to add
+     */
     public void addTribeCard(Shaman card) {
-        //card.addCard(this);
         shamanList.add(card);
         checkBuilding1();
     }
 
+    /**
+     * Adds a hunter card, applies its immediate food effect, and applies the Building 1 effect.
+     *
+     * @param card the hunter card to add
+     */
     public void addTribeCard(Hunter card) {
-        //card.addCard(this);
-        //aggiunge cacciatore e se ha icona si guadagna 1 cibo x ogni cacciatore in tribù (effetto istantaneo)
+
         hunterList.add(card);
         if (card.getIcon()) { addFood(1 * (hunterList.size())); }
         checkBuilding1();
     }
 
+    /**
+     * Adds an artist card to the player's tribe and applies the Building 1 effect.
+     *
+     * @param card the artist card to add
+     */
     public void addTribeCard(Artist card) {
-        //card.addCard(this);
         artistList.add(card);
         checkBuilding1();
     }
 
+    /**
+     * Adds a collector card to the player's tribe and applies the Building 1 effect.
+     *
+     * @param card the collector card to add
+     */
     public void addTribeCard(Collector card) {
-        //card.addCard(this);
         collectorList.add(card);
         checkBuilding1();
     }
 
-    // Il suo ppBonus viene conteggiato a fine partita da EndGameResolver.
+    /**
+     * Adds a builder card to the player's tribe and applies the Building 1 effect.
+     *
+     * @param card the builder card to add
+     */
     public void addTribeCard(Builder card) {
-        //card.addCard(this);
         builderList.add(card);
         checkBuilding1();
     }
 
+    /**
+     * Adds an inventor card and applies the Building 5 and Building 1 effects when applicable.
+     *
+     * @param card the inventor card to add
+     */
     public void addTribeCard(Inventor card) {
-        //Effetto edificio 5
         if (hasBuilding(BuildingType.BUILDING5)) {
             int countEqualsInvontors = 0;
-            //equalsIgnoreCase controlla prima dell'aggiunta se 2 stringhe (invenzione) (poi json) sono uguali, ignorando uppercase e formattazione stringa
             for (Inventor inventor : inventorList) {
                 if (inventor.getIconInvention().equalsIgnoreCase(card.getIconInvention())) { countEqualsInvontors++; }
             }
-            // se prima dell'aggiunta erano dispari, con questa carta completo una nuova coppia
-            // e quindi guadagno 3 cibi.
+
             addFood((countEqualsInvontors % 2 == 1) ? 3 : 0);
         }
-        //card.addCard(this);
         inventorList.add(card);
         checkBuilding1();
     }
 
+    /**
+     * Pays the discounted cost of a building card and adds it to the player's buildings.
+     * When Building 1 is added, records the character sets already completed.
+     *
+     * @param card the building card to add
+     * @throws IllegalArgumentException if the player cannot pay the discounted cost
+     */
     public void addTribeCard(BuildingCard card) {
 
-            int buildingCost = card.getFoodCost() - totalBuildingDiscount();
-            buildingCost = Math.max(0, buildingCost); //se lo sconto è maggiore del costo dovuto, setto un minimo di 0
+        int buildingCost = card.getFoodCost() - totalBuildingDiscount();
+        buildingCost = Math.max(0, buildingCost);
 
 
-            this.payFood(buildingCost);
-            buildings.add(card);
+        this.payFood(buildingCost);
+        buildings.add(card);
 
-            // se la building card appena aggiunta è BUILDING1,
-            // allinea minSetCompleted ai set già completati così non li conta retroattivamente
-            if (card.getType().equals(BuildingType.BUILDING1)) {
-                minSetCompleted = minCardSet();
-            }
+        if (card.getType().equals(BuildingType.BUILDING1)) {
+            minSetCompleted = minCardSet();
+        }
 
 
     }
 
-    // ─── GETTER LISTE ────────────────────────────────────────────────────────────
 
+    /**
+     * Returns the player's building cards.
+     *
+     * @return the building cards
+     */
     public List<BuildingCard> getBuildings() { return buildings; }
+    /**
+     * Returns the player's shaman cards.
+     *
+     * @return the shaman cards
+     */
     public List<Shaman> getShamansList() { return shamanList; }
+    /**
+     * Returns the player's hunter cards.
+     *
+     * @return the hunter cards
+     */
     public List<Hunter> getHuntersList() { return hunterList; }
+    /**
+     * Returns the player's inventor cards.
+     *
+     * @return the inventor cards
+     */
     public List<Inventor> getInventorsList() { return inventorList; }
+    /**
+     * Returns the player's builder cards.
+     *
+     * @return the builder cards
+     */
     public List<Builder> getBuildersList() { return builderList; }
+    /**
+     * Returns the player's collector cards.
+     *
+     * @return the collector cards
+     */
     public List<Collector> getCollectorsList() { return collectorList; }
+    /**
+     * Returns the player's artist cards.
+     *
+     * @return the artist cards
+     */
     public List<Artist> getArtistsList() { return artistList; }
 
-    // ─── UTILITY ─────────────────────────────────────────────────────────────────
-
+    /**
+     * Returns the total number of character cards in the player's tribe.
+     *
+     * @return the number of character cards
+     */
     public int playerDeckSize() {
         return shamanList.size() + hunterList.size() + artistList.size()
                 + inventorList.size() + builderList.size() + collectorList.size();
     }
 
+    /**
+     * Checks whether the player owns a building of the specified type.
+     *
+     * @param type the building type to search for
+     * @return {@code true} if the player owns the building; {@code false} otherwise
+     */
     public boolean hasBuilding(BuildingType type) {
         for (BuildingCard bc : buildings) {
             if (bc.getType().equals(type)) return true;
@@ -269,6 +399,11 @@ public class Player {
         return false;
     }
 
+    /**
+     * Returns the total number of shaman stars, including the Building 6 bonus.
+     *
+     * @return the total number of shaman stars
+     */
     public int countShamanStars() {
         int totalStars = 0;
         for (Shaman s : shamanList) {
@@ -279,11 +414,21 @@ public class Player {
         }
         return totalStars;
     }
-    //metodo per sapere il conteggio in base al tipo di personaggio: SERVE PER EDIFICIO 2,12
+    /**
+     * Returns the number of character cards of the specified type.
+     *
+     * @param type the character type to count
+     * @return the number of cards of the specified type
+     */
     public int countByType(CharacterType type) {
         return characterLists.get(type).size();
     }
 
+    /**
+     * Returns the number of complete character sets in the player's tribe.
+     *
+     * @return the smallest card count among all character types
+     */
     public int minCardSet() {
         return Collections.min(Arrays.asList(
                 shamanList.size(),
@@ -295,10 +440,20 @@ public class Player {
         ));
     }
 
+    /**
+     * Returns the player's identifier.
+     *
+     * @return the player's identifier
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Creates the card views representing the player's summary, tribe, and buildings.
+     *
+     * @return the player's card views
+     */
     public List<CardView> giveMyHand() {
         List<CardView> list = new ArrayList<>();
 
@@ -315,6 +470,11 @@ public class Player {
         return list;
     }
 
+    /**
+     * Returns the total building discount provided by the player's builder cards.
+     *
+     * @return the total building discount
+     */
     public int totalBuildingDiscount() {
         int builderDiscount = 0;
 

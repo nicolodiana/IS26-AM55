@@ -7,18 +7,33 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Deck manager for building cards grouped by era.
+ * <p>The deck initializes all building cards, exposes the active list, and removes cards when they are bought from the board.
+ */
 public class BuildingDeck {
+    /**
+     * Building cards contained in this deck or board row.
+     */
     List<BuildingCard> buildingCardsList;
 
+    /**
+     * Creates an empty building deck ready to be initialized for the game.
+     */
     public BuildingDeck(){
         buildingCardsList = new ArrayList<BuildingCard>();
     }
 
-    //Test helper
+    //Test Helper
     public void setBuildingCardsList(List<BuildingCard> buildingCardsList) {
         this.buildingCardsList = buildingCardsList;
     }
 
+    /**
+     * Initializes the era 1 building deck for the configured player count.
+     *
+     * @param numPlayers the players participating in the operation
+     */
     public void initBuildingDeckEra1(int numPlayers) {
         List<BuildingCard> buildingDeckEra1 = new ArrayList<>();
         buildingDeckEra1.add(new BuildingCard( 97, 1, 4, 3, BuildingType.BUILDING1, null, 0));
@@ -40,6 +55,12 @@ public class BuildingDeck {
         }
         this.buildingCardsList = buildingDeckEra1;
     }
+
+    /**
+     * Initializes the era 2 building deck for the configured player count.
+     *
+     * @param numPlayers the players participating in the operation
+     */
     public void initBuildingDeckEra2(int numPlayers) {
         List<BuildingCard> buildingDeckEra2 = new ArrayList<>();
         buildingDeckEra2.add(new BuildingCard(103, 2, 7, 0, BuildingType.BUILDING7, null, 0));
@@ -62,6 +83,11 @@ public class BuildingDeck {
         }
         this.buildingCardsList = buildingDeckEra2;
     }
+    /**
+     * Initializes the era 3 building deck for the configured player count.
+     *
+     * @param numPlayers the players participating in the operation
+     */
     public void initBuildingDeckEra3(int numPlayers) {
         List<BuildingCard> buildingDeckEra3 = new ArrayList<>();
         buildingDeckEra3.add(new BuildingCard(110, 3, 8, 8, BuildingType.BUILDING12, CharacterType.HUNTER, 3 ));
@@ -92,19 +118,35 @@ public class BuildingDeck {
     public List<BuildingCard> getBuildingDeck(){
         return this.buildingCardsList;
     }
+    /**
+     * Removes all cards currently stored in this building deck.
+     */
     public void clear(){
         buildingCardsList.clear();
     }
-//    public void swapBuildingDeck(BuildingDeck donor, BuildingDeck receiver){
-//        receiver.buildingCardsList = new ArrayList<>(donor.buildingCardsList) ;
-//        donor.clear();
-//    }
+
+    /**
+     * Removes the selected building card from this building deck.
+     *
+     * @param buildingCard the card to add, remove, or apply
+     */
     public void removeBuildingCard(BuildingCard buildingCard){
         buildingCardsList.remove(buildingCard);
     }
+    /**
+     * Removes the selected building card by index from this building deck.
+     *
+     * @param index the position to evaluate or access
+     */
     public void removeBuildingCardByIndex(int index){
         buildingCardsList.remove(index);
     }
+    /**
+     * Returns the building card by index that matches the provided input.
+     *
+     * @param index the position to evaluate or access
+     * @return the building card by index value
+     */
     public BuildingCard getBuildingCardByIndex(int index){
         return buildingCardsList.get(index);
     }

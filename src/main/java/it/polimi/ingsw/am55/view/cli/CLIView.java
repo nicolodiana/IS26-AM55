@@ -28,25 +28,58 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class CLIView implements ClientModelObserver {
 
+    /** Delay, in seconds, applied before rendering event-resolution results. */
     private static final int EVENT_RESOLUTION_DELAY_SECONDS = 4;
 
+    /** Client-side model observed by this view. */
     private final ClientModel model;
+
+    /** Scanner used to read commands from standard input. */
     private final Scanner input;
+
+    /** Helper responsible for rendering content in the terminal. */
     private final CLIRenderHelper renderer;
+
+    /** Resolver that determines the action available in the current client state. */
     private final ClientActionResolver actionResolver;
+
+    /** Scheduler used for delayed rendering and asynchronous lobby operations. */
     private final ScheduledExecutorService scheduler;
+
+    /** Semaphore that signals when the input loop should request a command. */
     private final Semaphore inputRequests;
+
+    /** Indicates whether an input request is already queued. */
     private final AtomicBoolean promptQueued;
+
+    /** Lock used to serialize console output. */
     private final Object outputLock;
 
+    /** Handler used to forward user actions to the controller. */
     private UserActionHandler actionHandler;
+
+    /** Latest game snapshot received from the client model. */
     private volatile GameView currentGameView;
+
+    /** Latest informational message received from the client model. */
     private volatile String currentInfoMessage;
+
+    /** Latest error message received from the client model. */
     private volatile String currentErrorMessage;
+
+    /** Indicates whether the view is waiting for a server response. */
     private volatile boolean waitingServerResponse;
+
+    /** Nickname of the local player. */
     private volatile String id;
+
+    /** Indicates whether the client is currently in the lobby. */
     private volatile boolean inLobby;
+
+    /** Latest lobby snapshot received from the client model. */
     private volatile LobbyView currentLobbyView;
+
+    /** Indicates whether the next game or end-game rendering must be delayed. */
     private volatile boolean pendingEventResolutionDelay;
 
     /**

@@ -153,20 +153,6 @@ public class Game implements GameModelInterface{
                 normalizedColor.toLowerCase()
         );
 
-        // PER DEBUG PICK SPECIAL
-//        if ("nico".equalsIgnoreCase(newPlayer.getNickname())) {
-//            newPlayer.addTribeCard(new BuildingCard(
-//                    999,
-//                    1,
-//                    0,
-//                    0,
-//                    BuildingType.BUILDING13,
-//                    null,
-//                    0
-//            ));
-//
-//            System.out.println("[DEBUG] Aggiunta Building 13 a nico");
-//        }
 
         if (players.size() + 1 > numPlayers) {
             throw new PlayerNumberOutOfRange("The number of player is out of range");
@@ -208,7 +194,6 @@ public class Game implements GameModelInterface{
         return state;
     }
 
-    //Getter for testing
     /**
      * Returns the shared board used by this game.
      *
@@ -772,8 +757,7 @@ public class Game implements GameModelInterface{
     private List<EndGameEffectView> applyFinalEffectsToPlayer(Player p) {
         List<EndGameEffectView> effects = new ArrayList<>();
 
-        // Painters' end-of-game effect:
-        // ogni coppia di artisti dà 10 PP
+
         int paintersBonus = (p.getArtistsList().size() / 2) * 10;
         if (paintersBonus != 0) {
             p.addPP(paintersBonus);
@@ -784,7 +768,6 @@ public class Game implements GameModelInterface{
             ));
         }
 
-        // Builders' end-game effect
         int sumPPBuilders = 0;
         for (Builder b : p.getBuildersList()) {
             sumPPBuilders += b.getNumPP();
@@ -807,7 +790,6 @@ public class Game implements GameModelInterface{
             ));
         }
 
-        // Inventors' end-of-game effect
         int inventorCount = p.getInventorsList().size();
 
         Set<String> distinctIcons = new HashSet<>();
@@ -827,7 +809,6 @@ public class Game implements GameModelInterface{
             ));
         }
 
-        // Building Effect 11
         if (p.hasBuilding(BuildingType.BUILDING11)) {
             int building11Bonus = p.minCardSet() * 6;
 
@@ -841,7 +822,6 @@ public class Game implements GameModelInterface{
             }
         }
 
-        // Building Effect 12 / bonus end game buildings
         int buildingsBonus = 0;
 
         for (BuildingCard bc : p.getBuildings()) {
@@ -857,7 +837,6 @@ public class Game implements GameModelInterface{
             ));
         }
 
-        // Building Effect 14
         if (p.hasBuilding(BuildingType.BUILDING14)) {
             int building14Bonus = 25;
 
@@ -930,10 +909,7 @@ public class Game implements GameModelInterface{
         List<ResolveEventView> resolvedEvents = new ArrayList<>();
         List<EndGameEffectView> endGameEffects = new ArrayList<>();
 
-        /*
-         * 1. Risolvo gli eventi finali.
-         * Nell'end game uso lower row + upper row.
-         */
+
         List<EventCard> finalEvents = new ArrayList<>(sharedBoard.orderEventsEndGame());
 
         for (EventCard card : finalEvents) {
@@ -943,22 +919,15 @@ public class Game implements GameModelInterface{
             resolvedEvents.add(resolveView);
         }
 
-        /*
-         * 2. Applico gli effetti finali non legati alle EventCard.
-         */
+
         for (Player player : players) {
             List<EndGameEffectView> playerEffects = applyFinalEffectsToPlayer(player);
             endGameEffects.addAll(playerEffects);
         }
 
-        /*
-         * 3. Calcolo solo i vincitori.
-         */
+
         Map<String, Integer> winners = calculateWinners();
 
-        /*
-         *  4.Salvo i dati nella base di dati
-         */
 
         gameRepository = new DatabaseManger();
         gameRepository.registerGame(this.id,this.numPlayers);
@@ -967,9 +936,7 @@ public class Game implements GameModelInterface{
         }
         List<LeaderBoardEntryView> leaderBoard = gameRepository.getGeneralClassification(this.numPlayers);
 
-        /*
-         * 5. Cambio stato finale.
-         */
+
         changeState(GameState.ENDED);
 
         return new EndGameResultView(resolvedEvents, endGameEffects, winners,leaderBoard);

@@ -9,25 +9,49 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-// Evento Rituale Sciamanico
+/**
+ * Event card that resolves shaman ritual effects.
+ * <p>It rewards or penalizes players according to their shaman stars and exposes the result through a resolution DTO.
+ */
 public class ShamanRitualEventCard extends EventCard {
+    /**
+     * Maximum prestige points awarded by this effect.
+     */
     private final int maxPP;
+    /**
+     * Minimum prestige points awarded by this effect.
+     */
     private final int minPP;
+    /**
+     * Mapping between affected players and the prestige points assigned by the effect.
+     */
     private final Map<String, Integer> effectToPP = new HashMap<>();
 
+    /**
+     * Creates a shaman ritual event card with its card metadata and rule values.
+     *
+     * @param id the identifier to use for the object
+     * @param era the era associated with the card
+     * @param maxPP the prestige-point value involved in the operation
+     * @param minPP the prestige-point value involved in the operation
+     */
     public ShamanRitualEventCard(int id, int era,int maxPP, int minPP) {
         super(id,era);
         this.maxPP = maxPP;
         this.minPP = minPP;
     }
 
+    /**
+     * Resolves this event card and applies its effects to the participating players.
+     *
+     * @param players the players participating in the operation
+     */
     @Override
     public void activateEvent(List<Player> players) {
         if (players == null || players.isEmpty()) {
             return;
         }
 
-        // calculate the max and min starts one time
         int maxStars = players.get(0).countShamanStars();
         int minStars = players.get(0).countShamanStars();
 
@@ -43,7 +67,6 @@ public class ShamanRitualEventCard extends EventCard {
             }
         }
 
-        // Apply the effect to all players
         for (Player p : players) {
             int stars = p.countShamanStars();
 
@@ -68,12 +91,27 @@ public class ShamanRitualEventCard extends EventCard {
         }
     }
 
+    /**
+     * Returns the event-resolution order used to sort event cards.
+     *
+     * @return the order value
+     */
     public int getOrder(){
         return 2;
     }
 
+    /**
+     * Builds the client-facing view representation of this shaman ritual event card.
+     *
+     * @return the client-facing view representation of this shaman ritual event card
+     */
     public ShamanRitualEventView toView() { return new ShamanRitualEventView(getId(), this.era, this.maxPP, this.minPP); }
 
+    /**
+     * Builds the event-resolution view generated after resolving this event card.
+     *
+     * @return the client-facing view representation of this shaman ritual event card
+     */
     public ResolveShamanRitualView toViewResolve() {
         return new ResolveShamanRitualView(effectToPP, "SHAMAN RITUAL");
     }

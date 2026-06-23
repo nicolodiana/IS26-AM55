@@ -42,26 +42,83 @@ import java.util.Set;
  */
 public class GameSceneController implements GenericSceneController {
 
+    /**
+     * Displays the game identifier.
+     */
     @FXML private Label gameIdLabel;
+    /**
+     * Displays the current game state.
+     */
     @FXML private Label stateLabel;
+    /**
+     * Displays the current round number.
+     */
     @FXML private Label roundLabel;
+    /**
+     * Displays the current player.
+     */
     @FXML private Label currentPlayerLabel;
+    /**
+     * Displays the instruction for the local player.
+     */
     @FXML private Label instructionLabel;
+    /**
+     * Displays informational and error messages.
+     */
     @FXML private Label statusLabel;
+    /**
+     * Contains the rendered player rows.
+     */
     @FXML private VBox playersBox;
+    /**
+     * Contains the turn ticket and its occupied slots.
+     */
     @FXML private HBox turnTicketBox;
+    /**
+     * Contains the bidding trail tickets.
+     */
     @FXML private HBox biddingTrailBox;
+    /**
+     * Contains the upper card row.
+     */
     @FXML private HBox upperRowBox;
+    /**
+     * Contains the lower card row.
+     */
     @FXML private HBox lowerRowBox;
+    /**
+     * Contains the resolved event summaries.
+     */
     @FXML private VBox eventsBox;
+    /**
+     * Provides scrolling for the resolved event summaries.
+     */
     @FXML private ScrollPane eventsScrollPane;
 
+    /**
+     * Provides the images used by the game scene.
+     */
     private final ImageResources imageResources = new ImageResources();
 
+    /**
+     * The GUI view used to execute player actions.
+     */
     private GuiView guiView;
+    /**
+     * The current interaction mode of the scene.
+     */
     private GuiInteractionMode mode = GuiInteractionMode.READ_ONLY;
+    /**
+     * The previous board snapshot used to detect removed cards.
+     */
     private BoardSnapshot previousBoardSnapshot;
+    /**
+     * The tracked progress of the current standard card pick.
+     */
     private PickProgress pickProgress;
+    /**
+     * The row currently enabled for a standard card pick.
+     */
     private RowName currentStandardPickRow;
 
     /**

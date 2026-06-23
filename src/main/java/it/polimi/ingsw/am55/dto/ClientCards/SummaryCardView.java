@@ -6,10 +6,21 @@ import it.polimi.ingsw.am55.view.cli.CliCardInfo;
 import it.polimi.ingsw.am55.view.cli.ConsoleColor;
 
 import java.util.List;
-
+/**
+ * Client-side DTO for the summary reference card.
+ * <p>It provides the textual event summary shown by the client views.
+ */
 public class SummaryCardView extends CardView {
+    /**
+     * Unique identifier of this project object.
+     */
     private final int id;
 
+    /**
+     * Creates a summary card view from model data that can be sent to the client.
+     *
+     * @param id the identifier to use for the object
+     */
     public SummaryCardView(int id) {
         this.id = id;
     }
@@ -24,6 +35,11 @@ public class SummaryCardView extends CardView {
                 "\n- Sustenance Event: lose 1 food per character";
     }
 
+    /**
+     * Builds the CLI rendering metadata used to display this card.
+     *
+     * @return the CLI rendering metadata for this card
+     */
     public CliCardInfo getCliCardInfo() {
         return new CliCardInfo(
                 "SUMMARY",
