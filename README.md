@@ -59,18 +59,33 @@ This section contains all instructions about how to run this project.
 ### Database
 make sure to Download on every device [*MySQL*](https://dev.mysql.com/downloads/mysql/8.0.html)
 
-- Download latest database edition there: [**Database**](readmeFiles/mesos-rules-it.pdf)
+- Download latest database edition there: [**Database**](jars)
 
 ### Server
 
 - Download latest Server edition there: [**Server**](jars/)
-- Run in terminal: `java -jar `
+- Run in terminal:
+
+`java -jar [RMIPort] [socketPort]`
+
+  - if no arguments are provided, the server uses the default RMI and socket ports.
+  - invalid line parameters terminate the application with exit code `2`.
+
+- share the server IP wrote in the terminal with the Clients 
 
 ### Client
 
 - Download latest Client edition there: [**Client**](jars/)
-- Run in terminal: `java -jar `
-- 
+- Run in terminal: 
+
+`java -jar <host> <RMI|socket> <port> <cli|gui>`
+
+  - `Host` set the Server IP given to you by the Server
+    - default for local gamaplay: `localHost`
+- `<RMI | socket>` select the connection technology
+- `<port>` select the connection port 
+  - if don't set it goes for the default port
+- `<cli|gui>` select the view mode
 
 
 ## How to run from IDE (IntelliJ IDEA)
