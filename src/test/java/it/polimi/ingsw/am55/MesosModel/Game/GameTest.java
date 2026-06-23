@@ -221,50 +221,90 @@ class GameTest {
         assertThrows(IllegalStateException.class, () -> g.pickFood(firstPlayer));
     }
 
-    /**
-     * Verifies that the correct player can legally pick food from the proper position
-     * in a five-player game.
-     *
-     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
-     */
+//    /**
+//     * Verifies that the correct player can legally pick food from the proper position
+//     * in a five-player game.
+//     *
+//     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+//     */
+//    @Test
+//    void testPickFood_CorrectNumberOfPlayerCorrectPosition() throws PlayerNumberOutOfRange{
+//        Game game = createFivePlayerGame();
+//
+//        String firstPlayer = game.getCurrentPlayer();
+//        game.placeTotem(0, game.getCurrentPlayer());
+//        game.placeTotem(2, game.getCurrentPlayer());
+//        game.placeTotem(5, game.getCurrentPlayer());
+//        game.placeTotem(4, game.getCurrentPlayer());
+//        game.placeTotem(3, game.getCurrentPlayer());
+//
+//        assertEquals(firstPlayer, game.getCurrentPlayer());
+//        assertDoesNotThrow(() -> game.pickFood(firstPlayer));
+//    }
     @Test
-    void testPickFood_CorrectNumberOfPlayerCorrectPosition() throws PlayerNumberOutOfRange{
+    void playerOnFoodTicketReceivesSixFoodAutomaticallyAtEndOfPlaceTotem() throws Exception {
         Game game = createFivePlayerGame();
 
-        String firstPlayer = game.getCurrentPlayer();
-        game.placeTotem(0, game.getCurrentPlayer());
-        game.placeTotem(2, game.getCurrentPlayer());
-        game.placeTotem(5, game.getCurrentPlayer());
-        game.placeTotem(4, game.getCurrentPlayer());
-        game.placeTotem(3, game.getCurrentPlayer());
+        assertEquals(GameState.PLACETOTEM, game.getGameState());
 
-        assertEquals(firstPlayer, game.getCurrentPlayer());
-        assertDoesNotThrow(() -> game.pickFood(firstPlayer));
-    }
+        String foodPlayer = game.getCurrentPlayer();
+        int foodBefore = game.getPlayerFood(foodPlayer);
 
-    /**
-     * Verifies that a player cannot pick food from the wrong position
-     * even if the action would otherwise be available in a five-player game.
-     *
-     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
-     */
-    @Test
-    void testPickFood_CorrectNumberOfPlayerWrongPosition() throws PlayerNumberOutOfRange {
-        Game game = createFivePlayerGame();
+        // Il primo giocatore piazza sulla tessera A: +3 cibo.
+        game.placeTotem(0, foodPlayer);
 
-        String firstPlayer = game.getCurrentPlayer();
-        game.placeTotem(0, game.getCurrentPlayer());
-        String secondPlayer = game.getCurrentPlayer();
-        game.placeTotem(2, game.getCurrentPlayer());
-        game.placeTotem(5, game.getCurrentPlayer());
-        game.placeTotem(4, game.getCurrentPlayer());
-        game.placeTotem(3, game.getCurrentPlayer());
+        int nextTicketIndex = 1;
 
-        assertAll(
-                () -> assertEquals(firstPlayer, game.getCurrentPlayer()),
-                () -> assertThrows(IllegalStateException.class, () -> game.pickFood(secondPlayer))
+        // Gli altri giocatori piazzano i totem sulle tessere successive.
+        while (game.getGameState().equals(GameState.PLACETOTEM)) {
+            String currentPlayer = game.getCurrentPlayer();
+            game.placeTotem(nextTicketIndex, currentPlayer);
+            nextTicketIndex++;
+        }
+
+        int foodAfter = game.getPlayerFood(foodPlayer);
+
+        // +3 dalla tessera A
+        // +3 dal primo spazio della TurnTicket quando il totem ritorna
+        assertEquals(foodBefore + 6, foodAfter);
+
+        assertEquals(GameState.PICKCARD, game.getGameState());
+
+        // Dopo la pick food automatica, il turno deve passare al prossimo giocatore.
+        assertNotEquals(foodPlayer, game.getCurrentPlayer());
+
+        // Il giocatore che ha preso cibo deve essere tornato nel primo spazio della TurnTicket.
+        assertNotNull(game.getSharedBoard().getPlayerFromTurnTicket(0));
+        assertEquals(
+                foodPlayer,
+                game.getSharedBoard().getPlayerFromTurnTicket(0).getNickname()
         );
     }
+
+
+///**
+//     * Verifies that a player cannot pick food from the wrong position
+//     * even if the action would otherwise be available in a five-player game.
+//     *
+//     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
+//     */
+//    @Test
+//    void testPickFood_CorrectNumberOfPlayerWrongPosition() throws PlayerNumberOutOfRange {
+//        Game game = createFivePlayerGame();
+//
+//        String firstPlayer = game.getCurrentPlayer();
+//        game.placeTotem(0, game.getCurrentPlayer());
+//        String secondPlayer = game.getCurrentPlayer();
+//        game.placeTotem(2, game.getCurrentPlayer());
+//        game.placeTotem(5, game.getCurrentPlayer());
+//        game.placeTotem(4, game.getCurrentPlayer());
+//        game.placeTotem(3, game.getCurrentPlayer());
+//
+//        assertAll(
+//                () -> assertEquals(firstPlayer, game.getCurrentPlayer()),
+//                () -> assertThrows(IllegalStateException.class, () -> game.pickFood(secondPlayer))
+//        );
+//    }
 
 
     /**

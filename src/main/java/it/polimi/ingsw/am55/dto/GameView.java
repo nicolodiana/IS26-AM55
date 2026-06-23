@@ -133,9 +133,17 @@ public class GameView implements Serializable {
         if (!resolveEvents.isEmpty()) {
             resolveEvents.clear();
         }
+        if (players.size() == 5 && state == GameState.PICKCARD && board.getBiddingTrail().get(0).isTaken()) {
+            PlayerView p = board.getBiddingTrail().get(0).getPlayer();
 
+            if (p != null) {
+                board.putPlayerInTurnTicket(p);
+                int foodGain = 6; // bonus food ticket + turnorder effect
+                p.setPointsAndFood(p.getFood() + foodGain, p.getPoints());
+            }
+        }
         board.getBiddingTrail().get(index).setPlayer(player);
-        board.removePlayerFromTurnTicket();
+        board.removePlayerFromTurnTicket(playerId);
     }
 
 

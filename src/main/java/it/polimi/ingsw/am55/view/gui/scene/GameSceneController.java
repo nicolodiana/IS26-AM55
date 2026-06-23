@@ -11,9 +11,11 @@ import it.polimi.ingsw.am55.view.gui.GuiInteractionMode;
 import it.polimi.ingsw.am55.view.gui.GuiView;
 import it.polimi.ingsw.am55.view.gui.assets.CardFormatter;
 import it.polimi.ingsw.am55.view.gui.assets.ImageResources;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -21,13 +23,16 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -35,91 +40,37 @@ import java.util.Set;
  * Controller for the in-game board scene.
  * <p>
  * The controller renders players, turn ticket, bidding trail, board rows and
- * resolved events. It also determines which board elements are clickable for the
- * local player. Standard multi-row picks are highlighted one row at a time: lower
+ * resolved events. At startup it also normalizes the FXML board order so that
+ * the upper row is shown above the bidding trail. It also determines which board
+ * elements are clickable for the local player. Standard multi-row picks are
+ * highlighted one row at a time: lower
  * required picks are offered first, then upper required picks, matching the
  * distinct pick steps performed by the model.
  */
 public class GameSceneController implements GenericSceneController {
 
-    /**
-     * Displays the game identifier.
-     */
     @FXML private Label gameIdLabel;
-    /**
-     * Displays the current game state.
-     */
     @FXML private Label stateLabel;
-    /**
-     * Displays the current round number.
-     */
     @FXML private Label roundLabel;
-    /**
-     * Displays the current player.
-     */
     @FXML private Label currentPlayerLabel;
-    /**
-     * Displays the instruction for the local player.
-     */
     @FXML private Label instructionLabel;
-    /**
-     * Displays informational and error messages.
-     */
     @FXML private Label statusLabel;
-    /**
-     * Contains the rendered player rows.
-     */
     @FXML private VBox playersBox;
-    /**
-     * Contains the turn ticket and its occupied slots.
-     */
     @FXML private HBox turnTicketBox;
-    /**
-     * Contains the bidding trail tickets.
-     */
     @FXML private HBox biddingTrailBox;
-    /**
-     * Contains the upper card row.
-     */
     @FXML private HBox upperRowBox;
-    /**
-     * Contains the lower card row.
-     */
     @FXML private HBox lowerRowBox;
-    /**
-     * Contains the resolved event summaries.
-     */
     @FXML private VBox eventsBox;
-    /**
-     * Provides scrolling for the resolved event summaries.
-     */
     @FXML private ScrollPane eventsScrollPane;
 
-    /**
-     * Provides the images used by the game scene.
-     */
     private final ImageResources imageResources = new ImageResources();
 
-    /**
-     * The GUI view used to execute player actions.
-     */
     private GuiView guiView;
-    /**
-     * The current interaction mode of the scene.
-     */
     private GuiInteractionMode mode = GuiInteractionMode.READ_ONLY;
-    /**
-     * The previous board snapshot used to detect removed cards.
-     */
     private BoardSnapshot previousBoardSnapshot;
-    /**
-     * The tracked progress of the current standard card pick.
-     */
     private PickProgress pickProgress;
-    /**
-     * The row currently enabled for a standard card pick.
-     */
     private RowName currentStandardPickRow;
+    private boolean boardLayoutNormalized;
 
     /**
      * Injects the owning GUI view.
@@ -127,6 +78,18 @@ public class GameSceneController implements GenericSceneController {
     @Override
     public void setGuiView(GuiView guiView) {
         this.guiView = guiView;
+    }
+
+    /**
+     * Performs one-time JavaFX initialization after all FXML fields are injected.
+     * <p>
+     * The original scene file can declare the bidding trail before the upper row;
+     * this hook fixes only the visual order and leaves the same injected nodes in
+     * place, so all existing render and click logic keeps working unchanged.
+     */
+    @FXML
+    private void initialize() {
+        normalizeBoardVerticalOrder();
     }
 
     /**
@@ -140,6 +103,8 @@ public class GameSceneController implements GenericSceneController {
         if (gameView == null) {
             return;
         }
+
+        normalizeBoardVerticalOrder();
 
         this.mode = toGuiMode(action);
         synchronizePickProgress(gameView, myPlayerId);
@@ -335,6 +300,8 @@ public class GameSceneController implements GenericSceneController {
      */
     private void renderBiddingTrail(BoardView board, String myPlayerId) {
         biddingTrailBox.getChildren().clear();
+        centerHorizontalRow(biddingTrailBox);
+
         if (board == null || board.getBiddingTrail() == null) {
             return;
         }
@@ -409,11 +376,161 @@ public class GameSceneController implements GenericSceneController {
     }
 
     /**
+     * Ensures the board is displayed as: upper row, bidding trail, lower row.
+     * <p>
+     * This method is intentionally defensive because the rows can be wrapped in
+     * scroll panes or other layout containers inside the FXML. It finds the
+     * nearest common {@link Pane}, moves the visual block containing the upper row
+     * before the block containing the bidding trail, and also carries the
+     * immediately-adjacent upper-row title label when it is a sibling.
+     */
+    private void normalizeBoardVerticalOrder() {
+        if (boardLayoutNormalized) {
+            return;
+        }
+
+        Pane commonParent = findNearestCommonPane(upperRowBox, biddingTrailBox);
+        if (commonParent == null) {
+            return;
+        }
+
+        ObservableList<Node> siblings = commonParent.getChildren();
+        Node upperBlock = directChildUnder(upperRowBox, commonParent);
+        Node trailBlock = directChildUnder(biddingTrailBox, commonParent);
+        if (upperBlock == null || trailBlock == null || upperBlock == trailBlock) {
+            return;
+        }
+
+        int upperIndex = siblings.indexOf(upperBlock);
+        int trailIndex = siblings.indexOf(trailBlock);
+        if (upperIndex < 0 || trailIndex < 0) {
+            return;
+        }
+
+        Node upperHeader = findPreviousHeader(siblings, upperIndex, "upper row", "fila superiore");
+        Node trailHeader = findPreviousHeader(siblings, trailIndex, "bidding", "tracciato", "offerte", "offer");
+        int upperStartIndex = upperHeader == null ? upperIndex : siblings.indexOf(upperHeader);
+        int trailStartIndex = trailHeader == null ? trailIndex : siblings.indexOf(trailHeader);
+
+        if (upperStartIndex < trailStartIndex) {
+            boardLayoutNormalized = true;
+            return;
+        }
+
+        List<Node> upperNodes = new ArrayList<>();
+        if (upperHeader != null) {
+            upperNodes.add(upperHeader);
+        }
+        upperNodes.add(upperBlock);
+
+        siblings.removeAll(upperNodes);
+        Node insertionTarget = trailHeader == null ? trailBlock : trailHeader;
+        int insertionIndex = siblings.indexOf(insertionTarget);
+        if (insertionIndex < 0) {
+            insertionIndex = siblings.size();
+        }
+        siblings.addAll(insertionIndex, upperNodes);
+
+        boardLayoutNormalized = true;
+    }
+
+    /**
+     * Finds the closest parent pane that contains both visual nodes somewhere in
+     * its descendant tree.
+     *
+     * @param first first node to compare
+     * @param second second node to compare
+     * @return nearest shared {@link Pane}, or {@code null} when the nodes are not
+     *         currently attached to a common pane
+     */
+    private Pane findNearestCommonPane(Node first, Node second) {
+        if (first == null || second == null) {
+            return null;
+        }
+
+        List<Parent> firstAncestors = parentChain(first);
+        Node current = second;
+        while (current != null) {
+            Parent parent = current.getParent();
+            if (parent instanceof Pane pane && firstAncestors.contains(parent)) {
+                return pane;
+            }
+            current = parent;
+        }
+        return null;
+    }
+
+    /**
+     * Builds the parent chain for a node, starting from its direct parent.
+     *
+     * @param node node whose parents must be inspected
+     * @return ordered list of parents from nearest to farthest
+     */
+    private List<Parent> parentChain(Node node) {
+        List<Parent> parents = new ArrayList<>();
+        Parent parent = node == null ? null : node.getParent();
+        while (parent != null) {
+            parents.add(parent);
+            parent = parent.getParent();
+        }
+        return parents;
+    }
+
+    /**
+     * Returns the direct child of a common ancestor that contains the supplied
+     * descendant. This allows row boxes wrapped by scroll panes to be moved as one
+     * visible block.
+     *
+     * @param descendant node nested somewhere below the ancestor
+     * @param ancestor pane whose direct child must be found
+     * @return direct child under {@code ancestor}, or {@code null} when the
+     *         descendant is not contained by that ancestor
+     */
+    private Node directChildUnder(Node descendant, Pane ancestor) {
+        Node current = descendant;
+        while (current != null && current.getParent() != ancestor) {
+            current = current.getParent();
+        }
+        return current != null && current.getParent() == ancestor ? current : null;
+    }
+
+    /**
+     * Looks for a title label immediately before a visual block. Only labels with
+     * one of the expected marker words are returned, preventing unrelated labels
+     * from being moved by the layout correction.
+     *
+     * @param siblings mutable child list of the common parent
+     * @param blockIndex index of the block that may have a title before it
+     * @param markers case-insensitive pieces of text accepted as title markers
+     * @return matching label node, or {@code null} if no matching title is found
+     */
+    private Node findPreviousHeader(ObservableList<Node> siblings, int blockIndex, String... markers) {
+        if (siblings == null || blockIndex <= 0) {
+            return null;
+        }
+
+        Node candidate = siblings.get(blockIndex - 1);
+        if (!(candidate instanceof Label label) || label.getText() == null) {
+            return null;
+        }
+
+        String normalizedText = label.getText().toLowerCase(Locale.ROOT);
+        for (String marker : markers) {
+            if (marker != null && normalizedText.contains(marker.toLowerCase(Locale.ROOT))) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Renders upper and lower card rows with one enabled row at a time.
      */
     private void renderRows(BoardView board) {
         upperRowBox.getChildren().clear();
         lowerRowBox.getChildren().clear();
+        centerHorizontalRow(upperRowBox);
+        centerHorizontalRow(lowerRowBox);
 
         if (board == null) {
             return;
@@ -486,6 +603,18 @@ public class GameSceneController implements GenericSceneController {
         for (CardView card : cards) {
             rowBox.getChildren().add(createCardPane(card, rowName, rowEnabled));
         }
+    }
+
+    /**
+     * Keeps horizontal board rows centered without changing game logic.
+     */
+    private void centerHorizontalRow(HBox rowBox) {
+        if (rowBox == null) {
+            return;
+        }
+
+        rowBox.setAlignment(Pos.CENTER);
+        rowBox.setMaxWidth(Double.MAX_VALUE);
     }
 
     /**

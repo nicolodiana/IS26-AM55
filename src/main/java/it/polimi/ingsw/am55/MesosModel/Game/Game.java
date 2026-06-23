@@ -297,7 +297,9 @@ public class Game implements GameModelInterface{
 
         changeState(GameState.PICKCARD);
         sharedBoard.removeAllPlayersFromTurnTicket();
-
+        if(sharedBoard.getChooseLowerCard(currentPlayer)==0 && sharedBoard.getChooseUpperCard(currentPlayer)==0){
+            return pickFood(currentPlayer.getNickname());
+        }
         return advanceAutomaticallyUntilInputNeeded();
     }
 

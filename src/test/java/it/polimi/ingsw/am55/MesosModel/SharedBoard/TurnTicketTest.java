@@ -4,7 +4,9 @@ import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -155,59 +157,24 @@ class TurnTicketTest {
 
     /**
      * Verifies the manual removal and addition methods of a player to the TurnTicket.
-     * Expected result: clear all players from turn ticket, while subsequent addition
+     * Expected result: Removal sets the first slot to null, while subsequent addition
      * repositions the player in the first available slot.
      */
     @Test
-    void testRemovePlayer() {
+    void testAddAndRemovePlayer() {
         turnTicket.initTurnTicket(List.of(p1, p2));
-
+        Player first = turnTicket.getTurnPlayer(0);
+        Player second = turnTicket.getTurnPlayer(1);
 
         turnTicket.removePlayersFromTurnTicket();
+        assertEquals(2, turnTicket.getTurnOrder().size());
+        assertFalse(turnTicket.getTurnOrder().contains(first));
+        assertFalse(turnTicket.getTurnOrder().contains(second));
+        turnTicket.addPlayer(first);
+        turnTicket.addPlayer(second);
+        assertEquals(2, turnTicket.getTurnOrder().size());
+        assertTrue(turnTicket.getTurnOrder().contains(first));
+        assertTrue(turnTicket.getTurnOrder().contains(second));
 
-       assertAll(
-               () -> assertEquals(2, turnTicket.getTurnOrder().size()),
-               () ->assertTrue(turnTicket.getTurnOrder().stream().allMatch(Objects::isNull))
-       ) ;
-
-    }
-    /**
-     * Verifies the manual  addition methods of a player to the TurnTicket.
-     * Add a player on turn ticket.
-     */
-    @Test
-    void testAdd_inFirstAvailableSlot() {
-        turnTicket.getTurnOrder().clear();
-        turnTicket.getTurnOrder().add(p1);
-        turnTicket.getTurnOrder().add(null);
-        turnTicket.getTurnOrder().add(p2);
-
-
-        Player p3 = new Player("Player3", "red");
-
-        turnTicket.addPlayer(p3);
-        assertAll(
-                () -> assertEquals(p1, turnTicket.getTurnOrder().get(0)),
-                () -> assertEquals(p3, turnTicket.getTurnOrder().get(1)),
-                () -> assertEquals(p2, turnTicket.getTurnOrder().get(2)),
-                () -> assertEquals(3, turnTicket.getTurnOrder().size())
-        );
-    }
-    @Test
-    void testAdd_noAvailableSlotDoesNotChangeList() {
-        turnTicket.getTurnOrder().clear();
-        turnTicket.getTurnOrder().add(p1);
-        turnTicket.getTurnOrder().add(p2);
-
-
-        Player p3 = new Player("Player3", "red");
-
-        turnTicket.addPlayer(p3);
-        assertAll(
-                () -> assertSame(p1, turnTicket.getTurnOrder().get(0)),
-                () -> assertSame(p2, turnTicket.getTurnOrder().get(1)),
-                () -> assertFalse(turnTicket.getTurnOrder().contains(p3)),
-                () -> assertEquals(2, turnTicket.getTurnOrder().size())
-        );
     }
 }

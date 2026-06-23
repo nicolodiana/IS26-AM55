@@ -101,13 +101,16 @@ public class BoardView implements Serializable {
     /**
      * it removes the player from the turn ticket
      */
-    public void removePlayerFromTurnTicket() {
+    public void removePlayerFromTurnTicket(String playerId) {
         if (turnTicket == null || turnTicket.isEmpty()) {
             return;
         }
-
-        turnTicket.remove(0);
-        turnTicket.add(null);
+        for(int i=0;i<turnTicket.size();i++){
+            if(turnTicket.get(i)!=null && turnTicket.get(i).getNickname().equals(playerId)){
+                turnTicket.set(i,null);
+                break;
+            }
+        }
     }
 
     /**
@@ -116,14 +119,17 @@ public class BoardView implements Serializable {
      *               all pick has finished
      */
     public void putPlayerInTurnTicket(PlayerView player) {
-
         for (BiddingTicketView ticket : this.biddingTrail) {
             if (ticket.getPlayer() != null && ticket.getPlayer().getNickname().equals(player.getNickname())) {
                 if (ticket.allPickDone()) {
-                    turnTicket.add(player);
-                    ticket.setPlayer(null);
+                    for (int i = 0; i < turnTicket.size(); i++) {
+                        if (turnTicket.get(i) == null) {
+                            turnTicket.set(i, player);
+                            ticket.setPlayer(null);
+                            return;
+                        }
+                    }
                 }
-
                 return;
             }
         }
