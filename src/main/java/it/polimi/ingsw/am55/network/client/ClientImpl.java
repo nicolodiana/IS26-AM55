@@ -2,6 +2,7 @@ package it.polimi.ingsw.am55.network.client;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.ClientModel.ClientModelUpdater;
+import it.polimi.ingsw.am55.message.ConnectionLostMessage;
 import it.polimi.ingsw.am55.message.MessageToClient;
 import it.polimi.ingsw.am55.network.ClientConnectionControl;
 import it.polimi.ingsw.am55.network.command.PingCommand;
@@ -231,9 +232,13 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
                 synchronized (pingLock) {
                     elapsed = System.currentTimeMillis() - lastPingFromServer;
                 }
-
                 if (elapsed > SERVER_TIMEOUT_MS) {
-                    System.out.println("[CLIENT_IMPL] Server unreachable (either server down or client down): I close the client.");
+                    stopPing();
+
+                    model.handleUpdate(new ConnectionLostMessage(
+                            "Connessione persa con il server."
+                    ));
+
                     closeConnection();
                 }
             }
@@ -273,11 +278,11 @@ public class ClientImpl extends UnicastRemoteObject implements VirtualView, Clie
      */
     @Override
     public void closeConnection() {
-            System.out.println("[CLIENT_IMPL] Client ping stopped");
+           // System.out.println("[CLIENT_IMPL] Client ping stopped");
             try{
                 server.close();
             }catch(Exception e){}
-            System.out.println("[CLIENT_IMPL] I close the client.");
+            //System.out.println("[CLIENT_IMPL] I close the client.");
             //System.exit(0);
 
     }
