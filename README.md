@@ -66,7 +66,7 @@ make sure to Download on every device [*MySQL*](https://dev.mysql.com/downloads/
 - Download latest Server edition there: [**Server**](jars/)
 - Run in terminal:
 
-`java -jar [RMIPort] [socketPort]`
+`java -jar server.jar [RMIPort] [socketPort]`
 
   - if no arguments are provided, the server uses the default RMI and socket ports.
   - invalid line parameters terminate the application with exit code `2`.
@@ -78,7 +78,7 @@ make sure to Download on every device [*MySQL*](https://dev.mysql.com/downloads/
 - Download latest Client edition there: [**Client**](jars/)
 - Run in terminal: 
 
-`java -jar <host> <RMI|socket> <port> <cli|gui>`
+`java -jar client.jar <host> <RMI|socket> <port> <cli|gui>`
 
   - `Host` set the Server IP given to you by the Server
     - default for local gamaplay: `localHost`
