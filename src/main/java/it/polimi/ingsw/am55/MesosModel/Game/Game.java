@@ -669,7 +669,7 @@ public class Game implements GameModelInterface{
      * @throws IllegalCallerException  if invoked when there are more than 5 players in the game
      * or when the current player is not on the food card.
      * **/
-    public List<String> pickFood(String id) {
+    private List<String> pickFood(String id) {
         if (!state.equals(GameState.PICKCARD)
                 || currentPlayer == null
                 || !currentPlayer.getNickname().equals(id)) {
@@ -960,30 +960,6 @@ public class Game implements GameModelInterface{
         changeState(GameState.ENDED);
     }
 
-    /**
-     * Checks whether a player with the specified nickname is registered in the game.
-     * The comparison is case-sensitive.
-     *
-     * @param idPlayer the nickname to search for
-     * @return {@code true} if a matching player is present; {@code false} otherwise
-     */
-    public boolean isInGame(String idPlayer){
-        for (Player p : players){
-            if (p.getNickname().equals(idPlayer))
-                return true;
-        }
-        return false;
-    }
-
-    /**
-     * Returns the current game state.
-     *
-     * @return the current game state
-     */
-    @Override
-    public GameState getState() {
-        return getGameState();
-    }
 
     /**
      * Searches for a player with the specified nickname.

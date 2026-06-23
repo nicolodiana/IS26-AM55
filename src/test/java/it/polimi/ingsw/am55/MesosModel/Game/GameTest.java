@@ -10,12 +10,15 @@ import it.polimi.ingsw.am55.MesosModel.Exceptions.*;
 import it.polimi.ingsw.am55.MesosModel.Player.Player;
 import it.polimi.ingsw.am55.MesosModel.SharedBoard.Row;
 import it.polimi.ingsw.am55.dto.GameView;
+import it.polimi.ingsw.am55.dto.endgame.EndGameEffectView;
 import it.polimi.ingsw.am55.dto.endgame.EndGameResultView;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -204,22 +207,6 @@ class GameTest {
     }
 
 
-    /**
-     * Verifies that attempting to pick food in an invalid player-count scenario
-     * results in an {@link IllegalStateException}.
-     *
-     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
-     */
-    @Test
-    void testPickFood_WrongNumbersOfPlayer() throws PlayerNumberOutOfRange {
-        addTwoPlayers();
-
-        String firstPlayer = g.getCurrentPlayer();
-        g.placeTotem(1, g.getCurrentPlayer());
-        g.placeTotem(2, g.getCurrentPlayer());
-
-        assertThrows(IllegalStateException.class, () -> g.pickFood(firstPlayer));
-    }
 
     @Test
     void playerOnFoodTicketReceivesSixFoodAutomaticallyAtEndOfPlaceTotem() throws Exception {
@@ -322,33 +309,44 @@ class GameTest {
     @Test
     void testPickCard_pickValidAndEndRound() throws PlayerNumberOutOfRange {
         addTwoPlayers();
+        clearRows(g);
 
+        /*
+         * IMPORTANTE: queste carte devono essere aggiunte PRIMA del secondo placeTotem.
+         * placeTotem(), quando piazza l'ultimo totem, entra subito in PICKCARD e chiama
+         * la logica di skip automatico. Se in quel momento le righe sono vuote, il gioco
+         * salta direttamente a EVENTRESOLVE e il primo pickCard lancia:
+         * "can't pick a card now".
+         */
+        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(1, true, 1));
+        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(2, true, 1));
+        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(3, false, 1));
+        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(4, false, 1));
+        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(5, false, 1));
+        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(6, false, 1));
 
-        g.placeTotem(3, g.getCurrentPlayer());
-        g.placeTotem(2, g.getCurrentPlayer());
-        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(1,true, 1));
-        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(2,true, 1));
-        g.getSharedBoard().getUpperRow().addCharacterCard(new Hunter(3,false, 1));
-        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(4,false, 1));
-        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(5,false, 1));
-        g.getSharedBoard().getLowerRow().addCharacterCard(new Hunter(6,false, 1));
+        String firstPlacingPlayer = g.getCurrentPlayer();
+        g.placeTotem(3, firstPlacingPlayer);      // ticket F: 2 carte upper
 
-        CharacterCard firstLowerCard = firstLowerCharacterCard();
-        g.pickCard(firstLowerCard.getId(), g.getCurrentPlayer());
+        String secondPlacingPlayer = g.getCurrentPlayer();
+        g.placeTotem(2, secondPlacingPlayer);     // ticket E: 1 carta lower + 1 carta upper
 
-        CharacterCard firstUpperCard = firstUpperCharacterCard();
-        g.pickCard(firstUpperCard.getId(), g.getCurrentPlayer());
+        assertEquals(GameState.PICKCARD, g.getGameState());
 
+        // Il giocatore sul ticket E gioca per primo: deve prendere 1 lower e 1 upper.
+        g.pickCard(4, g.getCurrentPlayer());
+        assertEquals(GameState.PICKCARD, g.getGameState());
 
-        Optional<Player> nextPlayer = g.getSharedBoard().nextPlayerSecondPhase();
-        assertTrue(nextPlayer.isPresent());
-        assertEquals(nextPlayer.get().getNickname(), g.getCurrentPlayer());
+        g.pickCard(1, g.getCurrentPlayer());
+        assertEquals(GameState.PICKCARD, g.getGameState());
 
-        CharacterCard secondUpperCard = firstUpperCharacterCard();
-        g.pickCard(secondUpperCard.getId(), g.getCurrentPlayer());
+        // Ora tocca al giocatore sul ticket F: deve prendere 2 upper.
+        g.pickCard(2, g.getCurrentPlayer());
+        assertEquals(GameState.PICKCARD, g.getGameState());
 
-        CharacterCard thirdUpperCard = firstUpperCharacterCard();
-        g.pickCard(thirdUpperCard.getId(), g.getCurrentPlayer());
+        g.pickCard(3, g.getCurrentPlayer());
+        assertEquals(GameState.EVENTRESOLVE, g.getGameState());
+
         g.eventResolve();
 
         String expectedFirstPlayerNextRound = g.getSharedBoard().getFirstPlayerFirstPhase().getNickname();
@@ -359,6 +357,7 @@ class GameTest {
                 () -> assertEquals(2, g.getCountRound())
         );
     }
+
 
     /**
      * Verifies the interaction between a normal card pick and the special-pick phase
@@ -731,104 +730,199 @@ class GameTest {
         addTwoPlayers();
         assertThrows(IllegalStateException.class, () -> g.endGame());
     }
-    /**
-     * Verifies that all end-game effects inside the scoring loop are applied correctly
-     * and that a single winner is produced.
-     *
-     * @throws Exception if checked exceptions are raised during test preparation
-     */
-    @Test
-    void testEndGame_ShouldApplyAllEffectsInsideForLoopOneWinner() throws Exception {
-        g.addPlayer("rich", "white");
-        g.addPlayer("plain", "blue");
+    private void setFood(Player player, int targetFood) {
+        int delta = targetFood - player.getNumFoods();
 
-        Player rich = g.getPlayers().getFirst();
-        Player plain = g.getPlayers().get(1);
-
-        rich.addTribeCard(new Shaman(1, 1, 1));
-        rich.addTribeCard(new Hunter(2, false, 1));
-        rich.addTribeCard(new Hunter(3, false, 1));
-        rich.addTribeCard(new Hunter(4, false, 1));
-        rich.addTribeCard(new Artist(5, 1));
-        rich.addTribeCard(new Artist(6, 1));
-        rich.addTribeCard(new Artist(7, 1));
-        rich.addTribeCard(new Artist(8, 1));
-        rich.addTribeCard(new Artist(9, 1));
-        rich.addTribeCard(new Collector(10, 1));
-        rich.addTribeCard(new Builder(11, 3, 0, 1));
-        rich.addTribeCard(new Builder(12, 4, 0, 1));
-        rich.addTribeCard(new Inventor("hammer", 13, 1));
-        rich.addTribeCard(new Inventor("saw", 14, 1));
-        rich.addTribeCard(new Inventor("hammer", 15, 1));
-
-        rich.getBuildings().add(new BuildingCard(16, 1, 0, 0, BuildingType.BUILDING2, CharacterType.HUNTER, 0));
-        rich.getBuildings().add(new BuildingCard(17, 1, 0, 0, BuildingType.BUILDING9, null, 0));
-        rich.getBuildings().add(new BuildingCard(18, 1, 0, 0, BuildingType.BUILDING11, null, 0));
-        rich.getBuildings().add(new BuildingCard(19, 1, 0, 2, BuildingType.BUILDING12, CharacterType.HUNTER, 0));
-        rich.getBuildings().add(new BuildingCard(20, 1, 0, 0, BuildingType.BUILDING14, null, 0));
-
-        plain.addTribeCard(new Builder(21, 5, 0, 1));
-        plain.addTribeCard(new Inventor("stone", 22, 1));
-        plain.addTribeCard(new Inventor("rope", 23, 1));
-        plain.addTribeCard(new Artist(24, 1));
-
-        g.changeState(GameState.ENDGAMERESOLVE);
-        EndGameResultView endGameResultView = g.endGame();
-
-        assertAll(
-                () -> assertEquals(77, rich.getNumPP()),
-                () -> assertEquals(9, plain.getNumPP()),
-                () -> assertEquals(1, endGameResultView.getWinners().size()),
-                () -> assertTrue(endGameResultView.getWinners().containsKey(rich.getNickname())),
-                () -> assertTrue(endGameResultView.getWinners().containsValue(77)),
-                () -> assertEquals(GameState.ENDED, g.getGameState())
-        );
+        if (delta > 0) {
+            player.addFood(delta);
+        } else if (delta < 0) {
+            player.payFood(-delta);
+        }
     }
 
-    /**
-     * Verifies that two players can end the game in a shared victory
-     * after applying the same effect-based setup.
-     *
-     * @throws PlayerNumberOutOfRange if the game size becomes invalid during setup
-     */
-    @Test
-    void testEndGame_SharedVictory_WithAppliedEffects() throws PlayerNumberOutOfRange {
+    private void addEndGameCardsWithFoodDiscount(Player player) {
+        // 8 personaggi totali.
+        new Artist(1, 1).addToPlayer(player);
+        new Artist(2, 1).addToPlayer(player);
 
+        new Builder(3, 3, 0, 1).addToPlayer(player);
+
+        new Inventor("wheel", 4, 1).addToPlayer(player);
+        new Inventor("fire", 5, 1).addToPlayer(player);
+
+        // false: non aggiunge cibo extra quando viene aggiunto al player.
+        new Hunter(6, false, 1).addToPlayer(player);
+
+        // 1 Collector = sconto sostentamento di 3 cibi.
+        new Collector(7, 1).addToPlayer(player);
+
+        new Shaman(8, 1, 1).addToPlayer(player);
+
+        // Building2(COLLECTOR) = ulteriore sconto di 1 cibo,
+        // perché c'è 1 carta Collector.
+        new BuildingCard(
+                101,
+                1,
+                0,
+                0,
+                BuildingType.BUILDING2,
+                CharacterType.COLLECTOR,
+                0
+        ).addToPlayer(player);
+
+        // Building9: raddoppia i punti dei Builder a fine partita.
+        new BuildingCard(
+                102,
+                1,
+                0,
+                0,
+                BuildingType.BUILDING9,
+                null,
+                0
+        ).addToPlayer(player);
+
+        // Building11: +6 PP per ogni set completo di personaggi.
+        new BuildingCard(
+                103,
+                1,
+                0,
+                0,
+                BuildingType.BUILDING11,
+                null,
+                0
+        ).addToPlayer(player);
+
+        // Building12: +2 PP per ogni Artist.
+        new BuildingCard(
+                104,
+                1,
+                0,
+                2,
+                BuildingType.BUILDING12,
+                CharacterType.ARTIST,
+                0
+        ).addToPlayer(player);
+
+        // Building14: +25 PP a fine partita.
+        new BuildingCard(
+                105,
+                1,
+                0,
+                0,
+                BuildingType.BUILDING14,
+                null,
+                0
+        ).addToPlayer(player);
+    }
+
+    private Game createEndGameScenarioWithSustenanceDiscount() throws Exception {
         Game game = new Game(2);
-        game.addPlayer("alice", "orange");
-        game.addPlayer("bob", "blue");
 
-        Player p1 = game.getPlayers().get(0);
-        Player p2 = game.getPlayers().get(1);
+        game.addPlayer("alice", "blue");
+        game.addPlayer("bob", "orange");
 
-        p1.addFood(4 - p1.getNumFoods());
-        p2.addFood(4 - p2.getNumFoods());
+        // Rende deterministico il test: non vogliamo dipendere dagli eventi
+        // pescati casualmente dal costruttore della board.
+        clearRows(game);
 
-        giveTieSetup(p1);
-        giveTieSetup(p2);
+        for (Player player : game.getPlayers()) {
+            addEndGameCardsWithFoodDiscount(player);
 
-        List<Player> players = List.of(p1, p2);
+            // Sostentamento:
+            // 8 personaggi - 3 cibi del Collector - 1 cibo del Building2(COLLECTOR) = 4 cibi da pagare.
+            // Partendo da 5, resta 1 cibo e NON si perde nessun PP.
+            setFood(player, 5);
+        }
 
-        new HuntEventCard(21, 1, 1).activateEvent(players);
-        new PaintingsEventCard(20, 1, 2, 1, 1, 0).activateEvent(players);
-        new SustenanceEventCard(19, 1, 1).activateEvent(players);
+        new SustenanceEventCard(90, 1, 1).activateEvent(game.getPlayers());
+
+        for (Player player : game.getPlayers()) {
+            assertEquals(1, player.getNumFoods());
+            assertEquals(0, player.getNumPP());
+        }
+
+        // Evento finale deterministico: con 2 Artist dà +2 PP a ogni giocatore.
+        // Quindi il totale atteso è 55 dagli effetti finali + 2 da PAINTINGS = 57.
+        game.getSharedBoard()
+                .getLowerRow()
+                .addEventCard(new PaintingsEventCard(91, 1, 2, 1, 1, 2));
 
         game.changeState(GameState.ENDGAMERESOLVE);
-        EndGameResultView endGameResultView = game.endGame();
 
-        assertAll(
-                () -> assertEquals(GameState.ENDED, game.getGameState()),
-                () -> assertEquals(2, endGameResultView.getWinners().size()),
-                () -> assertTrue(endGameResultView.getWinners().containsKey("alice")),
-                () -> assertTrue(endGameResultView.getWinners().containsKey("bob")),
-                () -> assertEquals(1, endGameResultView.getWinners().get("alice")),
-                () -> assertEquals(1, endGameResultView.getWinners().get("bob")),
-                () -> assertEquals(20, p1.getNumPP()),
-                () -> assertEquals(20, p2.getNumPP()),
-                () -> assertEquals(1, p1.getNumFoods()),
-                () -> assertEquals(1, p2.getNumFoods())
-        );
+        return game;
     }
+
+    @Test
+    void testEndGame_ShouldApplyAllEffectsInsideForLoop() throws Exception {
+        Game game = createEndGameScenarioWithSustenanceDiscount();
+
+        EndGameResultView result = game.endGame();
+
+        Player alice = game.getSinglePlayer("alice");
+        Player bob = game.getSinglePlayer("bob");
+
+        // Bonus finali per player:
+        // Artists: 2 / 2 * 10 = 10
+        // Builder: 3 * 2 grazie a Building9 = 6
+        // Inventors: 2 inventori * 2 icone distinte = 4
+        // Building11: 1 set completo * 6 = 6
+        // Building12: 2 Artists * 2 = 4
+        // Building14: 25
+        // Totale effetti finali = 55
+        // Evento PAINTINGS risolto da endGame(): +2 PP
+        // Totale finale = 57
+        assertEquals(57, alice.getNumPP());
+        assertEquals(57, bob.getNumPP());
+
+        assertEquals(1, alice.getNumFoods());
+        assertEquals(1, bob.getNumFoods());
+
+        assertEquals(1, result.getResolvedEvents().size());
+        assertEquals(12, result.getEndGameEffects().size());
+
+        Map<String, Long> effectsByPlayer = result.getEndGameEffects()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        EndGameEffectView::getPlayerNickname,
+                        Collectors.counting()
+                ));
+
+        assertEquals(6L, effectsByPlayer.get("alice"));
+        assertEquals(6L, effectsByPlayer.get("bob"));
+
+        assertEquals(GameState.ENDED, game.getGameState());
+    }
+
+    @Test
+    void testEndGame_SharedVictory_WithAppliedEffects() throws Exception {
+        Game game = createEndGameScenarioWithSustenanceDiscount();
+
+        EndGameResultView result = game.endGame();
+
+        assertEquals(1, result.getResolvedEvents().size());
+
+        Map<String, Integer> winners = result.getWinners();
+
+        assertEquals(2, winners.size());
+
+        assertTrue(winners.containsKey("alice"));
+        assertTrue(winners.containsKey("bob"));
+
+        // In pareggio sui PP, la mappa winners contiene il cibo rimasto.
+        // I PP sono pari a 57 per entrambi: 55 effetti finali + 2 PAINTINGS.
+        // Il cibo deve essere 1 perché lo sconto cibo è applicato correttamente.
+        assertEquals(1, winners.get("alice"));
+        assertEquals(1, winners.get("bob"));
+
+        assertEquals(57, game.getPlayerPoints("alice"));
+        assertEquals(57, game.getPlayerPoints("bob"));
+
+        assertEquals(1, game.getPlayerFood("alice"));
+        assertEquals(1, game.getPlayerFood("bob"));
+
+        assertEquals(GameState.ENDED, game.getGameState());
+    }
+
 
     @Test
     void testEventResolver() throws PlayerNumberOutOfRange {
@@ -840,15 +934,7 @@ class GameTest {
         assertNotNull(g.eventResolve());
     }
 
-    @Test
-    void testIsInGame() throws PlayerNumberOutOfRange{
-        Game game = new Game(2);
-        game.addPlayer("alice", "orange");
-        game.addPlayer("bob", "blue");
 
-        assertTrue(game.isInGame("alice"));
-        assertFalse(game.isInGame("fabio"));
-    }
 
     @Test
     void quitGame() throws PlayerNumberOutOfRange {
@@ -859,7 +945,7 @@ class GameTest {
 
     @Test
     void getStateTest(){
-        GameState state = g.getState();
+        GameState state = g.getGameState();
         assertEquals(GameState.CREATED, state);
     }
 

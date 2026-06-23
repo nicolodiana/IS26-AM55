@@ -2,7 +2,7 @@ package it.polimi.ingsw.am55.view.launcher;
 
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.controller.UserActionHandler;
-import it.polimi.ingsw.am55.network.ClientImpl;
+import it.polimi.ingsw.am55.network.client.ClientImpl;
 import it.polimi.ingsw.am55.view.cli.CLIView;
 
 import java.rmi.RemoteException;

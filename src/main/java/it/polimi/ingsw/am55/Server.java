@@ -1,7 +1,7 @@
 package it.polimi.ingsw.am55;
 
-import it.polimi.ingsw.am55.network.ServerApplication;
-import it.polimi.ingsw.am55.network.SocketServer;
+import it.polimi.ingsw.am55.network.server.ServerApplication;
+import it.polimi.ingsw.am55.network.server.SocketServer;
 import it.polimi.ingsw.am55.utility.ServerConfig;
 
 import java.io.BufferedReader;

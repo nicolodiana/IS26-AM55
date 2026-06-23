@@ -1,5 +1,7 @@
 package it.polimi.ingsw.am55.network;
 
+import it.polimi.ingsw.am55.network.client.ClientImpl;
+import it.polimi.ingsw.am55.network.networkException.ClientStartupException;
 import it.polimi.ingsw.am55.utility.*;
 import it.polimi.ingsw.am55.ClientModel.ClientModel;
 import it.polimi.ingsw.am55.network.middleware.ServerStub;

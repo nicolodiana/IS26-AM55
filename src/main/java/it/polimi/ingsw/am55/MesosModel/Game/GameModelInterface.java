@@ -93,11 +93,6 @@ public interface GameModelInterface {
      */
     List<String> pickCard(int index, String idPlayer);
 
-    /**
-     * Allows for a client player gets foods
-     * @throws IllegalStateException if it will be when there are less than 5 players
-     **/
-    List<String> pickFood(String id) throws IllegalStateException;
 
     /**
      * Allows a controller terminates the game if one player crashed
@@ -137,20 +132,7 @@ public interface GameModelInterface {
      */
     void quitGame();
 
-    /**
-     * Checks whether a player with the specified nickname belongs to the game.
-     *
-     * @param idPlayer the nickname to search for
-     * @return {@code true} if the player belongs to the game; {@code false} otherwise
-     */
-    boolean isInGame(String idPlayer);
 
-    /**
-     * Returns the current state of the game.
-     *
-     * @return the current game state
-     */
-    GameState getState();
 
     /**
      * Returns the players registered in the game.

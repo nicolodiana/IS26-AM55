@@ -1,7 +1,7 @@
 package it.polimi.ingsw.am55.network.middleware;
 
 import it.polimi.ingsw.am55.message.MessageToClient;
-import it.polimi.ingsw.am55.network.ClientImpl;
+import it.polimi.ingsw.am55.network.client.ClientImpl;
 import it.polimi.ingsw.am55.network.command.ServerCommand;
 import it.polimi.ingsw.am55.virtualview.VirtualServer;
 import it.polimi.ingsw.am55.virtualview.VirtualView;

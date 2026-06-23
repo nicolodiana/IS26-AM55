@@ -72,7 +72,14 @@ public abstract class MessageToClient implements Serializable {
      * @return {@code true} when {@link #update(ClientModel)} should be called
      */
     public boolean shouldUpdateModel() {return  true;}
-
+    /**
+     * Indicates whether receiving this message must close the current game session.
+     * <p>
+     * The default implementation returns {@code false}; messages that terminate
+     * the match or require the client to leave the session can override this method.
+     *
+     * @return {@code true} when the game session must be closed; {@code false} otherwise
+     */
     public boolean closeGameSession(){return false;}
 
 }

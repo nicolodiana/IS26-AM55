@@ -1,6 +1,6 @@
 package it.polimi.ingsw.am55.controller;
 
-import it.polimi.ingsw.am55.network.ClientImpl;
+import it.polimi.ingsw.am55.network.client.ClientImpl;
 import it.polimi.ingsw.am55.network.command.CreateGameCommand;
 import it.polimi.ingsw.am55.network.command.JoinGameCommand;
 import it.polimi.ingsw.am55.network.command.PickCardCommand;

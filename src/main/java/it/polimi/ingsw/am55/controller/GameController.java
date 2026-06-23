@@ -146,7 +146,7 @@ public class GameController {
         }
 
         return new LobbyView(
-                gameModel.getState(),
+                gameModel.getGameState(),
                 gameModel.getPlayers()
         );
     }
