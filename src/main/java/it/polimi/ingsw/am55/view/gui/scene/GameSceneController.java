@@ -547,21 +547,33 @@ public class GameSceneController implements GenericSceneController {
      */
     private Set<RowName> resolveEnabledRows(BoardView board) {
         Set<RowName> rows = new HashSet<>();
+        currentStandardPickRow = null;
 
         if (mode == GuiInteractionMode.PICK_SPECIAL) {
             rows.add(RowName.UPPER);
+            currentStandardPickRow = RowName.UPPER;
             return rows;
         }
 
-        if (mode != GuiInteractionMode.PICK_CARD || pickProgress == null) {
+        if (mode != GuiInteractionMode.PICK_CARD || pickProgress == null || board == null) {
             return rows;
         }
 
-        RowName nextRow = nextStandardPickRow(board);
-        if (nextRow != null) {
-            currentStandardPickRow = nextRow;
-            rows.add(nextRow);
+        int remainingLower = Math.max(0, pickProgress.requiredLower - pickProgress.pickedLower);
+        int remainingUpper = Math.max(0, pickProgress.requiredUpper - pickProgress.pickedUpper);
+
+        if (remainingLower > 0 && hasPickableCard(board.getLowerRow())) {
+            rows.add(RowName.LOWER);
         }
+
+        if (remainingUpper > 0 && hasPickableCard(board.getUpperRow())) {
+            rows.add(RowName.UPPER);
+        }
+
+        if (rows.size() == 1) {
+            currentStandardPickRow = rows.iterator().next();
+        }
+
         return rows;
     }
 
@@ -764,6 +776,13 @@ public class GameSceneController implements GenericSceneController {
      * Builds a pick instruction matching the one highlighted row.
      */
     private String pickInstruction() {
+        int remainingLower = Math.max(0, pickProgress.requiredLower - pickProgress.pickedLower);
+        int remainingUpper = Math.max(0, pickProgress.requiredUpper - pickProgress.pickedUpper);
+
+        if (remainingLower > 0 && remainingUpper > 0) {
+            return "It is your turn: choose a highlighted card from the UPPER or LOWER ROW.";
+        }
+
         RowName nextRow = currentStandardPickRow != null ? currentStandardPickRow : nextStandardPickRowFromProgressOnly();
         if (nextRow == RowName.LOWER) {
             return "It is your turn: choose a highlighted card from the LOWER ROW.";
@@ -773,6 +792,7 @@ public class GameSceneController implements GenericSceneController {
         }
         return "It is your turn: choose one highlighted card.";
     }
+
 
     /**
      * Computes the next row using only tracked progress for instruction text.
